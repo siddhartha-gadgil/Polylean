@@ -1,0 +1,1 @@
+A replication in __lean 4__ of some of the __scala__ code used in the _PolyMath 14_ project. 
