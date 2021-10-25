@@ -36,8 +36,6 @@ def provedSplits(z: Letter) : (w : Word) → List (ProvedSplit z w)
       headSplit :: tailSplits
     else tailSplits
 
-#eval (provedSplits α [β, α, β, α, β⁻¹]).map (fun ps => (ps.fst, ps.snd))
-
 abbrev Length := Word → Nat
 
 def conjInv(l: Length) : Prop := (x : Letter) → (g : Word) → l (g^x) = l (g)
@@ -63,26 +61,26 @@ theorem conj_split (x: Letter) (ys fst snd: Word) :
               simp
 
 -- deducing bound using `l (xh₁x⁻¹h₂) ≤ b₁ + b₂` given `l (hᵢ) ≤ bᵢ`, `i = 1, 2`
-def ProvedBound.matchHead(x: Letter)(ys fst snd: Word)
-      (eqn : ys = fst ++ [x⁻¹] ++ snd) :
-        ProvedBound fst → ProvedBound snd → ProvedBound (x :: ys) := 
-          fun pb1 pb2 =>
-          let bound := pb1.bound + pb2.bound
-          let pf : 
-            (l: Length) →  emptyWord l → normalized l → conjInv l → triangIneq l → 
-                l (x :: ys) ≤ bound := by
-                  intros l emp norm conj triang
-                  rw [conj_split x ys fst snd eqn]
-                  have lem : l (fst ^ x ++ snd) ≤ l (fst^x) + l snd := 
-                     by
-                       apply triang
-                  have clem : l (fst^x) = l fst := by apply conj
-                  rw [clem] at lem
-                  apply Nat.le_trans lem
-                  have l1 : l fst ≤ pb1.bound := pb1.pf l emp norm conj triang
-                  have l2 : l snd ≤ pb2.bound := pb2.pf l emp norm conj triang
-                  apply Nat.add_le_add l1 l2
-          ⟨bound, pf⟩
+def ProvedBound.headMatches(x: Letter)(ys fst snd: Word)
+  (eqn : ys = fst ++ [x⁻¹] ++ snd) :
+  ProvedBound fst → ProvedBound snd → ProvedBound (x :: ys) := 
+    fun pb1 pb2 =>
+    let bound := pb1.bound + pb2.bound
+    let pf : 
+      (l: Length) → emptyWord l → normalized l → conjInv l → triangIneq l → 
+          l (x :: ys) ≤ bound := by
+            intros l emp norm conj triang
+            rw [conj_split x ys fst snd eqn]
+            have lem : l (fst ^ x ++ snd) ≤ l (fst^x) + l snd := 
+                by
+                  apply triang
+            have clem : l (fst^x) = l fst := by apply conj
+            rw [clem] at lem
+            apply Nat.le_trans lem
+            have l1 : l fst ≤ pb1.bound := pb1.pf l emp norm conj triang
+            have l2 : l snd ≤ pb2.bound := pb2.pf l emp norm conj triang
+            apply Nat.add_le_add l1 l2
+    ⟨bound, pf⟩
 
 -- deducing `l(xh) ≤ b + 1` given `l(h) ≤ b`
 def ProvedBound.prepend{w : Word} (x: Letter) 
@@ -134,14 +132,12 @@ partial def provedBound : (w: Word) → ProvedBound w := fun w =>
   | [] => ProvedBound.emptyWord
   | x :: ys =>
     let head := ProvedBound.prepend x (provedBound ys)
-    let splits := provedSplits (x⁻¹ )  ys
+    let splits := provedSplits x⁻¹  ys
     let tail := splits.map (fun ps => 
-      ProvedBound.matchHead x ys ps.fst ps.snd ps.proof (provedBound ps.fst)
-          (provedBound ps.snd))
+      ProvedBound.headMatches x ys ps.fst ps.snd ps.proof 
+        (provedBound ps.fst) (provedBound ps.snd))
     ProvedBound.min head tail
     
 #eval (provedBound ([α, α, β, α!, β!])).bound
 
 #eval (provedBound ([α, α, β, α!, β!]^2)).bound
-
-#check (provedBound ([α, α, β, α!, β!])).pf

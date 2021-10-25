@@ -11,26 +11,18 @@ def Letter.inv : Letter → Letter
   | α! => α 
   | β! => β 
 
-postfix:100 "⁻¹" => Letter.inv
+postfix:max "⁻¹" => Letter.inv
 
 open Letter
 
 abbrev Word := List Letter
 
-def Word.pow : Word → Nat → Word :=
-  fun w n => 
-  match n with
-  | 0 => []
-  | Nat.succ m => w ++ (pow w m)
-
-def Word.conj: Word → Letter → Word
-  | w, l => [l] ++ w ++ [l⁻¹]
+def Word.pow : Word → Nat → Word 
+  | w, 0 => []
+  | w, Nat.succ m => w ++ (pow w m)
 
 instance : Pow Word Nat where
   pow w n := w.pow n
-
-instance: Pow Word Letter where
-  pow w l := w.conj l
 
 def splits(l : Letter) : Word → List (Word × Word) 
   | [] => []
@@ -48,4 +40,11 @@ partial def l : Word → Nat
 #eval l ([α, α, β, α!, β!])
 
 #eval l ([α, α, β, α!, β!]^2)
+
+-- For proofs 
+
+def Word.conj: Word → Letter → Word := fun w l => [l] ++ w ++ [l⁻¹]
+
+instance: Pow Word Letter where
+  pow w l := w.conj l
 
