@@ -38,14 +38,12 @@ def splits(l : Letter) : Word → List (Word × Word)
     let tailSplits := (splits l ys).map (fun (fst, snd) => (x :: fst, snd)) 
     if x = l then ([], ys) :: tailSplits else tailSplits
 
-#eval splits α [β, α, β, α, β⁻¹]
-
 partial def l : Word → Nat  
   | [] => 0
   | x :: ys =>
     let base := 1 + (l ys)
     let derived := (splits (x⁻¹) ys).map (fun (fst, snd) => l fst + l snd) 
-    derived.foldl min base
+    derived.foldl min base -- minimum of base and elements of derived
 
 #eval l ([α, α, β, α!, β!])
 

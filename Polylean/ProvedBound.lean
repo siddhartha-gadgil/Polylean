@@ -6,21 +6,24 @@ structure ProvedSplit (l: Letter)(w : Word) where
   snd: Word
   proof : w = fst ++ [l] ++ snd 
 
+-- Split with first piece empty when head matches the splitting letter.
 def ProvedSplit.head (x: Letter) (ys: Word) : ProvedSplit x (x :: ys) :=
-  ⟨[], ys, rfl⟩
+  ⟨[], ys, rfl⟩ 
 
-def ProvedSplit.prepend{l: Letter}{w : Word} (x: Letter) 
-        (ps: ProvedSplit l w) : ProvedSplit l (x :: w) :=
+-- Prepend to a proved split of the tail (`l` and `ys` implicit).
+def ProvedSplit.prepend{l: Letter}{ys : Word} (x: Letter) 
+        (ps: ProvedSplit l ys) : ProvedSplit l (x :: ys) :=
       let newFst := x :: ps.fst
       let newSnd := ps.snd
-      have newProof : x :: w = newFst ++ [l] ++ newSnd  := 
+      have newProof : x :: ys = newFst ++ [l] ++ newSnd  := 
         by
-          let prev : x :: w = x :: (ps.fst ++ [l] ++ ps.snd) 
+          let prev : x :: ys = x :: (ps.fst ++ [l] ++ ps.snd) 
              := congrArg  (List.cons x) ps.proof
           rw [prev] 
           simp
       ⟨newFst, newSnd, newProof⟩   
 
+-- all proved splits of a word
 def provedSplits(z: Letter) : (w : Word) → List (ProvedSplit z w) 
   | [] => []
   | x :: ys =>
@@ -59,6 +62,7 @@ theorem conj_split (x: Letter) (ys fst snd: Word) :
               rw [hyp]
               simp
 
+-- deducing bound using `l (xh₁x⁻¹h₂) ≤ b₁ + b₂` given `l (hᵢ) ≤ bᵢ`, `i = 1, 2`
 def ProvedBound.matchHead(x: Letter)(ys fst snd: Word)
       (eqn : ys = fst ++ [x⁻¹] ++ snd) :
         ProvedBound fst → ProvedBound snd → ProvedBound (x :: ys) := 
@@ -80,6 +84,7 @@ def ProvedBound.matchHead(x: Letter)(ys fst snd: Word)
                   apply Nat.add_le_add l1 l2
           ⟨bound, pf⟩
 
+-- deducing `l(xh) ≤ b + 1` given `l(h) ≤ b`
 def ProvedBound.prepend{w : Word} (x: Letter) 
         (ps: ProvedBound w) : ProvedBound (x :: w) :=
       let newBound := ps.bound + 1
@@ -91,15 +96,18 @@ def ProvedBound.prepend{w : Word} (x: Letter)
         rw [Nat.add_comm]
         apply Nat.add_le_add_right prev⟩
 
+-- `l(e) ≤ 0`
 def ProvedBound.emptyWord: ProvedBound [] :=
   ⟨0, fun l emp _ _ _ => by rw [emp]; apply Nat.le_refl⟩
 
+-- the best proved bound for a word
 def ProvedBound.min {w: Word}: ProvedBound w → List (ProvedBound w) → 
     ProvedBound w :=
         fun head tail =>
           tail.foldl (fun pb1 pb2 =>
             if pb1.bound ≤ pb2.bound then pb1 else pb2) head
 
+-- bound using only the triangle inequality
 def easyBound : (w : Word) → ProvedBound w 
   | [] => ProvedBound.emptyWord
   | x :: ys =>
@@ -119,7 +127,8 @@ def easyBound : (w : Word) → ProvedBound w
     ⟨bound, pf⟩
 
 instance {w: Word} : Inhabited (ProvedBound w) :=⟨easyBound w⟩
-  
+
+-- bound with proof for words  
 partial def provedBound : (w: Word) → ProvedBound w := fun w =>
   match w with
   | [] => ProvedBound.emptyWord
