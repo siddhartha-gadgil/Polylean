@@ -17,9 +17,7 @@ def ProvedSplit.prepend{l: Letter}{ys : Word} (x: Letter)
       let newSnd := ps.snd
       have newProof : x :: ys = newFst ++ [l] ++ newSnd  := 
         by
-          let prev : x :: ys = x :: (ps.fst ++ [l] ++ ps.snd) 
-             := congrArg  (List.cons x) ps.proof
-          rw [prev] 
+          rw [ps.proof] 
           simp
       ⟨newFst, newSnd, newProof⟩   
 
