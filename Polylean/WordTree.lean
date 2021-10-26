@@ -1,36 +1,36 @@
 import Polylean.ProvedBound
 
-inductive WordTree : Word → Type where
-  | emptyWord : WordTree []
-  | letter : (l : Letter) → WordTree [l]
-  | conjugate : (l : Letter) → (w: Word) → WordTree w → WordTree (w^l)
-  | append : (w₁ : Word) → (w₂ : Word) → WordTree w₁ → WordTree w₂ → WordTree (w₁ ++ w₂)
+inductive ProofTree : Word → Type where
+  | emptyWord : ProofTree []
+  | normalized : (l : Letter) → ProofTree [l]
+  | conjugate : (l : Letter) → (w: Word) → ProofTree w → ProofTree (w^l)
+  | triangleIneq : (w₁ : Word) → (w₂ : Word) → ProofTree w₁ → ProofTree w₂ → ProofTree (w₁ ++ w₂)
   deriving Repr
 
-def WordTree.bound: (w: Word) → WordTree w → Nat :=
+def ProofTree.bound: (w: Word) → ProofTree w → Nat :=
   fun w t =>
     match t with
-    | WordTree.emptyWord => 0
-    | WordTree.letter l => 1
-    | WordTree.conjugate l w t => bound w t 
-    | WordTree.append w₁ w₂ t₁ t₂ => bound w₁ t₁ + bound w₂ t₂
+    | ProofTree.emptyWord => 0
+    | ProofTree.normalized l => 1
+    | ProofTree.conjugate l w t => bound w t 
+    | ProofTree.triangleIneq w₁ w₂ t₁ t₂ => bound w₁ t₁ + bound w₂ t₂
 
-def WordTree.provedBound: (w: Word) → WordTree w → ProvedBound w :=
+def ProofTree.provedBound: (w: Word) → ProofTree w → ProvedBound w :=
   fun w t =>
     match t with
-    | WordTree.emptyWord => ProvedBound.emptyWord
-    | WordTree.letter x => 
+    | ProofTree.emptyWord => ProvedBound.emptyWord
+    | ProofTree.normalized x => 
         ⟨1, by
               intros l emp norm conj triang
               rw [norm x]
               apply Nat.le_refl⟩
-    | WordTree.conjugate x w t => 
+    | ProofTree.conjugate x w t => 
           let pb := provedBound w t
           ⟨pb.bound, by
             intros l emp norm conj triang
             rw [conj x w]
             apply pb.pf l emp norm conj triang⟩
-    | WordTree.append w₁ w₂ t₁ t₂ => 
+    | ProofTree.triangleIneq w₁ w₂ t₁ t₂ => 
           let pb1 := provedBound w₁ t₁
           let pb2 := provedBound w₂ t₂
           ⟨pb1.bound + pb2.bound, by
@@ -41,63 +41,64 @@ def WordTree.provedBound: (w: Word) → WordTree w → ProvedBound w :=
             exact pb2.pf l emp norm conj triang 
             ⟩
 
-def WordTree.headMatches(x: Letter)(ys fst snd: Word)
+def ProofTree.headMatches(x: Letter)(ys fst snd: Word)
   (eqn : ys = fst ++ [x⁻¹] ++ snd) :
-  WordTree fst → WordTree snd → WordTree (x :: ys) := by
-      intros wt1 wt2 
+  ProofTree fst → ProofTree snd → ProofTree (x :: ys) := by
+      intros pt1 pt2 
       rw [conj_split x ys fst snd eqn]
-      apply WordTree.append
-      exact WordTree.conjugate x fst wt1
-      exact wt2
+      apply ProofTree.triangleIneq
+      exact ProofTree.conjugate x fst pt1
+      exact pt2
 
-def WordTree.prepend{w : Word} (x: Letter) 
-        (wt: WordTree w) : WordTree (x :: w) := by
+def ProofTree.prepend{w : Word} (x: Letter) 
+        (pt: ProofTree w) : ProofTree (x :: w) := by
         have exp : x :: w = [x] ++ w := by rfl
         rw [exp]
-        apply WordTree.append
-        exact WordTree.letter x
-        exact wt
+        apply ProofTree.triangleIneq
+        exact ProofTree.normalized x
+        exact pt
 
-def WordTree.min {w: Word}: WordTree w → List (WordTree w) → 
-    WordTree w :=
+def ProofTree.min {w: Word}: ProofTree w → List (ProofTree w) → 
+    ProofTree w :=
         fun head tail =>
-          tail.foldl (fun wt1 wt2 =>
-            if wt1.bound ≤ wt2.bound then wt1 else wt2) head
+          tail.foldl (fun pt1 pt2 =>
+            if pt1.bound ≤ pt2.bound then pt1 else pt2) head
 
-def simpleTree(w: Word) : WordTree w :=
+def simpleTree(w: Word) : ProofTree w :=
   match w with
-  | [] => WordTree.emptyWord
+  | [] => ProofTree.emptyWord
   | x :: ys => by 
     have exp : x :: ys = [x] ++ ys := by rfl
     rw [exp]
-    apply WordTree.append
-    exact WordTree.letter x
+    apply ProofTree.triangleIneq
+    exact ProofTree.normalized x
     exact simpleTree ys
 
 
-instance {w: Word} : Inhabited (WordTree w) :=⟨simpleTree w⟩
+instance {w: Word} : Inhabited (ProofTree w) :=⟨simpleTree w⟩
 
-partial def wordTree : (w: Word) → WordTree w := fun w =>
+partial def proofTree : (w: Word) → ProofTree w := fun w =>
   match w with
-  | [] => WordTree.emptyWord
+  | [] => ProofTree.emptyWord
   | x :: ys =>
-    let head := WordTree.prepend x (wordTree ys)
+    let head := ProofTree.prepend x (proofTree ys)
     let splits := provedSplits x⁻¹  ys
     let tail := splits.map (fun ps => 
-      WordTree.headMatches x ys ps.fst ps.snd ps.proof 
-        (wordTree ps.fst) (wordTree ps.snd))
-    WordTree.min head tail
+      ProofTree.headMatches x ys ps.fst ps.snd ps.proof 
+        (proofTree ps.fst) (proofTree ps.snd))
+    ProofTree.min head tail
 
 
 open Letter
-#eval (wordTree ([α, α, β, α!, β!])).bound
 
-#eval (wordTree ([α, α, β, α!, β!]^2)).bound
+#eval (proofTree ([α, α, β, α!, β!])).bound
 
-#eval (wordTree ([α, α, β, α!, β!]))
+#eval (proofTree ([α, α, β, α!, β!]^2)).bound
 
-#eval (wordTree ([α, α, β, α!, β!]^2))
+#eval (proofTree ([α, α, β, α!, β!]))
 
-#eval ((wordTree ([α, α, β, α!, β!])).provedBound).bound
+#eval (proofTree ([α, α, β, α!, β!]^2))
 
-#eval ((wordTree ([α, α, β, α!, β!]^2)).provedBound).bound
+#eval ((proofTree ([α, α, β, α!, β!])).provedBound).bound
+
+#eval ((proofTree ([α, α, β, α!, β!]^2)).provedBound).bound
