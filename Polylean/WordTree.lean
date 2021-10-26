@@ -91,10 +91,6 @@ partial def proofTree : (w: Word) → ProofTree w := fun w =>
 
 open Letter
 
-#eval (proofTree ([α, α, β, α!, β!])).bound
-
-#eval (proofTree ([α, α, β, α!, β!]^2)).bound
-
 #eval (proofTree ([α, α, β, α!, β!]))
 
 #eval (proofTree ([α, α, β, α!, β!]^2))
@@ -102,3 +98,7 @@ open Letter
 #eval ((proofTree ([α, α, β, α!, β!])).provedBound).bound
 
 #eval ((proofTree ([α, α, β, α!, β!]^2)).provedBound).bound
+
+#eval (proofTree ([α, α, β, α!, β!])).bound
+
+#eval (proofTree ([α, α, β, α!, β!]^2)).bound
