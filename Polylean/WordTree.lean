@@ -4,7 +4,8 @@ inductive ProofTree : Word → Type where
   | emptyWord : ProofTree []
   | normalized : (l : Letter) → ProofTree [l]
   | conjugate : (l : Letter) → (w: Word) → ProofTree w → ProofTree (w^l)
-  | triangleIneq : (w₁ : Word) → (w₂ : Word) → ProofTree w₁ → ProofTree w₂ → ProofTree (w₁ ++ w₂)
+  | triangleIneq : (w₁ : Word) → (w₂ : Word) → 
+                      ProofTree w₁ → ProofTree w₂ → ProofTree (w₁ ++ w₂)
   deriving Repr
 
 def ProofTree.bound: (w: Word) → ProofTree w → Nat :=
