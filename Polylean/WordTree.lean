@@ -65,21 +65,7 @@ def ProofTree.min {w: Word}: ProofTree w → List (ProofTree w) →
           tail.foldl (fun pt1 pt2 =>
             if pt1.bound ≤ pt2.bound then pt1 else pt2) head
 
-def simpleTree(w: Word) : ProofTree w :=
-  match w with
-  | [] => ProofTree.emptyWord
-  | x :: ys => by 
-    have exp : x :: ys = [x] ++ ys := by rfl
-    rw [exp]
-    apply ProofTree.triangleIneq
-    exact ProofTree.normalized x
-    exact simpleTree ys
-
-
-instance {w: Word} : Inhabited (ProofTree w) :=⟨simpleTree w⟩
-
-partial def proofTree : (w: Word) → ProofTree w := fun w =>
-  match w with
+def proofTree : (w: Word) → ProofTree w 
   | [] => ProofTree.emptyWord
   | x :: ys =>
     let head := ProofTree.prepend x (proofTree ys)
@@ -88,7 +74,7 @@ partial def proofTree : (w: Word) → ProofTree w := fun w =>
       ProofTree.headMatches x ys ps.fst ps.snd ps.proof 
         (proofTree ps.fst) (proofTree ps.snd))
     ProofTree.min head tail
-
+  termination_by measure fun l => l.length
 
 open Letter
 
