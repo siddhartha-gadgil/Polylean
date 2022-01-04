@@ -27,10 +27,7 @@ def provedSplits(z: Letter) : (w : Word) → List (ProvedSplit z w)
   | x :: ys =>
     let tailSplits := (provedSplits z ys).map (ProvedSplit.prepend x) 
     if c:x = z then
-      let headSplit : ProvedSplit z (x :: ys) :=
-        by
-          rw [c] 
-          exact ProvedSplit.head z ys 
+      let headSplit : ProvedSplit z (x :: ys) := by rw [c] ; exact ProvedSplit.head z ys 
       headSplit :: tailSplits
     else tailSplits
 
@@ -69,9 +66,7 @@ def ProvedBound.headMatches(x: Letter)(ys fst snd: Word)
           l (x :: ys) ≤ bound := by
             intros l emp norm conj triang
             rw [conj_split x ys fst snd eqn]
-            have lem : l (fst ^ x ++ snd) ≤ l (fst^x) + l snd := 
-                by
-                  apply triang
+            have lem : l (fst ^ x ++ snd) ≤ l (fst^x) + l snd := by apply triang
             have clem : l (fst^x) = l fst := by apply conj
             rw [clem] at lem
             apply Nat.le_trans lem
