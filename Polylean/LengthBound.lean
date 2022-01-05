@@ -49,9 +49,3 @@ def Word.conj: Word → Letter → Word := fun w l => [l] ++ w ++ [l⁻¹]
 instance: Pow Word Letter where
   pow w l := w.conj l
 
-inductive Vector(α : Type): Nat → Type where
-  | nil: Vector α 0
-  | cons{n : Nat}: α →  Vector α  n → Vector α  (n+1)
-
-open Nat
-open Vector
