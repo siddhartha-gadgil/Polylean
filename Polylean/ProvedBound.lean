@@ -98,8 +98,30 @@ def ProvedBound.min {w: Word}: ProvedBound w → List (ProvedBound w) →
           tail.foldl (fun pb1 pb2 =>
             if pb1.bound ≤ pb2.bound then pb1 else pb2) head
 
+-- bound using only the triangle inequality
+def easyBound : (w : Word) → ProvedBound w 
+  | [] => ProvedBound.emptyWord
+  | x :: ys =>
+    let base := easyBound ys
+    let bound := base.bound + 1
+    let pf: 
+      (l: Length) → emptyWord l → normalized l → conjInv l → triangIneq l → 
+          l (x :: ys) ≤ bound := 
+        by
+          intros l emp norm conj triang
+          let lem : l (x :: ys) ≤ l [x] + l ys := triang [x] ys
+          apply Nat.le_trans lem
+          rw [norm x]
+          rw [Nat.add_comm 1 (l ys)]
+          apply Nat.add_le_add_right
+          exact base.pf l emp norm conj triang 
+    ⟨bound, pf⟩
+
+instance {w: Word} : Inhabited (ProvedBound w) :=⟨easyBound w⟩
+
 -- bound with proof for words  
-def provedBound : (w: Word) → ProvedBound w 
+partial def provedBound : (w: Word) → ProvedBound w := fun w =>
+  match w with
   | [] => ProvedBound.emptyWord
   | x :: ys =>
     let head := ProvedBound.prepend x (provedBound ys)
@@ -108,7 +130,6 @@ def provedBound : (w: Word) → ProvedBound w
       ProvedBound.headMatches x ys ps.fst ps.snd ps.proof 
         (provedBound ps.fst) (provedBound ps.snd))
     ProvedBound.min head tail
-  termination_by measure fun l => l.length
     
 #eval (provedBound ([α, α, β, α!, β!])).bound
 
