@@ -6,6 +6,7 @@ structure ProvedSplit (l: Letter)(w : Word) where
   snd: Word
   proof : w = fst ++ [l] ++ snd 
 
+
 -- Split with first piece empty when head matches the splitting letter.
 def ProvedSplit.head (x: Letter) (ys: Word) : ProvedSplit x (x :: ys) :=
   ⟨[], ys, rfl⟩ 
@@ -130,7 +131,7 @@ partial def provedBound : (w: Word) → ProvedBound w := fun w =>
       ProvedBound.headMatches x ys ps.fst ps.snd ps.proof 
         (provedBound ps.fst) (provedBound ps.snd))
     ProvedBound.min head tail
-    
+
 #eval (provedBound ([α, α, β, α!, β!])).bound
 
 #eval (provedBound ([α, α, β, α!, β!]^2)).bound
