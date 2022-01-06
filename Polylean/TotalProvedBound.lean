@@ -3,46 +3,27 @@ import Polylean.ProvedBound
 open Letter
 open Nat
 
-theorem appendLengths{α : Type}(fst: List α)(snd: List α): 
-          (fst ++ snd).length = fst.length + snd.length :=
-          match fst with
-          | [] => by 
-              have prep : [] ++ snd = snd := by rfl
-              rw [prep]
-              have nl : List.length ([] : List α) = 0 := by rfl
-              rw [nl]
-              apply Eq.symm
-              apply Nat.zero_add
-          | (x::xs) => by 
-                have lhs : List.length (x :: xs ++ snd) = List.length (xs ++ snd) + 1 := by rfl
-                rw [lhs]
-                have ht : List.length (x :: xs) = List.length xs + 1 := by rfl
-                rw [ht]
-                rw [appendLengths xs snd]
-                rw [Nat.add_assoc]
-                rw [Nat.add_assoc]
-                apply congrArg (fun n => xs.length + n)
-                apply Nat.add_comm
-                 
 theorem splitFirst{l: Letter}{w: Word}(ps: ProvedSplit l w): 
           ps.fst.length + 1 ≤ w.length :=
           by
-            let lem := appendLengths (ps.fst ++ [l]) ps.snd
+            let lem : (ps.fst ++ [l] ++ ps.snd).length = 
+                (ps.fst ++ [l]).length + ps.snd.length := by apply List.length_append
             rw [← ps.proof] at lem  
             rw [lem]
             have lem2 : List.length (ps.fst ++ [l]) = ps.fst.length + 1 := by 
-                apply appendLengths
+                apply List.length_append
             rw [lem2]
             apply Nat.le_add_right
 
 theorem splitSecond{l: Letter}{w: Word}(ps: ProvedSplit l w): 
           ps.snd.length + 1 ≤ w.length :=
           by
-            let lem := appendLengths (ps.fst ++ [l]) ps.snd
+            let lem : (ps.fst ++ [l] ++ ps.snd).length = 
+                (ps.fst ++ [l]).length + ps.snd.length := by apply List.length_append
             rw [← ps.proof] at lem  
             rw [lem]
             have lem2 : List.length (ps.fst ++ [l]) = ps.fst.length + 1 := by 
-                apply appendLengths
+                apply List.length_append
             rw [lem2]
             rw [Nat.add_assoc]
             rw [Nat.add_comm]
