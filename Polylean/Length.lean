@@ -22,7 +22,7 @@ namespace Wrd
 
 initialize normCache : IO.Ref (HashMap Wrd Nat) ← IO.mkRef (HashMap.empty)
 
-def splits(w: Wrd)(l : Int) : Array (Wrd × Wrd) := Id.run do
+def splits(w: Wrd)(l : Int) : IO <| Array (Wrd × Wrd) := do
   let mut tail := w.eraseIdx 0
   let mut init : Wrd := #[]
   let mut accum : Array (Wrd × Wrd) := #[]
@@ -31,7 +31,7 @@ def splits(w: Wrd)(l : Int) : Array (Wrd × Wrd) := Id.run do
       accum := accum.push (init, tail)
     init := init.push w[j]
     tail := tail.eraseIdx 0
-  accum
+  return accum
 
 partial def length : Wrd →  IO Nat := fun w =>
 do
@@ -47,7 +47,7 @@ do
         let mut l := 1 + (← length <| w.eraseIdx 0)
         let x := w[0]
         let ys := w.eraseIdx 0
-        let pairs := splits ys (-x)
+        let pairs ←  splits ys (-x)
         for (fst, snd) in pairs do
           let pl := (← length <| fst) + (← length <| snd)
           if pl < l then
