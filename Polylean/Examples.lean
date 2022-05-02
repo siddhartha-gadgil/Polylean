@@ -2,7 +2,7 @@ import Polylean.Length
 import Polylean.LengthBound
 open Letter
 
-#eval (Word.wrd ([α, α, β, α!, α,  β!])).splits (1)
+#eval (Word.wrd ([α, α, β, α!, α,  β!])).splits (α)
 
 #eval (Word.wrd ([α, α, β, α!, α,  β!])).length
 

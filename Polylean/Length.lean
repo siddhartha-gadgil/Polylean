@@ -24,16 +24,15 @@ instance : Hashable Wrd := ⟨hashfn⟩
 
 initialize normCache : IO.Ref (HashMap Wrd Nat) ← IO.mkRef (HashMap.empty)
 
-def splits(w: Wrd)(l : Letter) : IO <| Array (Wrd × Wrd) := do
-  let mut tail := w.eraseIdx 0
-  let mut init : Wrd := #[]
-  let mut accum : Array (Wrd × Wrd) := #[]
-  for x in w do
-    if l = x then
-      accum := accum.push (init, tail)
-    init := init.push x
-    tail := tail.eraseIdx 0
-  return accum
+partial def splits(l : Letter) : (w : Wrd) → Array (Wrd × Wrd) := fun w =>
+  match w.size, w with
+  | 0, _ => #[]
+  | m + 1 , _ =>
+    let x := w.back
+    let ys := w.pop
+    let tailSplits := (splits l ys).map fun (fst, snd) =>
+      (fst, snd.push x)
+    if x = l then tailSplits.push (ys, #[]) else tailSplits
 
 partial def length : Wrd →  IO Nat := fun w =>
 do
@@ -49,7 +48,7 @@ do
         let ys := w.pop
         let x := w.back
         let mut l := 1 + (← length <| ys)
-        let pairs ←  splits ys (x.inv)
+        let pairs :=  splits (x.inv) ys
         for (fst, snd) in pairs do
           let pl := (← length <| fst) + (← length <| snd)
           if pl < l then
