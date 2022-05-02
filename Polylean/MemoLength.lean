@@ -23,3 +23,9 @@ def memoLength : Word → IO Nat := fun w => do
       normCache.set <| cache.insert w res
       return res
 termination_by _ l => l.length
+
+#check Array.eraseIdx'
+
+#check -1
+
+#eval #[1, 3, 5].eraseIdx' (0: Fin 3)
