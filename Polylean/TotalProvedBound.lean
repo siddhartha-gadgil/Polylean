@@ -4,32 +4,6 @@ import Polylean.WordTree
 open Letter
 open Nat
 
-theorem splitFirst{l: Letter}{w: Word}(ps: ProvedSplit l w): 
-          ps.fst.length + 1 ≤ w.length :=
-          by
-            let lem : (ps.fst ++ [l] ++ ps.snd).length = 
-                (ps.fst ++ [l]).length + ps.snd.length := by apply List.length_append
-            rw [← ps.proof] at lem  
-            rw [lem]
-            have lem2 : List.length (ps.fst ++ [l]) = ps.fst.length + 1 := by 
-                apply List.length_append
-            rw [lem2]
-            apply Nat.le_add_right
-
-theorem splitSecond{l: Letter}{w: Word}(ps: ProvedSplit l w): 
-          ps.snd.length + 1 ≤ w.length :=
-          by
-            let lem : (ps.fst ++ [l] ++ ps.snd).length = 
-                (ps.fst ++ [l]).length + ps.snd.length := by apply List.length_append
-            rw [← ps.proof] at lem  
-            rw [lem]
-            have lem2 : List.length (ps.fst ++ [l]) = ps.fst.length + 1 := by 
-                apply List.length_append
-            rw [lem2]
-            rw [Nat.add_assoc]
-            rw [Nat.add_comm]
-            apply Nat.le_add_left
-
 def totalProvedBound(n: Nat) : (w: Word) → (w.length ≤ n) →  ProvedBound w := fun w =>
   match n with
   | 0 => 

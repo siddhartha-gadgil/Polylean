@@ -120,17 +120,57 @@ def easyBound : (w : Word) → ProvedBound w
 
 instance {w: Word} : Inhabited (ProvedBound w) :=⟨easyBound w⟩
 
+theorem splitFirst{l: Letter}{w: Word}(ps: ProvedSplit l w): 
+          ps.fst.length + 1 ≤ w.length :=
+          by
+            let lem : (ps.fst ++ [l] ++ ps.snd).length = 
+                (ps.fst ++ [l]).length + ps.snd.length := by apply List.length_append
+            rw [← ps.proof] at lem  
+            rw [lem]
+            have lem2 : List.length (ps.fst ++ [l]) = ps.fst.length + 1 := by 
+                apply List.length_append
+            rw [lem2]
+            apply Nat.le_add_right
+
+theorem splitSecond{l: Letter}{w: Word}(ps: ProvedSplit l w): 
+          ps.snd.length + 1 ≤ w.length :=
+          by
+            let lem : (ps.fst ++ [l] ++ ps.snd).length = 
+                (ps.fst ++ [l]).length + ps.snd.length := by apply List.length_append
+            rw [← ps.proof] at lem  
+            rw [lem]
+            have lem2 : List.length (ps.fst ++ [l]) = ps.fst.length + 1 := by 
+                apply List.length_append
+            rw [lem2]
+            rw [Nat.add_assoc]
+            rw [Nat.add_comm]
+            apply Nat.le_add_left
+
 -- bound with proof for words  
-partial def provedBound : (w: Word) → ProvedBound w := fun w =>
-  match w with
+def provedBound : (w: Word) → ProvedBound w := fun w =>
+  match h:w with
   | [] => ProvedBound.emptyWord
   | x :: ys =>
     let head := ProvedBound.prepend x (provedBound ys)
     let splits := provedSplits x⁻¹  ys
+    have wl:  w.length = ys.length + 1 := by
+      rw[h] 
+      rfl
     let tail := splits.map (fun ps => 
+      have l1 : ps.fst.length + 1 ≤ ys.length + 1 := 
+        by
+        have lm := splitFirst ps
+        apply Nat.le_trans lm
+        apply Nat.le_succ        
+      have l2 : ps.snd.length + 1 ≤ ys.length + 1 :=
+        by
+        have lm := splitSecond ps
+        apply Nat.le_trans lm
+        apply Nat.le_succ
       ProvedBound.headMatches x ys ps.fst ps.snd ps.proof 
         (provedBound ps.fst) (provedBound ps.snd))
     ProvedBound.min head tail
+termination_by  _ w => w.length
 
 #eval (provedBound ([α, α, β, α!, β!])).bound
 
