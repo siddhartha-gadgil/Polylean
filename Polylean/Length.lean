@@ -63,22 +63,19 @@ do
         have lll : w.size -1 < w.size := by
           rw [h] 
           apply Nat.le_refl
-         let mut l := 1 + (← length <| ys)
-        let pairs :=  splits (x.inv) ys
-        have ysize : ys.size = m := by
-          rw [Array.size_pop, h]
-          rfl
-        for ⟨(fst, snd), h0⟩ in pairs do
+        let base := 1 + (← length <| ys)
+        let derived ←  (splits x⁻¹ ys).mapM fun ⟨(fst, snd), h0⟩ => 
+          have ysize : ys.size = m := by
+            rw [Array.size_pop, h]
+            rfl
           have h0 : fst.size + snd.size < w.size := by
             rw [h]
             rw [← ysize]
             apply Nat.lt_trans h0 (Nat.lt_succ_self _)
           have h1 : snd.size < w.size  := Nat.lt_of_le_of_lt (Nat.le_add_left _ _) h0
           have h2 : fst.size < w.size := Nat.lt_of_le_of_lt (Nat.le_add_right _ _) h0
-          let pl := (← length fst) + (← length snd)
-          if pl < l then
-            l := pl
-        pure l
+          return (← length fst) + (← length snd)
+        derived.foldl (fun x y => do return min (← x) y) (pure base)
     normCache.set <| cache.insert w res
     return res
 termination_by _ w => w.size
