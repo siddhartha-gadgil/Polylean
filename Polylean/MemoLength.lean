@@ -20,7 +20,7 @@ def memoLength : Word → IO Nat := fun w => do
         have h2 : fst.length < ys.length + 1 := Nat.lt_of_le_of_lt (Nat.le_add_right _ _) h
         return (← memoLength fst) + (← memoLength snd)
       let res := derived.foldl min base -- minimum of base and elements of derived
-      normCache.set <| cache.insert w res
+      normCache.set <| (← normCache.get).insert w res
       return res
 termination_by _ l => l.length
 

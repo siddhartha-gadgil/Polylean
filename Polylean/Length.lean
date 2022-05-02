@@ -76,7 +76,7 @@ do
           have h2 : fst.size < w.size := Nat.lt_of_le_of_lt (Nat.le_add_right _ _) h0
           return (← length fst) + (← length snd)
         derived.foldl (fun x y => do return min (← x) y) (pure base)
-    normCache.set <| cache.insert w res
+    normCache.set <| (← normCache.get).insert w res
     return res
 termination_by _ w => w.size
 
