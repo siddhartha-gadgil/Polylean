@@ -24,17 +24,30 @@ instance : Hashable Wrd := ⟨hashfn⟩
 
 initialize normCache : IO.Ref (HashMap Wrd Nat) ← IO.mkRef (HashMap.empty)
 
-partial def splits(l : Letter) : (w : Wrd) → Array (Wrd × Wrd) := fun w =>
-  match w.size, w with
-  | 0, _ => #[]
-  | m + 1 , _ =>
+def splits(l : Letter) : (w : Wrd) → Array {p : Wrd × Wrd // p.1.size + p.2.size < w.size} := fun w =>
+  match h:w.size with
+  | 0 => #[]
+  | m + 1  =>    
     let x := w.back
+    have lll : w.size -1 < w.size := by
+      rw [h] 
+      apply Nat.le_refl
     let ys := w.pop
-    let tailSplits := (splits l ys).map fun (fst, snd) =>
-      (fst, snd.push x)
-    if x = l then tailSplits.push (ys, #[]) else tailSplits
+    have ysize : ys.size = m := by
+      rw [Array.size_pop, h]
+      rfl
+    let tailSplits := (splits l ys).map fun ⟨(fst, snd), h⟩ =>
+      ⟨(fst, snd.push x), by 
+        rw [Array.size_push]
+        rw [ysize] at h
+        simp [Nat.add_succ, Nat.succ_lt_succ h]⟩
+    if x = l then tailSplits.push ⟨(ys, #[]), 
+      by 
+        rw [ysize]
+        apply Nat.le_refl⟩ else tailSplits
+termination_by _ l w => w.size
 
-partial def length : Wrd →  IO Nat := fun w =>
+def length(w : Wrd) :  IO Nat := 
 do
   let cache ← normCache.get
   match cache.find? w with
@@ -42,20 +55,33 @@ do
       pure n
   | none =>
     let res ← 
-      match w.size with
+      match h:w.size with
       | 0 => pure 0
-      | k + 1 => do
+      | m + 1 => do
         let ys := w.pop
         let x := w.back
-        let mut l := 1 + (← length <| ys)
+        have lll : w.size -1 < w.size := by
+          rw [h] 
+          apply Nat.le_refl
+         let mut l := 1 + (← length <| ys)
         let pairs :=  splits (x.inv) ys
-        for (fst, snd) in pairs do
-          let pl := (← length <| fst) + (← length <| snd)
+        have ysize : ys.size = m := by
+          rw [Array.size_pop, h]
+          rfl
+        for ⟨(fst, snd), h0⟩ in pairs do
+          have h0 : fst.size + snd.size < w.size := by
+            rw [h]
+            rw [← ysize]
+            apply Nat.lt_trans h0 (Nat.lt_succ_self _)
+          have h1 : snd.size < w.size  := Nat.lt_of_le_of_lt (Nat.le_add_left _ _) h0
+          have h2 : fst.size < w.size := Nat.lt_of_le_of_lt (Nat.le_add_right _ _) h0
+          let pl := (← length fst) + (← length snd)
           if pl < l then
             l := pl
         pure l
     normCache.set <| cache.insert w res
     return res
+termination_by _ w => w.size
 
 end Wrd
 
@@ -64,4 +90,6 @@ def wordLength(w: Word):IO Nat :=
 
 #eval (Word.wrd ([α, α, β, α!, α,  β!])).splits (α)
 
-#check Array.reverse
+#check Array.size_push
+
+#check Nat.pred
