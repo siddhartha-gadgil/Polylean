@@ -9,9 +9,9 @@ def Letter.int : Letter → Int
   | α! => -1
   | β! => -2 
 
-abbrev Wrd := Array Int
+abbrev Wrd := Array Letter
 
-def Word.wrd (w: Word) : Wrd := w.toArray.map <| fun l => l.int
+def Word.wrd (w: Word) : Wrd := w.toArray -- .map <| fun l => l.int
 
 universe u
 
@@ -24,7 +24,7 @@ instance : Hashable Wrd := ⟨hashfn⟩
 
 initialize normCache : IO.Ref (HashMap Wrd Nat) ← IO.mkRef (HashMap.empty)
 
-def splits(w: Wrd)(l : Int) : IO <| Array (Wrd × Wrd) := do
+def splits(w: Wrd)(l : Letter) : IO <| Array (Wrd × Wrd) := do
   let mut tail := w.eraseIdx 0
   let mut init : Wrd := #[]
   let mut accum : Array (Wrd × Wrd) := #[]
@@ -49,7 +49,7 @@ do
         let ys := w.pop
         let x := w.back
         let mut l := 1 + (← length <| ys)
-        let pairs ←  splits ys (-x)
+        let pairs ←  splits ys (x.inv)
         for (fst, snd) in pairs do
           let pl := (← length <| fst) + (← length <| snd)
           if pl < l then
@@ -63,6 +63,6 @@ end Wrd
 def wordLength(w: Word):IO Nat :=
   Wrd.length <| Word.wrd w
 
-#eval (Word.wrd ([α, α, β, α!, α,  β!])).splits (1)
+#eval (Word.wrd ([α, α, β, α!, α,  β!])).splits (α)
 
 #check Array.reverse

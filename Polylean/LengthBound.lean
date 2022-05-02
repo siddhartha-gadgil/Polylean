@@ -3,7 +3,7 @@ inductive Letter where
   | β : Letter 
   | α! : Letter
   | β! : Letter
-  deriving DecidableEq, Repr, Hashable
+  deriving DecidableEq, Repr, Hashable, Inhabited
 
 def Letter.inv : Letter → Letter
   | α => α!
