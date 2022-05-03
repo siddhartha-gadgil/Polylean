@@ -5,6 +5,14 @@ inductive Letter where
   | β! : Letter
   deriving DecidableEq, Repr, Hashable, Inhabited
 
+def Letter.toString : Letter → String
+| α => "α"
+| β => "β"
+| α! => "α!"
+| β! => "β!"
+
+instance : ToString Letter := ⟨Letter.toString⟩
+
 def Letter.inv : Letter → Letter
   | α => α!
   | β  => β!

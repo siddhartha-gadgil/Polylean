@@ -9,21 +9,28 @@ inductive ProofNode :   Type
 | triang: (w₁ w₂ : Word) → ProofNode 
 | conj : (l: Letter) → (w: Word) → ProofNode 
 | power : (n: Nat) →  (w: Word) → ProofNode 
+deriving Repr, BEq
 
 open ProofNode
-def top: ProofNode → Word
+def ProofNode.top: ProofNode → Word
 | empty => []
 | gen l => [l]
 | triang w₁ w₂ => w₁ ++ w₂
 | conj l w => w ^ l
 | power n w => w ^ n
 
-def base: ProofNode → List Word
+def ProofNode.base: ProofNode → List Word
 | empty => []
 | gen l => []
 | triang w₁ w₂ => [w₁, w₂]
 | conj l w => [w]
 | power n w => [w ^ n]
+
+
+def ProofNode.baseLength: ProofNode → Option Nat
+| empty => some 0
+| gen l => some 1
+| _ => none
 
 
 initialize floatNormCache : 
@@ -63,7 +70,7 @@ def lengthNodes : Word → IO Float := fun w => do
       ) (base, [gen x, triang [x] ys]) 
       floatNormCache.set <| (← floatNormCache.get).insert w res
       for node in nodes do
-        proofCache.set <| (← proofCache.get).insert (top node) node
+        proofCache.set <| (← proofCache.get).insert (node.top) node
       return res
 termination_by _ l => l.length
 
@@ -71,8 +78,18 @@ partial def resolveProof(w: Word) : IO ((List ProofNode) × (List Word)) := do
   let cache ← proofCache.get
   match cache.find? w with
   | none => return ([], [w])
-  | some node => do
-    let ws := base node
+  | some node => 
+    let ws := node.base
     let offspring ←  ws.mapM resolveProof
     return offspring.foldl (fun (ns, ws) (ns', ws') => (ns ++ ns', ws ++ ws') ) ([node], [])
 
+partial def derivedLength!(w: Word) : IO Float := do
+  let cache ← proofCache.get
+  match cache.find? w with
+  | none => panic! s!"no cached node for {w}"
+  | some node => 
+    match node.baseLength with
+    | some n => pure n.toFloat
+    | none => 
+      let offspring ←  node.base.mapM (derivedLength!)
+      return offspring.foldl (fun l₁ l₂ => l₁ + l₂) 0

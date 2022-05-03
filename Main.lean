@@ -20,4 +20,5 @@ def main(args: List String) : IO Unit := do
   IO.println s!"Length of [α, α, β, α!, β!]^{n}, {l} (= {l'})"
   IO.println s!"Nodes generated: {(← proofCache.get).size}"
   let (ns, ws) ← resolveProof w
-  IO.println s!"Resolved proof; nodes :{ns.length}, base : {ws.length}"
+  IO.println s!"Resolved proof; nodes: {ns.eraseDups.length}, base: {ws.length}"
+  IO.println s!"derived length: {(← derivedLength! w)}"
