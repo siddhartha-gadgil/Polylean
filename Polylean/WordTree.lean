@@ -78,17 +78,30 @@ def simpleTree(w: Word) : ProofTree w :=
 
 instance {w: Word} : Inhabited (ProofTree w) :=⟨simpleTree w⟩
 
-partial def proofTree : (w: Word) → ProofTree w := fun w =>
-  match w with
+def proofTree : (w: Word) → ProofTree w := fun w =>
+  match h:w with
   | [] => ProofTree.emptyWord
   | x :: ys =>
     let head := ProofTree.prepend x (proofTree ys)
     let splits := provedSplits x⁻¹  ys
+    have wl:  w.length = ys.length + 1 := by
+      rw[h] 
+      rfl
     let tail := splits.map (fun ps => 
+      have l1 : ps.fst.length + 1 ≤ ys.length + 1 := 
+        by
+        have lm := splitFirst ps
+        apply Nat.le_trans lm
+        apply Nat.le_succ        
+      have l2 : ps.snd.length + 1 ≤ ys.length + 1 :=
+        by
+        have lm := splitSecond ps
+        apply Nat.le_trans lm
+        apply Nat.le_succ
       ProofTree.headMatches x ys ps.fst ps.snd ps.proof 
         (proofTree ps.fst) (proofTree ps.snd))
     ProofTree.min head tail
-
+termination_by  _ w => w.length
 
 open Letter
 
