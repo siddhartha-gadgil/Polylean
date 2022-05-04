@@ -22,3 +22,18 @@ def main(args: List String) : IO Unit := do
   let (ns, ws) ← resolveProof w
   IO.println s!"Resolved proof; nodes: {ns.eraseDups.length}, base: {ws.length}"
   IO.println s!"derived length: {(← derivedLength! w)}"
+  for k in [1, 2, 6] do
+    let w := [α, β, α!, β!]^k ++ [α]
+    IO.println s!"computing length via powers of {w}"
+    for n in [1:21] do
+      let l ← powerLength w n
+      IO.println s!"length of {w} from power {n}: {l}"
+  let w := [α, β, α!, β!] 
+  IO.println s!"computing length via powers of the commutator {w}" 
+  for n in [1:21] do
+    let l ← powerLength w n
+    IO.println s!"length of {w} from power {n}: {l}"
+  let l ← lengthNodes w
+  IO.println s!"length of {w}: {l}"
+  IO.println s!"derived length: {(← derivedLength! w)}"
+

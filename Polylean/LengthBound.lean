@@ -8,8 +8,8 @@ inductive Letter where
 def Letter.toString : Letter → String
 | α => "α"
 | β => "β"
-| α! => "α!"
-| β! => "β!"
+| α! => "̅α"
+| β! => "̅β"
 
 instance : ToString Letter := ⟨Letter.toString⟩
 
@@ -24,6 +24,10 @@ postfix:max "⁻¹" => Letter.inv
 open Letter
 
 abbrev Word := List Letter
+
+def Word.toString(w: Word) := w.foldl (fun x y => s!"{x}{y}") ""
+
+instance : ToString Word := ⟨Word.toString⟩
 
 def Word.pow : Word → Nat → Word 
   | w, 0 => []
@@ -64,3 +68,4 @@ def Word.conj: Word → Letter → Word := fun w l => [l] ++ w ++ [l⁻¹]
 instance: Pow Word Letter where
   pow w l := w.conj l
 
+#eval (α!).toString

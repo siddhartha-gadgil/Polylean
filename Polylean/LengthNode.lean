@@ -74,6 +74,26 @@ def lengthNodes : Word → IO Float := fun w => do
       return res
 termination_by _ l => l.length
 
+def powerLength : Word → Nat → IO Float 
+| w, n => do
+  let pl ← lengthNodes (w ^ n)
+  let res := pl / n.toFloat
+  match ← cacheLength? w with
+  | none => 
+    floatNormCache.set <| (← floatNormCache.get).insert w res
+    if n >1 then 
+      proofCache.set <| (← proofCache.get).insert w (power n w)
+    return res
+  | some l₀ => 
+    if res < l₀ then 
+      IO.println s!"updated cache for {w}"
+      floatNormCache.set <| (← floatNormCache.get).insert w res
+      if n >1 then 
+        proofCache.set <| (← proofCache.get).insert w (power n w)
+      return res
+    else 
+      return l₀
+
 partial def resolveProof(w: Word) : IO ((List ProofNode) × (List Word)) := do 
   let cache ← proofCache.get
   match cache.find? w with
@@ -88,8 +108,9 @@ partial def derivedLength!(w: Word) : IO Float := do
   match cache.find? w with
   | none => panic! s!"no cached node for {w}"
   | some node => 
-    match node.baseLength with
-    | some n => pure n.toFloat
-    | none => 
-      let offspring ←  node.base.mapM (derivedLength!)
-      return offspring.foldl (fun l₁ l₂ => l₁ + l₂) 0
+    match node with
+    | empty => return 0.0
+    | gen l => return 1.0
+    | triang w₁ w₂ => return (← derivedLength! w₁) + (← derivedLength! w₂)
+    | conj l w => derivedLength! w
+    | power n w => return (← derivedLength! (w^n)) / n.toFloat
