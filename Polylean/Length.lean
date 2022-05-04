@@ -9,12 +9,25 @@ def Letter.int : Letter → Int
   | α! => -1
   | β! => -2 
 
+open Letter
+
+instance : Pow Word Nat where
+  pow w n := w.pow n
+
 abbrev Wrd := Array Letter
 
 def Word.wrd (w: Word) : Wrd := w.toArray -- .map <| fun l => l.int
 
-universe u
+def Wrd.toString(w: Wrd) := w.foldl (fun x y => s!"{x}{y}") ""
 
+instance : ToString Wrd := ⟨Wrd.toString⟩
+
+def Wrd.pow : Wrd → Nat → Wrd 
+  | w, 0 => #[]
+  | w, Nat.succ m => w ++ (pow w m)
+
+instance : Pow Wrd Nat where
+  pow w n := w.pow n
 namespace Wrd
 
 def hashfn (w: Wrd) : UInt64 := 
@@ -84,6 +97,11 @@ end Wrd
 
 def wordLength(w: Word):IO Nat :=
   Wrd.length <| Word.wrd w
+
+def Wrd.conj: Wrd → Letter → Wrd := fun w l => #[l] ++ w ++ #[l⁻¹]
+
+instance: Pow Wrd Letter where
+  pow w l := w.conj l
 
 #eval (Word.wrd ([α, α, β, α!, α,  β!])).splits (α)
 
