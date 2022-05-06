@@ -101,10 +101,37 @@ theorem coeffComplement (x₀ : X)(s : FormalSum X) :
               intro pos
               cases c:x == x₀ with
               | true => 
+                let k := FormalSum.coeff x₀ tail
+                have lem : a + k = 
+                      FormalSum.coeff x₀ ((a, x) :: tail) := 
+                        by 
+                          rw [FormalSum.coeff, monoCoeff]
+                          rw [c]
+                have c'' : x = x₀ := 
+                        of_decide_eq_true c
+                rw [c'']
+                rw [c''] at lem
+                cases c':k with
+                | zero => 
+                  have lIneq : tail.length < List.length ((a, x) :: tail) := 
+                    by 
+                      have d : List.length ((a, x) :: tail) = 
+                        tail.length + 1 := by rfl 
+                      rw [d]
+                      apply Nat.le_refl
+                  rw [c'] at lem
+                  rw [Nat.add_zero] at lem
+                  rw [← lem]   
+                  exact ⟨tail, rfl, lIneq⟩
+                | succ k' => 
+                  have pos : 0  < k := by 
+                    rw [c']
+                    apply Nat.zero_lt_succ
+                  let ⟨ys', eqnStep, lIneqStep⟩ := hyp pos
                   admit
               | false =>
                 let k := FormalSum.coeff x₀ tail
-                have lem : FormalSum.coeff x₀ tail = 
+                have lem : k = 
                       FormalSum.coeff x₀ ((a, x) :: tail) := 
                         by 
                           rw [FormalSum.coeff, monoCoeff]
@@ -135,3 +162,5 @@ theorem coeffComplement (x₀ : X)(s : FormalSum X) :
                     exact Eq.trans eqn₁ eqn₂
                 exact ⟨ys, eqn, lIneq⟩
 termination_by _ s => s.length
+
+#check Bool.beq_to_eq
