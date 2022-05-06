@@ -14,6 +14,9 @@ inductive basicRel : FormalSum X  → FormalSum X   →  Prop where
         basicRel  ((a, x) :: (b, x) :: tail) ((a + b, x) :: tail)
 | cons (a: Nat)(x: X)(s₁ s₂ : FormalSum X):
         basicRel  s₁ s₂ → basicRel ((a, x) :: s₁) ((a, x) ::  s₂)
+| swap (a₁ a₂: Nat)(x₁ x₂: X)(tail : FormalSum X):
+        basicRel  ((a₁, x₁) :: (a₂, x₂) :: tail) 
+                    ((a₂, x₂) :: (a₁, x₁) :: tail)
 
 def NatSpan := Quot (@basicRel X)
 
@@ -45,6 +48,8 @@ theorem coeff_well_defined (x₀ : X)(s₁ s₂: FormalSum X)(h: basicRel X s₁
             simp [coeffSum, monoCoeffZero, ← Nat.add_assoc, monoCoeffHom]
           | cons a x s₁ s₂ r step => 
             simp [coeffSum, step]
+          | swap a₁ a₂ x₁ x₂ tail => 
+            simp [coeffSum, ← Nat.add_assoc, Nat.add_comm]
 
 def NatSpan.coeff (x₀ : X) : NatSpan X → Nat := 
       Quot.lift (coeffSum X x₀) (coeff_well_defined X x₀)
