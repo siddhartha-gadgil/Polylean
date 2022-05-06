@@ -5,8 +5,6 @@ a free "Nat-module" with basis X.
 
 abbrev X := Nat × Nat × Nat
 
-example : ((1, 2, 3) : X) = ((1, 2, 3) : X) := by decide
-
 abbrev FormalSum : Type := List (Nat × X)
 
 inductive basicRel : FormalSum   → FormalSum   →  Prop where
@@ -37,15 +35,18 @@ def coeffSum(x₀ : X) : FormalSum → Nat
 | [] => 0
 | h :: l => (monoCoeff x₀ h) + (coeffSum x₀ l)
 
+open basicRel in
 theorem coeff_well_defined (x₀ : X)(s₁ s₂: FormalSum)(h: basicRel s₁ s₂):
-        coeffSum x₀  s₁ = coeffSum x₀ s₂ := 
-      match s₁, s₂, h with
-      | (a, x) :: tail, .(tail), basicRel.zeroCoeff  .(tail) .(x) .(a) hyp => by
-        simp [coeffSum, hyp, monoCoeffZero]
-      | (a, x) :: (b, .(x)) :: tail, _, basicRel.addCoeffs .(a) .(b) .(x) .(tail) => by
-          simp [coeffSum, ← Nat.add_assoc, monoCoeffHom] 
-      | (a, x) :: s₁, (_, _) :: s₂  , basicRel.cons .(a) .(x) .(s₁) .(s₂) r => by
-        let step := coeff_well_defined x₀ s₁ s₂ r 
-        simp [coeffSum, step]
+        coeffSum x₀  s₁ = coeffSum x₀ s₂ := by
+          induction h with
+          | zeroCoeff tail x a hyp => simp [coeffSum, hyp, monoCoeffZero]
+          | addCoeffs a b x tail => 
+            simp [coeffSum, monoCoeffZero]
+            simp [coeffSum, ← Nat.add_assoc, monoCoeffHom]
+          | cons a x s₁ s₂ r => 
+            let step := coeff_well_defined x₀ s₁ s₂ r 
+            simp [coeffSum, step]
 
+def NatSpan.coeff (x₀ : X) : NatSpan → Nat := 
+      Quot.lift (coeffSum x₀) (coeff_well_defined x₀)
 
