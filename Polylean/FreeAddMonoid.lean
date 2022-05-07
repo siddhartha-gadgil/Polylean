@@ -50,32 +50,32 @@ theorem consEquiv{X: Type}[DecidableEq X] (s₁ s₂ : FormalSum X) (a: Nat) (x:
 
              
 
-def monoCoeff {X: Type}[DecidableEq X](x₀ : X) (nx : Nat × X) : Nat := 
+def monomCoeff {X: Type}[DecidableEq X](x₀ : X) (nx : Nat × X) : Nat := 
   match  (nx.2 == x₀) with 
   | true => nx.1
   | false => 0
 
-theorem monoCoeffHom (x₀ x : X)(a b : Nat) :
-    monoCoeff x₀ (a + b, x) = monoCoeff x₀ (a, x) + monoCoeff x₀ (b, x) := by
-    repeat (rw [monoCoeff])
+theorem monomCoeffHom (x₀ x : X)(a b : Nat) :
+    monomCoeff x₀ (a + b, x) = monomCoeff x₀ (a, x) + monomCoeff x₀ (b, x) := by
+    repeat (rw [monomCoeff])
     cases x==x₀ <;> rfl
 
-theorem monoCoeffZero (x₀ x : X) : monoCoeff x₀ (0, x) = 0 :=
+theorem monomCoeffZero (x₀ x : X) : monomCoeff x₀ (0, x) = 0 :=
     by 
-      rw [monoCoeff]
+      rw [monomCoeff]
       cases x==x₀ <;> rfl
 
 def FormalSum.coeff{X: Type}[DecidableEq X](x₀ : X) : FormalSum X → Nat
 | [] => 0
-| h :: l => (monoCoeff x₀ h) + (coeff x₀ l)
+| h :: l => (monomCoeff x₀ h) + (coeff x₀ l)
 
 open basicRel in
 theorem coeff_well_defined (x₀ : X)(s₁ s₂: FormalSum X)(h: basicRel X s₁ s₂):
         FormalSum.coeff  x₀  s₁ = FormalSum.coeff  x₀ s₂ := by
           induction h with
-          | zeroCoeff tail x a hyp => simp [FormalSum.coeff, hyp, monoCoeffZero]
+          | zeroCoeff tail x a hyp => simp [FormalSum.coeff, hyp, monomCoeffZero]
           | addCoeffs a b x tail => 
-            simp [FormalSum.coeff, monoCoeffZero, ← Nat.add_assoc, monoCoeffHom]
+            simp [FormalSum.coeff, monomCoeffZero, ← Nat.add_assoc, monomCoeffHom]
           | cons a x s₁ s₂ r step => 
             simp [FormalSum.coeff, step]
           | swap a₁ a₂ x₁ x₂ tail => 
@@ -101,7 +101,7 @@ theorem coeffComplement (x₀ : X)(s : FormalSum X) :
                 let k := FormalSum.coeff x₀ tail
                 have lem : a + k = 
                       FormalSum.coeff x₀ ((a, x) :: tail) := 
-                        by rw [FormalSum.coeff, monoCoeff, c]
+                        by rw [FormalSum.coeff, monomCoeff, c]
                 have c'' : x = x₀ := 
                         of_decide_eq_true c
                 rw [c'']
@@ -143,7 +143,7 @@ theorem coeffComplement (x₀ : X)(s : FormalSum X) :
                 have lem : k = 
                       FormalSum.coeff x₀ ((a, x) :: tail) := 
                         by 
-                          simp [FormalSum.coeff, monoCoeff, c, Nat.zero_add]
+                          simp [FormalSum.coeff, monomCoeff, c, Nat.zero_add]
                 rw [← lem] at pos          
                 let ⟨ys', eqnStep, lIneqStep⟩ := hyp pos   
                 rw [← lem]
@@ -166,3 +166,34 @@ theorem coeffComplement (x₀ : X)(s : FormalSum X) :
                     exact Eq.trans eqn₁ eqn₂
                 exact ⟨ys, eqn, lIneq⟩
 termination_by _ s => s.length
+
+theorem zeroCoeffs{X: Type}[DecidableEq X](s: FormalSum X)
+               (hyp :∀ x: X, s.coeff x = 0) : s ≅ [] := 
+               match s with 
+               | [] => rfl
+               | h :: t => by
+                let (a₀, x₀) := h
+                let hyp₀ := hyp x₀
+                rw [FormalSum.coeff] at hyp₀
+                have c₀ : monomCoeff x₀ (a₀, x₀) = a₀ := by
+                    simp [monomCoeff]                     
+                rw [c₀] at hyp₀
+                have hyp₁ : a₀ + FormalSum.coeff x₀ t  
+                    - (FormalSum.coeff x₀ t ) = 0 - FormalSum.coeff x₀ t  :=
+                      congrArg (fun m => m - FormalSum.coeff x₀ t ) hyp₀
+                simp [Nat.add_sub_cancel] at hyp₁
+                rw [hyp₁]
+                let tailCoeffs : (x: X) → FormalSum.coeff x t = 0 :=
+                      by
+                        intro x
+                        let hx := hyp x
+                        rw [FormalSum.coeff, Nat.add_comm] at hx
+                        let hx' :=
+                          congrArg (fun m => m - (monomCoeff x (a₀, x₀)) ) hx
+                        simp [Nat.add_sub_cancel] at hx'
+                        exact hx'
+                let step := zeroCoeffs t tailCoeffs
+                let l₀ : (0, x₀) :: t ≅ t := 
+                   Quot.sound <| basicRel.zeroCoeff  t x₀ 0 rfl
+                exact Eq.trans l₀ step
+
