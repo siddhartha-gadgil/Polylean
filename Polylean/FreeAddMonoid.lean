@@ -311,3 +311,44 @@ theorem equalCoeffs{X: Type}[DecidableEq X](s₁ s₂: FormalSum X)
                       simp [← ceq, hyp]
                     Eq.trans eq₁ eq₂
 termination_by _ X s _ _  => s.length
+
+def posOnSupport(s : FormalSum X)(cf : X → Nat) : Bool := 
+        s.any <| fun (_, x) => 0 < cf (x)
+
+def FormalSum.inSupport{X: Type}[DecidableEq X](s: FormalSum X) : List X :=
+        s.map <| fun (_, x) => x
+
+theorem coeff_support{X: Type}[DecidableEq X](s: FormalSum X) :
+        ∀ x: X, s.coeff x > 0 → s.inSupport.elem x := 
+          match s with 
+          | [] => fun x hyp => 
+            by
+              have d : FormalSum.coeff x [] = 0 := by rfl
+              rw [d] at hyp
+              contradiction
+          | h :: t => 
+            by
+            intro x hyp
+            let (a₀, x₀) := h
+            have d : FormalSum.inSupport ((a₀, x₀) :: t) =  
+              x₀ :: (FormalSum.inSupport t) := by rfl
+            rw [d]
+            match p:x₀ == x with
+            | true => 
+                have eqn : x₀ = x := of_decide_eq_true p
+                rw [eqn]
+                simp [List.elem]
+            | false => 
+                rw [FormalSum.coeff, monomCoeff, p, Nat.zero_add] at hyp
+                let step := coeff_support t x hyp
+                simp [List.elem]
+                have p' : (x == x₀) = false := 
+                      by
+                        have eqn := of_decide_eq_false p 
+                        have eqn' : ¬ (x = x₀) := by
+                            intro contra
+                            let contra' := Eq.symm contra
+                            contradiction
+                        exact decide_eq_false eqn'                        
+                rw [p']
+                exact step
