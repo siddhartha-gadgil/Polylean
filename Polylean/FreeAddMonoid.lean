@@ -316,7 +316,7 @@ def FormalSum.support{X: Type}[DecidableEq X](s: FormalSum X) : List X :=
         s.map <| fun (_, x) => x
 
 theorem coeff_support{X: Type}[DecidableEq X](s: FormalSum X) :
-        ∀ x: X, s.coeff x > 0 → s.support.elem x := 
+        ∀ x: X, 0 < s.coeff x  → x ∈ s.support  := 
           match s with 
           | [] => fun x hyp => 
             by
@@ -334,10 +334,12 @@ theorem coeff_support{X: Type}[DecidableEq X](s: FormalSum X) :
             | true => 
                 have eqn : x₀ = x := of_decide_eq_true p
                 rw [eqn]
+                apply List.mem_of_elem_eq_true
                 simp [List.elem]
             | false => 
                 rw [FormalSum.coeff, monomCoeff, p, Nat.zero_add] at hyp
                 let step := coeff_support t x hyp
+                apply List.mem_of_elem_eq_true
                 simp [List.elem]
                 have p' : (x == x₀) = false := 
                       by
@@ -346,8 +348,9 @@ theorem coeff_support{X: Type}[DecidableEq X](s: FormalSum X) :
                             intro contra
                             let contra' := Eq.symm contra
                             contradiction
-                        exact decide_eq_false eqn'                        
+                        exact decide_eq_false eqn'                                      
                 rw [p']
+                apply List.elem_eq_true_of_mem
                 exact step
 
 def List.eqlFns (l: List X)(f g : X → Nat) : Bool := 
@@ -390,7 +393,7 @@ def FormalSum.decideEquiv
               intro x
               match e₁:s₁.support.elem x with
               | true =>
-                
+
                 sorry
               | false => 
                 match e₂:s₂.support.elem x with 
