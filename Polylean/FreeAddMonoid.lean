@@ -70,7 +70,7 @@ def FormalSum.coeff{X: Type}[DecidableEq X](x₀ : X) : FormalSum X → Nat
 | h :: l => (monomCoeff x₀ h) + (coeff x₀ l)
 
 open basicRel in
-theorem coeff_well_defined (x₀ : X)(s₁ s₂: FormalSum X)(h: basicRel X s₁ s₂):
+theorem coeff_move_invariant (x₀ : X)(s₁ s₂: FormalSum X)(h: basicRel X s₁ s₂):
         FormalSum.coeff  x₀  s₁ = FormalSum.coeff  x₀ s₂ := by
           induction h with
           | zeroCoeff tail x a hyp => simp [FormalSum.coeff, hyp, monomCoeffZero]
@@ -82,9 +82,31 @@ theorem coeff_well_defined (x₀ : X)(s₁ s₂: FormalSum X)(h: basicRel X s₁
             simp [FormalSum.coeff, ← Nat.add_assoc, Nat.add_comm]
 
 def NatSpan.coeff (x₀ : X) : NatSpan X → Nat := 
-      Quot.lift (FormalSum.coeff  x₀) (coeff_well_defined X x₀)
+      Quot.lift (FormalSum.coeff  x₀) (coeff_move_invariant X x₀)
 
-theorem coeffComplement (x₀ : X)(s : FormalSum X) :
+theorem coeff_factors (x: X)(s: FormalSum X):
+      NatSpan.coeff X x (FormalSum.sum s) = FormalSum.coeff x s := by
+      simp [NatSpan.coeff]
+      apply Quot.liftBeta
+      apply coeff_move_invariant
+
+theorem coeff_well_defined (x: X)(s₁ s₂: FormalSum X):
+      s₁ ≅ s₂ → (FormalSum.coeff x s₁) = (FormalSum.coeff x s₂) := by
+        intro hyp
+        simp [← coeff_factors, NatSpan.coeff]
+        rw [hyp]
+        
+
+theorem tail_coeffs (x₀ x : X)(a: Nat) (s: FormalSum X):
+      s.coeff x₀ = 
+        (FormalSum.coeff x₀ ((a, x) :: s)) - monomCoeff x₀ (a, x) := 
+        by
+          simp [FormalSum.coeff]
+          rw [Nat.add_comm]
+          simp [Nat.add_sub_cancel]
+          
+
+def coeffComplement (x₀ : X)(s : FormalSum X) :
         0 < s.coeff x₀  → 
           (∃ ys: FormalSum X, 
             (((s.coeff x₀, x₀) :: ys) ≅ s) ∧ 
@@ -197,3 +219,95 @@ theorem zeroCoeffs{X: Type}[DecidableEq X](s: FormalSum X)
                    Quot.sound <| basicRel.zeroCoeff  t x₀ 0 rfl
                 exact Eq.trans l₀ step
 
+theorem equalCoeffs{X: Type}[DecidableEq X](s₁ s₂: FormalSum X)
+               (hyp :∀ x: X, s₁.coeff x = s₂.coeff x) : s₁ ≅ s₂ := 
+               match mt:s₁ with 
+               | [] => 
+                have coeffs : ∀ x: X, s₂.coeff x = 0 := by
+                  intro x
+                  let h := hyp x
+                  rw [← h]
+                  rfl
+                let zl := zeroCoeffs s₂ coeffs
+                Eq.symm zl
+               | h :: t => 
+                  let (a₀, x₀):= h
+                  if p: 0  < a₀ then 
+                    let a₁ := FormalSum.coeff x₀ t
+                    if p₁: 0 < a₁ then
+                      by
+                        let ⟨ys, eqn, ineqn⟩ := coeffComplement X x₀ t p₁
+                        let s₃ := (a₀ + a₁, x₀) :: ys
+                        have eq₁ : (a₀, x₀) :: (a₁ , x₀) :: ys ≅ s₃ := by 
+                          apply Quot.sound
+                          let lem := basicRel.addCoeffs a₀ a₁ x₀ ys
+                          exact lem
+                        have eq₂ : (a₀, x₀) :: (a₁ , x₀) :: ys ≅ 
+                            (a₀, x₀) :: t := by 
+                              apply consEquiv
+                              assumption
+                        have eq₃ : s₃ ≅ s₂ := by 
+                          have bd : ys.length + 1 < t.length + 1 := 
+                            by
+                              apply Nat.succ_lt_succ
+                              exact ineqn
+                          apply equalCoeffs
+                          intro x
+                          rw [← hyp x]
+                          simp [FormalSum.coeff]
+                          let d := coeff_well_defined X x _ _ eqn
+                          rw [FormalSum.coeff] at d
+                          rw [← d]
+                          simp [monomCoeffHom]
+                          simp [FormalSum.coeff, 
+                            Nat.add_assoc]
+                        apply Eq.trans (Eq.trans (Eq.symm eq₂) eq₁) eq₃ 
+                    else
+                      let p' : a₁ = 0 := by
+                      cases Nat.eq_zero_or_pos a₁ with
+                      | inl h => exact h
+                      | inr h => contradiction
+                      by
+                        have cf₂ : s₂.coeff x₀ = a₀ := by
+                          rw [← hyp]
+                          simp [FormalSum.coeff]
+                          have lem : FormalSum.coeff x₀ t = 0 := p'
+                          simp [lem, Nat.add_zero]
+                          simp [monomCoeff]
+                        let ⟨ys, eqn, ineqn⟩ := 
+                          coeffComplement X x₀ s₂ (by 
+                            rw [cf₂]
+                            assumption)
+                        let cfs := fun x => 
+                          coeff_well_defined X x _ _ eqn
+                        rw [cf₂] at cfs
+                        let cfs' := fun (x: X) =>
+                          Eq.trans (hyp x) (Eq.symm (cfs x))
+                        simp [FormalSum.coeff] at cfs'
+                        let cs'' : ∀ x: X,
+                            FormalSum.coeff x t = ys.coeff x := by
+                              intro x
+                              let c := cfs' x
+                              exact Nat.add_left_cancel c 
+                        let step := 
+                          equalCoeffs t ys cs''
+                        let step' := consEquiv t ys a₀ x₀ step 
+                        rw [cf₂] at eqn
+                        exact Eq.trans step' eqn  
+                  else 
+                    let p' : a₀ = 0 := by
+                      cases Nat.eq_zero_or_pos a₀ with
+                      | inl h => exact h
+                      | inr h => contradiction                     
+                    have eq₁ : (a₀, x₀) :: t ≅ t := by 
+                        apply Quot.sound
+                        rw [p']
+                        apply basicRel.zeroCoeff
+                        rfl
+                    have eq₂ : t ≅ s₂ := by 
+                      apply equalCoeffs t s₂
+                      intro x
+                      let ceq := coeff_well_defined X x ((a₀, x₀) :: t) t eq₁
+                      simp [← ceq, hyp]
+                    Eq.trans eq₁ eq₂
+termination_by _ X s _ _  => s.length
