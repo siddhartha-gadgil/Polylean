@@ -312,14 +312,11 @@ theorem equalCoeffs{X: Type}[DecidableEq X](s₁ s₂: FormalSum X)
                     Eq.trans eq₁ eq₂
 termination_by _ X s _ _  => s.length
 
-def posOnSupport(s : FormalSum X)(cf : X → Nat) : Bool := 
-        s.any <| fun (_, x) => 0 < cf (x)
-
-def FormalSum.inSupport{X: Type}[DecidableEq X](s: FormalSum X) : List X :=
+def FormalSum.support{X: Type}[DecidableEq X](s: FormalSum X) : List X :=
         s.map <| fun (_, x) => x
 
 theorem coeff_support{X: Type}[DecidableEq X](s: FormalSum X) :
-        ∀ x: X, s.coeff x > 0 → s.inSupport.elem x := 
+        ∀ x: X, s.coeff x > 0 → s.support.elem x := 
           match s with 
           | [] => fun x hyp => 
             by
@@ -330,8 +327,8 @@ theorem coeff_support{X: Type}[DecidableEq X](s: FormalSum X) :
             by
             intro x hyp
             let (a₀, x₀) := h
-            have d : FormalSum.inSupport ((a₀, x₀) :: t) =  
-              x₀ :: (FormalSum.inSupport t) := by rfl
+            have d : FormalSum.support ((a₀, x₀) :: t) =  
+              x₀ :: (FormalSum.support t) := by rfl
             rw [d]
             match p:x₀ == x with
             | true => 
@@ -352,3 +349,61 @@ theorem coeff_support{X: Type}[DecidableEq X](s: FormalSum X) :
                         exact decide_eq_false eqn'                        
                 rw [p']
                 exact step
+
+def List.eqlFns (l: List X)(f g : X → Nat) : Bool := 
+  match l with
+  | [] => true
+  | h :: t =>
+    (f h == g h) && t.eqlFns f g
+
+theorem List.eqlFns_elem(l: List X)(f g : X → Nat) :
+      l.eqlFns X f g  = true → (x: X) → l.elem x → f x = g x:= by
+      induction l with
+      | nil => 
+        intro h x hyp          
+        rw [List.elem] at hyp 
+        contradiction
+      | cons h t step => 
+        intro eqlhyp x
+        simp [eqlFns] at eqlhyp
+        intro elemhyp
+        match c:x == h with
+        | true =>
+          have es : x = h := of_decide_eq_true c
+          rw [es]
+          exact (eqlhyp).left
+        | false =>
+          let ss := step eqlhyp.right x
+          rw [List.elem, c] at elemhyp
+          exact ss elemhyp
+
+def FormalSum.decideEquiv
+      (s₁ s₂ : FormalSum X) : Decidable (s₁ ≅ s₂) :=   
+        let c₁ := fun x => FormalSum.coeff x s₁
+        let c₂ := fun x => FormalSum.coeff x s₂
+        let p₁ := s₁.support.all <| fun x =>  c₁ x =  c₂ x
+        let p₂ := s₂.support.eqlFns X c₁ c₂
+        match ch₁:p₁ with
+        | true =>
+          Decidable.isTrue (by
+              apply equalCoeffs
+              intro x
+              match e₁:s₁.support.elem x with
+              | true =>
+                
+                sorry
+              | false => 
+                match e₂:s₂.support.elem x with 
+                | true => sorry
+                | false => sorry) 
+        | false => 
+          Decidable.isFalse (
+            by
+              intro hyp
+              have ceqn : c₁ = c₂ := by
+                apply funext
+                intro x
+                apply coeff_well_defined 
+                assumption
+              sorry
+          )
