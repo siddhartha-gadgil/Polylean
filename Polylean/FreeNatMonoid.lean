@@ -54,19 +54,17 @@ theorem consEquiv{X: Type}[DecidableEq X] (s₁ s₂ : FormalSum X) (a: Nat) (x:
         rw [← factorizes]
         rw [h]
 
-             
-
 def monomCoeff {X: Type}[DecidableEq X](x₀ : X) (nx : Nat × X) : Nat := 
   match  (nx.2 == x₀) with 
   | true => nx.1
   | false => 0
 
-theorem monomCoeffHom (x₀ x : X)(a b : Nat) :
+theorem monom_coeff_hom (x₀ x : X)(a b : Nat) :
     monomCoeff x₀ (a + b, x) = monomCoeff x₀ (a, x) + monomCoeff x₀ (b, x) := by
     repeat (rw [monomCoeff])
     cases x==x₀ <;> rfl
 
-theorem monomCoeffZero (x₀ x : X) : monomCoeff x₀ (0, x) = 0 :=
+theorem monom_coeff_at_zero (x₀ x : X) : monomCoeff x₀ (0, x) = 0 :=
     by 
       rw [monomCoeff]
       cases x==x₀ <;> rfl
@@ -79,9 +77,9 @@ open basicRel in
 theorem coeff_move_invariant (x₀ : X)(s₁ s₂: FormalSum X)(h: basicRel X s₁ s₂):
         coeff  x₀  s₁ = coeff  x₀ s₂ := by
           induction h with
-          | zeroCoeff tail x a hyp => simp [coeff, hyp, monomCoeffZero]
+          | zeroCoeff tail x a hyp => simp [coeff, hyp, monom_coeff_at_zero]
           | addCoeffs a b x tail => 
-            simp [coeff, monomCoeffZero, ← Nat.add_assoc, monomCoeffHom]
+            simp [coeff, monom_coeff_at_zero, ← Nat.add_assoc, monom_coeff_hom]
           | cons a x s₁ s₂ r step => 
             simp [coeff, step]
           | swap a₁ a₂ x₁ x₂ tail => 
@@ -102,7 +100,6 @@ theorem coeff_well_defined (x: X)(s₁ s₂: FormalSum X):
         simp [← coeff_factors, NatSpan.coeff]
         rw [hyp]
         
-
 theorem tail_coeffs (x₀ x : X)(a: Nat) (s: FormalSum X):
       s.coeff x₀ = 
         (coeff x₀ ((a, x) :: s)) - monomCoeff x₀ (a, x) := 
@@ -111,8 +108,7 @@ theorem tail_coeffs (x₀ x : X)(a: Nat) (s: FormalSum X):
           rw [Nat.add_comm]
           simp [Nat.add_sub_cancel]
           
-
-def coeffComplement (x₀ : X)(s : FormalSum X) :
+theorem pos_coeff_has_complement (x₀ : X)(s : FormalSum X) :
         0 < s.coeff x₀  → 
           (∃ ys: FormalSum X, 
             (((s.coeff x₀, x₀) :: ys) ≅ s) ∧ 
@@ -195,7 +191,7 @@ def coeffComplement (x₀ : X)(s : FormalSum X) :
                 exact ⟨ys, eqn, lIneq⟩
 termination_by _ s => s.length
 
-theorem zeroCoeffs{X: Type}[DecidableEq X](s: FormalSum X)
+theorem equiv_e_of_zero_coeffs{X: Type}[DecidableEq X](s: FormalSum X)
                (hyp :∀ x: X, s.coeff x = 0) : s ≅ [] := 
                match s with 
                | [] => rfl
@@ -220,12 +216,12 @@ theorem zeroCoeffs{X: Type}[DecidableEq X](s: FormalSum X)
                           congrArg (fun m => m - (monomCoeff x (a₀, x₀)) ) hx
                         simp [Nat.add_sub_cancel] at hx'
                         exact hx'
-                let step := zeroCoeffs t tailCoeffs
+                let step := equiv_e_of_zero_coeffs t tailCoeffs
                 let l₀ : (0, x₀) :: t ≅ t := 
                    Quot.sound <| basicRel.zeroCoeff  t x₀ 0 rfl
                 exact Eq.trans l₀ step
 
-theorem equalCoeffs{X: Type}[DecidableEq X](s₁ s₂: FormalSum X)
+theorem equiv_of_equal_coeffs{X: Type}[DecidableEq X](s₁ s₂: FormalSum X)
                (hyp :∀ x: X, s₁.coeff x = s₂.coeff x) : s₁ ≅ s₂ := 
                match mt:s₁ with 
                | [] => 
@@ -234,7 +230,7 @@ theorem equalCoeffs{X: Type}[DecidableEq X](s₁ s₂: FormalSum X)
                   let h := hyp x
                   rw [← h]
                   rfl
-                let zl := zeroCoeffs s₂ coeffs
+                let zl := equiv_e_of_zero_coeffs s₂ coeffs
                 Eq.symm zl
                | h :: t => 
                   let (a₀, x₀):= h
@@ -242,7 +238,7 @@ theorem equalCoeffs{X: Type}[DecidableEq X](s₁ s₂: FormalSum X)
                     let a₁ := coeff x₀ t
                     if p₁: 0 < a₁ then
                       by
-                        let ⟨ys, eqn, ineqn⟩ := coeffComplement X x₀ t p₁
+                        let ⟨ys, eqn, ineqn⟩ := pos_coeff_has_complement X x₀ t p₁
                         let s₃ := (a₀ + a₁, x₀) :: ys
                         have eq₁ : (a₀, x₀) :: (a₁ , x₀) :: ys ≅ s₃ := by 
                           apply Quot.sound
@@ -257,16 +253,14 @@ theorem equalCoeffs{X: Type}[DecidableEq X](s₁ s₂: FormalSum X)
                             by
                               apply Nat.succ_lt_succ
                               exact ineqn
-                          apply equalCoeffs
+                          apply equiv_of_equal_coeffs
                           intro x
                           rw [← hyp x]
                           simp [coeff]
                           let d := coeff_well_defined X x _ _ eqn
                           rw [coeff] at d
                           rw [← d]
-                          simp [monomCoeffHom]
-                          simp [coeff, 
-                            Nat.add_assoc]
+                          simp [monom_coeff_hom, coeff, Nat.add_assoc]
                         apply Eq.trans (Eq.trans (Eq.symm eq₂) eq₁) eq₃ 
                     else
                       let p' : a₁ = 0 := by
@@ -281,7 +275,7 @@ theorem equalCoeffs{X: Type}[DecidableEq X](s₁ s₂: FormalSum X)
                           simp [lem, Nat.add_zero]
                           simp [monomCoeff]
                         let ⟨ys, eqn, ineqn⟩ := 
-                          coeffComplement X x₀ s₂ (by 
+                          pos_coeff_has_complement X x₀ s₂ (by 
                             rw [cf₂]
                             assumption)
                         let cfs := fun x => 
@@ -296,7 +290,7 @@ theorem equalCoeffs{X: Type}[DecidableEq X](s₁ s₂: FormalSum X)
                               let c := cfs' x
                               exact Nat.add_left_cancel c 
                         let step := 
-                          equalCoeffs t ys cs''
+                          equiv_of_equal_coeffs t ys cs''
                         let step' := consEquiv t ys a₀ x₀ step 
                         rw [cf₂] at eqn
                         exact Eq.trans step' eqn  
@@ -311,7 +305,7 @@ theorem equalCoeffs{X: Type}[DecidableEq X](s₁ s₂: FormalSum X)
                         apply basicRel.zeroCoeff
                         rfl
                     have eq₂ : t ≅ s₂ := by 
-                      apply equalCoeffs t s₂
+                      apply equiv_of_equal_coeffs t s₂
                       intro x
                       let ceq := coeff_well_defined X x ((a₀, x₀) :: t) t eq₁
                       simp [← ceq, hyp]
@@ -321,7 +315,7 @@ termination_by _ X s _ _  => s.length
 def FormalSum.support{X: Type}[DecidableEq X](s: FormalSum X) : List X :=
         s.map <| fun (_, x) => x
 
-theorem coeff_support{X: Type}[DecidableEq X](s: FormalSum X) :
+theorem pos_coeff_in_support{X: Type}[DecidableEq X](s: FormalSum X) :
         ∀ x: X, 0 < s.coeff x  → x ∈ s.support  := 
           match s with 
           | [] => fun x hyp => 
@@ -344,7 +338,7 @@ theorem coeff_support{X: Type}[DecidableEq X](s: FormalSum X) :
                 simp [List.elem]
             | false => 
                 rw [coeff, monomCoeff, p, Nat.zero_add] at hyp
-                let step := coeff_support t x hyp
+                let step := pos_coeff_in_support t x hyp
                 apply List.mem_of_elem_eq_true
                 simp [List.elem]
                 have p' : (x == x₀) = false := 
@@ -365,7 +359,8 @@ def equalOnSupport{X: Type}[DecidableEq X](l: List X)(f g : X → Nat) : Prop :=
   | h :: t =>
     (f h = g h) ∧ (equalOnSupport t f g)
 
-theorem equal_on_support_of_equal{X: Type}[DecidableEq X](l: List X)(f g : X → Nat):
+theorem equal_on_support_of_equal{X: Type}[DecidableEq X]
+  (l: List X)(f g : X → Nat):
     f = g → equalOnSupport l f g := by
     intro hyp
     induction l with
@@ -426,7 +421,7 @@ def decideEquiv{X: Type}[DecidableEq X](s₁ s₂ : FormalSum X) :
           if ch₂ : equalOnSupport s₂.support c₁ c₂ then
             Decidable.isTrue ( 
               by
-              apply equalCoeffs
+              apply equiv_of_equal_coeffs
               intro x
               cases (Nat.eq_zero_or_pos <| c₁ x) with
               | inl hz₁ => 
@@ -437,14 +432,14 @@ def decideEquiv{X: Type}[DecidableEq X](s₁ s₂ : FormalSum X) :
                     exact ceq
                 | inr hp => 
                   have lem : x ∈ s₂.support := by 
-                      apply coeff_support
+                      apply pos_coeff_in_support
                       assumption
                   let lem' :=   
                     mem_of_equal_on_support s₂.support c₁ c₂ x lem ch₂
                   exact lem'
               | inr hp => 
                 have lem : x ∈ s₁.support := by 
-                    apply coeff_support
+                    apply pos_coeff_in_support
                     assumption
                 let lem' :=   
                   mem_of_equal_on_support s₁.support c₁ c₂ x lem ch₁
