@@ -440,7 +440,7 @@ def decideEquiv{X: Type}[DecidableEq X](s₁ s₂ : FormalSum X) :
                       apply coeff_support
                       assumption
                   let lem' :=   
-                    mem_of_equal_on_support s₁.support c₁ c₂ x lem ch₁
+                    mem_of_equal_on_support s₂.support c₁ c₂ x lem ch₂
                   exact lem'
               | inr hp => 
                 have lem : x ∈ s₁.support := by 
