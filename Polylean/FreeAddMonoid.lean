@@ -414,61 +414,68 @@ def decideEqualOnSupport{X: Type}[DecidableEq X](l: List X)(f g : X → Nat) :
        have contra' := contra.right
        contradiction
 
--- deprecated
-def List.eqlFns (l: List X)(f g : X → Nat) : Bool := 
-  match l with
-  | [] => true
-  | h :: t =>
-    (f h == g h) && t.eqlFns f g
 
-theorem List.eqlFns_elem(l: List X)(f g : X → Nat) :
-      l.eqlFns X f g  = true → (x: X) → l.elem x → f x = g x:= by
-      induction l with
-      | nil => 
-        intro h x hyp          
-        rw [List.elem] at hyp 
-        contradiction
-      | cons h t step => 
-        intro eqlhyp x
-        simp [eqlFns] at eqlhyp
-        intro elemhyp
-        match c:x == h with
-        | true =>
-          have es : x = h := of_decide_eq_true c
-          rw [es]
-          exact (eqlhyp).left
-        | false =>
-          let ss := step eqlhyp.right x
-          rw [List.elem, c] at elemhyp
-          exact ss elemhyp
+instance {X: Type}[DecidableEq X]{l: List X}{f g : X → Nat} :
+    Decidable (equalOnSupport l f g) := decideEqualOnSupport l f g
 
-def FormalSum.decideEquiv
-      (s₁ s₂ : FormalSum X) : Decidable (s₁ ≅ s₂) :=   
+def decideEquiv{X: Type}[DecidableEq X](s₁ s₂ : FormalSum X) : 
+  Decidable (s₁ ≅ s₂) := 
         let c₁ := fun x => coeff x s₁
         let c₂ := fun x => coeff x s₂
-        let p₁ := s₁.support.all <| fun x =>  c₁ x =  c₂ x
-        let p₂ := s₂.support.eqlFns X c₁ c₂
-        match ch₁:p₁ with
-        | true =>
-          Decidable.isTrue (by
+        if ch₁ : equalOnSupport s₁.support c₁ c₂ then
+          if ch₂ : equalOnSupport s₂.support c₁ c₂ then
+            Decidable.isTrue ( 
+              by
               apply equalCoeffs
               intro x
-              match e₁:s₁.support.elem x with
-              | true =>
-
-                sorry
-              | false => 
-                match e₂:s₂.support.elem x with 
-                | true => sorry
-                | false => sorry) 
-        | false => 
+              cases (Nat.eq_zero_or_pos <| c₁ x) with
+              | inl hz₁ => 
+                  cases (Nat.eq_zero_or_pos <| c₂ x) with
+                | inl hz₂ =>
+                    have ceq: c₁ x = c₂ x := 
+                      by rw [hz₁, hz₂] 
+                    exact ceq
+                | inr hp => 
+                  have lem : x ∈ s₂.support := by 
+                      apply coeff_support
+                      assumption
+                  let lem' :=   
+                    mem_of_equal_on_support s₁.support c₁ c₂ x lem ch₁
+                  exact lem'
+              | inr hp => 
+                have lem : x ∈ s₁.support := by 
+                    apply coeff_support
+                    assumption
+                let lem' :=   
+                  mem_of_equal_on_support s₁.support c₁ c₂ x lem ch₁
+                exact lem'
+              )
+          else
+            Decidable.isFalse (
+              by
+                intro contra
+                have ceq: c₁ = c₂ := by
+                  apply funext
+                  intro x
+                  apply coeff_well_defined
+                  assumption
+                let lem :=
+                  equal_on_support_of_equal s₂.support c₁ c₂ ceq 
+                contradiction
+            )
+        else
           Decidable.isFalse (
             by
-              intro hyp
-              have ceqn : c₁ = c₂ := by
+              intro contra
+              have ceq: c₁ = c₂ := by
                 apply funext
                 intro x
-                apply coeff_well_defined 
+                apply coeff_well_defined
                 assumption
-              sorry
+              let lem :=
+                equal_on_support_of_equal s₁.support c₁ c₂ ceq 
+              contradiction
           )
+  
+instance {X: Type}[DecidableEq X]{s₁ s₂ : FormalSum X} : 
+  Decidable (s₁ ≅ s₂) := decideEquiv s₁ s₂
