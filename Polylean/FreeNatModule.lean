@@ -18,11 +18,11 @@ inductive basicRel : FormalSum X  → FormalSum X   →  Prop where
         basicRel  ((a₁, x₁) :: (a₂, x₂) :: tail) 
                     ((a₂, x₂) :: (a₁, x₁) :: tail)
 
-def FreeNatModule := Quot (basicRel X)
+def FreeNatModuleAux := Quot (basicRel X)
 
 namespace FormalSum
 
-def sum {X: Type} [DecidableEq X] (s: FormalSum X): FreeNatModule X :=
+def sum {X: Type} [DecidableEq X] (s: FormalSum X): FreeNatModuleAux X :=
       Quot.mk (basicRel X) s
 
 def equiv {X: Type} [DecidableEq X] (s₁ s₂: FormalSum X): Prop :=
@@ -37,7 +37,7 @@ open FormalSum
 theorem cons_equiv_of_equiv{X: Type}[DecidableEq X] (s₁ s₂ : FormalSum X) (a: Nat) (x: X):
       s₁ ≃ s₂ → (a, x) :: s₁ ≃ (a, x) :: s₂  := by
         intro h
-        let f : FormalSum X → FreeNatModule X := 
+        let f : FormalSum X → FreeNatModuleAux X := 
             fun s => sum <| (a, x) :: s
         let wit : (s₁ s₂ : FormalSum X) → (basicRel X s₁ s₂) → f s₁ = f s₂ :=
             by
@@ -73,7 +73,9 @@ def FormalSum.coeff{X: Type}[DecidableEq X](x₀ : X) : FormalSum X → Nat
 | [] => 0
 | h :: l => (monomCoeff x₀ h) + (coeff x₀ l)
 
-open basicRel in
+def FormalSum.coords{X: Type}[DecidableEq X](s: FormalSum X):
+        X → Nat := fun x => s.coeff x
+
 theorem coeff_move_invariant (x₀ : X)(s₁ s₂: FormalSum X)(h: basicRel X s₁ s₂):
         coeff  x₀  s₁ = coeff  x₀ s₂ := by
           induction h with
@@ -85,19 +87,19 @@ theorem coeff_move_invariant (x₀ : X)(s₁ s₂: FormalSum X)(h: basicRel X s�
           | swap a₁ a₂ x₁ x₂ tail => 
             simp [coeff, ← Nat.add_assoc, Nat.add_comm]
 
-def FreeNatModule.coeff (x₀ : X) : FreeNatModule X → Nat := 
+def FreeNatModuleAux.coeff (x₀ : X) : FreeNatModuleAux X → Nat := 
       Quot.lift (FormalSum.coeff  x₀) (coeff_move_invariant X x₀)
 
 theorem coeff_factors (x: X)(s: FormalSum X):
-      FreeNatModule.coeff X x (sum s) = coeff x s := by
-      simp [FreeNatModule.coeff]
+      FreeNatModuleAux.coeff X x (sum s) = coeff x s := by
+      simp [FreeNatModuleAux.coeff]
       apply Quot.liftBeta
       apply coeff_move_invariant
 
 theorem coeff_well_defined (x: X)(s₁ s₂: FormalSum X):
       s₁ ≃ s₂ → (coeff x s₁) = (coeff x s₂) := by
         intro hyp
-        simp [← coeff_factors, FreeNatModule.coeff]
+        simp [← coeff_factors, FreeNatModuleAux.coeff]
         rw [hyp]
         
 theorem tail_coeffs (x₀ x : X)(a: Nat) (s: FormalSum X):
@@ -465,6 +467,47 @@ def decideEquiv{X: Type}[DecidableEq X](s₁ s₂ : FormalSum X) :
 instance {X: Type}[DecidableEq X]{s₁ s₂ : FormalSum X} : 
   Decidable (s₁ ≃ s₂) := decideEquiv s₁ s₂
 
+-- Setoid using coordinate equality
+def eqlCoords(s₁ s₂ : FormalSum X) : Prop :=
+        s₁.coords = s₂.coords
+
+namespace eqlCoords
+
+theorem refl{X: Type}[DecidableEq X](s: FormalSum X) :
+      eqlCoords X s s := by
+        rfl
+
+theorem symm{X: Type}[DecidableEq X]{s₁ s₂ : FormalSum X} : 
+    eqlCoords X s₁ s₂ → eqlCoords X s₂ s₁ := by
+    intro hyp
+    apply funext
+    intro x 
+    apply Eq.symm
+    exact congrFun hyp x
+
+theorem trans{X: Type}[DecidableEq X]{s₁ s₂ s₃ : FormalSum X}:
+    eqlCoords X s₁ s₂ → eqlCoords X s₂ s₃ → eqlCoords X s₁ s₃ := by
+    intro hyp₁ hyp₂
+    apply funext
+    intro x
+    have l₁ := congrFun hyp₁ x
+    have l₂ := congrFun hyp₂ x
+    exact Eq.trans l₁ l₂
+
+theorem is_equivalence{X: Type}[DecidableEq X] : 
+      Equivalence (eqlCoords X) := 
+      {refl := refl, symm := symm, trans := trans}
+
+end eqlCoords
+
+instance formalSumSetoid:
+    Setoid (FormalSum X) := ⟨eqlCoords X, eqlCoords.is_equivalence⟩
+
+def FreeNatModule := Quotient (formalSumSetoid X)
+
+
+-- Probably not needed with Setoid approach
+
 theorem coeff_inj_aux{X: Type}[DecidableEq X]:(s₁ s₂ : FormalSum X) → 
   (sum s₁).coeff = (sum s₂).coeff → sum s₁ = sum s₂ := by
     intro s₁ s₂ hyp
@@ -475,18 +518,18 @@ theorem coeff_inj_aux{X: Type}[DecidableEq X]:(s₁ s₂ : FormalSum X) →
     rw [coeff_factors] at lem
     assumption
 
-theorem coeff_inj{X: Type}[DecidableEq X]:(a₁ a₂ : FreeNatModule X) → 
+theorem coeff_inj{X: Type}[DecidableEq X]:(a₁ a₂ : FreeNatModuleAux X) → 
   a₁.coeff = a₂.coeff → a₁ = a₂ := 
       Quot.ind <| fun s₁ =>
         Quot.ind <| coeff_inj_aux s₁ 
 
-def FreeNatModule.ind {X: Type}[DecidableEq X]{β : FreeNatModule X → Prop}:
-    (∀ s : FormalSum X, β (s.sum)) → ∀ x : FreeNatModule X, β x :=
+def FreeNatModuleAux.ind {X: Type}[DecidableEq X]{β : FreeNatModuleAux X → Prop}:
+    (∀ s : FormalSum X, β (s.sum)) → ∀ x : FreeNatModuleAux X, β x :=
       Quot.ind 
 
-def FreeNatModule.lift {X: Type}[DecidableEq X]{β : Sort u}:
+def FreeNatModuleAux.lift {X: Type}[DecidableEq X]{β : Sort u}:
     (f : FormalSum X → β) → ((s₁ s₂ : (FormalSum X)) → 
-      s₁ ≃ s₂ → f s₁ = f s₂) → FreeNatModule X  →   β  := by
+      s₁ ≃ s₂ → f s₁ = f s₂) → FreeNatModuleAux X  →   β  := by
         intro f hyp x 
         apply Quot.lift f
         intro s₁ s₂ rel
