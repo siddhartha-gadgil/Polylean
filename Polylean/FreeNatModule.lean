@@ -7,23 +7,23 @@ variable (X: Type)[DecidableEq X]
 
 abbrev FormalSum : Type := List (Nat × X)
 
-inductive basicRel : FormalSum X  → FormalSum X   →  Prop where
+inductive BasicRel : FormalSum X  → FormalSum X   →  Prop where
 | zeroCoeff (tail: FormalSum X)(x: X)(a : Nat)(h: a = 0):  
-        basicRel  ((a, x):: tail) tail 
+        BasicRel  ((a, x):: tail) tail 
 | addCoeffs (a b: Nat)(x: X)(tail: FormalSum X):  
-        basicRel  ((a, x) :: (b, x) :: tail) ((a + b, x) :: tail)
+        BasicRel  ((a, x) :: (b, x) :: tail) ((a + b, x) :: tail)
 | cons (a: Nat)(x: X)(s₁ s₂ : FormalSum X):
-        basicRel  s₁ s₂ → basicRel ((a, x) :: s₁) ((a, x) ::  s₂)
+        BasicRel  s₁ s₂ → BasicRel ((a, x) :: s₁) ((a, x) ::  s₂)
 | swap (a₁ a₂: Nat)(x₁ x₂: X)(tail : FormalSum X):
-        basicRel  ((a₁, x₁) :: (a₂, x₂) :: tail) 
+        BasicRel  ((a₁, x₁) :: (a₂, x₂) :: tail) 
                     ((a₂, x₂) :: (a₁, x₁) :: tail)
 
-def FreeNatModuleAux := Quot (basicRel X)
+def FreeNatModuleAux := Quot (BasicRel X)
 
 namespace FormalSum
 
 def sum {X: Type} [DecidableEq X] (s: FormalSum X): FreeNatModuleAux X :=
-      Quot.mk (basicRel X) s
+      Quot.mk (BasicRel X) s
 
 def equiv {X: Type} [DecidableEq X] (s₁ s₂: FormalSum X): Prop :=
       s₁.sum = s₂.sum
@@ -39,11 +39,11 @@ theorem cons_equiv_of_equiv{X: Type}[DecidableEq X] (s₁ s₂ : FormalSum X) (a
         intro h
         let f : FormalSum X → FreeNatModuleAux X := 
             fun s => sum <| (a, x) :: s
-        let wit : (s₁ s₂ : FormalSum X) → (basicRel X s₁ s₂) → f s₁ = f s₂ :=
+        let wit : (s₁ s₂ : FormalSum X) → (BasicRel X s₁ s₂) → f s₁ = f s₂ :=
             by
             intro s₁ s₂ hyp
             apply Quot.sound
-            apply basicRel.cons
+            apply BasicRel.cons
             assumption
         let g := Quot.lift f wit
         let factorizes : 
@@ -76,7 +76,7 @@ def FormalSum.coeff{X: Type}[DecidableEq X](x₀ : X) : FormalSum X → Nat
 def FormalSum.coords{X: Type}[DecidableEq X](s: FormalSum X):
         X → Nat := fun x => s.coeff x
 
-theorem coeff_move_invariant (x₀ : X)(s₁ s₂: FormalSum X)(h: basicRel X s₁ s₂):
+theorem coeff_move_invariant (x₀ : X)(s₁ s₂: FormalSum X)(h: BasicRel X s₁ s₂):
         coeff  x₀  s₁ = coeff  x₀ s₂ := by
           induction h with
           | zeroCoeff tail x a hyp => simp [coeff, hyp, monom_coeff_at_zero]
@@ -149,7 +149,7 @@ theorem pos_coeff_has_complement (x₀ : X)(s : FormalSum X) :
                   have eqn₁ : 
                     (a, x₀) :: (k, x₀) :: ys ≃ (a + k, x₀) :: ys := by
                     apply Quot.sound 
-                    apply basicRel.addCoeffs
+                    apply BasicRel.addCoeffs
                   have eqn₂ : 
                   (a, x₀) :: (k, x₀) :: ys ≃ (a, x₀) :: tail := 
                     by 
@@ -182,7 +182,7 @@ theorem pos_coeff_has_complement (x₀ : X)(s : FormalSum X) :
                 have eqn₁ : 
                   (k, x₀) :: ys ≃ (a, x) :: (k, x₀) :: ys' := by
                     apply Quot.sound 
-                    apply basicRel.swap
+                    apply BasicRel.swap
                 have eqn₂ : 
                   (a, x) :: (k, x₀) :: ys' ≃ (a, x) :: tail := 
                     by 
@@ -220,7 +220,7 @@ theorem equiv_e_of_zero_coeffs{X: Type}[DecidableEq X](s: FormalSum X)
                         exact hx'
                 let step := equiv_e_of_zero_coeffs t tailCoeffs
                 let l₀ : (0, x₀) :: t ≃ t := 
-                   Quot.sound <| basicRel.zeroCoeff  t x₀ 0 rfl
+                   Quot.sound <| BasicRel.zeroCoeff  t x₀ 0 rfl
                 exact Eq.trans l₀ step
 
 theorem equiv_of_equal_coeffs{X: Type}[DecidableEq X](s₁ s₂: FormalSum X)
@@ -247,7 +247,7 @@ theorem equiv_of_equal_coeffs{X: Type}[DecidableEq X](s₁ s₂: FormalSum X)
                         let s₃ := (a₀ + a₁, x₀) :: ys
                         have eq₁ : (a₀, x₀) :: (a₁ , x₀) :: ys ≃ s₃ := by 
                           apply Quot.sound
-                          let lem := basicRel.addCoeffs a₀ a₁ x₀ ys
+                          let lem := BasicRel.addCoeffs a₀ a₁ x₀ ys
                           exact lem
                         have eq₂ : (a₀, x₀) :: (a₁ , x₀) :: ys ≃ 
                             (a₀, x₀) :: t := by 
@@ -294,7 +294,7 @@ theorem equiv_of_equal_coeffs{X: Type}[DecidableEq X](s₁ s₂: FormalSum X)
                     have eq₁ : (a₀, x₀) :: t ≃ t := by 
                         apply Quot.sound
                         rw [p']
-                        apply basicRel.zeroCoeff
+                        apply BasicRel.zeroCoeff
                         rfl
                     have eq₂ : t ≃ s₂ := by 
                       apply equiv_of_equal_coeffs t s₂
@@ -507,7 +507,7 @@ def FreeNatModule := Quotient (formalSumSetoid X)
 
 theorem func_eql_of_move_equiv{X: Type}[DecidableEq X]{β : Sort u}
   (f : FormalSum X → β):
-  (∀ s₁ s₂ : FormalSum X, ∀ mv : basicRel X s₁ s₂, f s₁ = f s₂) → 
+  (∀ s₁ s₂ : FormalSum X, ∀ mv : BasicRel X s₁ s₂, f s₁ = f s₂) → 
   (∀ s₁ s₂ : FormalSum X, s₁ ≈ s₂ →  f s₁ = f s₂) := by
   intro hyp
   let fbar : FreeNatModuleAux X → β :=
@@ -531,29 +531,35 @@ def linear_extension{X: Type}[DecidableEq X](f₀ : X → Nat) : FormalSum X →
       a * f₀ x + (linear_extension f₀ t)
 termination_by _ _ s => s.length
 
+open BasicRel
+theorem invariance_of_linear_extension{X: Type}[DecidableEq X](f₀ : X → Nat) :
+    (∀ s₁ s₂ : FormalSum X, ∀ rel : BasicRel X s₁ s₂, linear_extension f₀ s₁ = linear_extension f₀ s₂) :=
+    fun s₁ s₂ rel =>
+  match rel with
+  | zeroCoeff tail x a hyp => by
+    rw [hyp]
+    simp [linear_extension]
+  | addCoeffs a b x tail   => by
+    simp [linear_extension, ← Nat.add_assoc]
+    have step : a * f₀ x + b * f₀ x = (a + b) * f₀ x :=
+      by simp [Nat.right_distrib]
+    rw [← step]
+  | cons a x t₁ t₂ r       => by
+    simp [linear_extension, ← Nat.add_assoc]
+    let ih := invariance_of_linear_extension f₀ t₁ t₂ r
+    rw [ih]
+  | swap a₁ a₂ x₁ x₂ tail  => by
+    simp [linear_extension, ← Nat.add_assoc]
+    have step : a₁ * f₀ x₁ + a₂ * f₀ x₂ = a₂ * f₀ x₂ + a₁ * f₀ x₁ :=
+        by simp [Nat.add_comm]
+    rw [step]
 
-def mini_universal_property{X: Type}[DecidableEq X](f₀ : X → Nat) :
+
+def miniUniversalProperty{X: Type}[DecidableEq X](f₀ : X → Nat) :
     FreeNatModule X → Nat := by
       apply Quotient.lift (linear_extension f₀)
       apply func_eql_of_move_equiv
-      intro s₁ s₂ r
-      induction r with
-        | zeroCoeff tail x a hyp => 
-          rw [hyp]
-          simp [linear_extension] 
-        | addCoeffs a b x tail => 
-            simp [linear_extension, ← Nat.add_assoc]
-            have step : a * f₀ x + b * f₀ x = (a + b) * f₀ x := 
-              by simp [Nat.right_distrib]
-            rw [← step]
-        | cons a x t₁ t₂ r step =>
-            simp [linear_extension, ← Nat.add_assoc]
-            admit
-        | swap a₁ a₂ x₁ x₂ tail => 
-          admit
-
-
-#check Nat.zero_mul
+      apply invariance_of_linear_extension
 
 -- Probably not needed with Setoid approach
 
