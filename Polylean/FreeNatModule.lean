@@ -505,6 +505,55 @@ instance formalSumSetoid:
 
 def FreeNatModule := Quotient (formalSumSetoid X)
 
+theorem func_eql_of_move_equiv{X: Type}[DecidableEq X]{β : Sort u}
+  (f : FormalSum X → β):
+  (∀ s₁ s₂ : FormalSum X, ∀ mv : basicRel X s₁ s₂, f s₁ = f s₂) → 
+  (∀ s₁ s₂ : FormalSum X, s₁ ≈ s₂ →  f s₁ = f s₂) := by
+  intro hyp
+  let fbar : FreeNatModuleAux X → β :=
+      Quot.lift f hyp
+  let fct : ∀ s : FormalSum X, f s = fbar (sum s) := by
+      apply Quot.liftBeta
+      apply hyp
+  intro s₁ s₂ sim
+  have ec : eqlCoords X s₁ s₂ := sim
+  rw [eqlCoords] at ec
+  have pullback: sum s₁ = sum s₂ := by
+    apply equiv_of_equal_coeffs
+    intro x
+    exact congrFun ec x
+  simp [fct, pullback]
+
+def linear_extension{X: Type}[DecidableEq X](f₀ : X → Nat) : FormalSum X → Nat
+| [] => 0
+| h :: t => 
+      let (a, x) := h
+      a * f₀ x + (linear_extension f₀ t)
+termination_by _ _ s => s.length
+
+
+def mini_universal_property{X: Type}[DecidableEq X](f₀ : X → Nat) :
+    FreeNatModule X → Nat := by
+      apply Quotient.lift (linear_extension f₀)
+      apply func_eql_of_move_equiv
+      intro s₁ s₂ r
+      induction r with
+        | zeroCoeff tail x a hyp => 
+          rw [hyp]
+          simp [linear_extension] 
+        | addCoeffs a b x tail => 
+            simp [linear_extension, ← Nat.add_assoc]
+            have step : a * f₀ x + b * f₀ x = (a + b) * f₀ x := 
+              by simp [Nat.right_distrib]
+            rw [← step]
+        | cons a x t₁ t₂ r step =>
+            simp [linear_extension, ← Nat.add_assoc]
+            admit
+        | swap a₁ a₂ x₁ x₂ tail => 
+          admit
+
+
+#check Nat.zero_mul
 
 -- Probably not needed with Setoid approach
 
