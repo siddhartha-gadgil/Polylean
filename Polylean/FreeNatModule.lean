@@ -378,6 +378,37 @@ theorem mem_of_equal_on_support{X: Type}[DecidableEq X](l: List X)
       have step := mem_of_equal_on_support t f g x inTail hyp.right
       exact step
 
+theorem equal_of_equal_on_supports{X: Type}[DecidableEq X]
+  (s₁ s₂ : FormalSum X):
+    equalOnSupport s₁.support s₁.coords s₂.coords → 
+    equalOnSupport s₂.support s₁.coords s₂.coords → 
+      s₁.coords = s₂.coords := by
+      intro hyp₁ hyp₂
+      apply funext
+      intro x
+      cases (Nat.eq_zero_or_pos <| s₁.coords x) with
+      | inl hz₁ => 
+          cases (Nat.eq_zero_or_pos <| s₂.coords x) with
+        | inl hz₂ =>
+            have ceq: s₁.coords x = s₂.coords x := 
+              by rw [hz₁, hz₂] 
+            exact ceq
+        | inr hp => 
+          have lem : x ∈ s₂.support := by 
+              apply pos_coeff_in_support
+              assumption
+          let lem' :=   
+            mem_of_equal_on_support s₂.support s₁.coords s₂.coords x lem hyp₂
+          exact lem'
+      | inr hp => 
+        have lem : x ∈ s₁.support := by 
+            apply pos_coeff_in_support
+            assumption
+        let lem' :=   
+          mem_of_equal_on_support s₁.support s₁.coords s₂.coords x lem hyp₁
+        exact lem'
+
+
 def decideEqualOnSupport{X: Type}[DecidableEq X](l: List X)(f g : X → Nat) :
       Decidable (equalOnSupport l f g) := 
   match l with
@@ -554,13 +585,130 @@ theorem invariance_of_linear_extension{X: Type}[DecidableEq X](f₀ : X → Nat)
         by simp [Nat.add_comm]
     rw [step]
 
-
 def miniUniversalProperty{X: Type}[DecidableEq X](f₀ : X → Nat) :
     FreeNatModule X → Nat := by
       apply Quotient.lift (linear_extension f₀)
       apply func_eql_of_move_equiv
       apply invariance_of_linear_extension
 
+
+notation "⟦" a "⟧" => Quotient.mk' a
+
+
+def elemsEqualAux?{X: Type}[DecidableEq X](s₁ s₂ : FormalSum X) : Bool := 
+    decide ( (equalOnSupport s₁.support s₁.coords  s₂.coords) ∧ 
+              (equalOnSupport s₂.support s₁.coords  s₂.coords))
+
+def equal_of_elem_eql_true_aux{X: Type}[DecidableEq X]{s₁ s₂ : FormalSum X} :
+  elemsEqualAux? s₁ s₂ = true → s₁ ≈  s₂ := by
+  intro hyp
+  let p := of_decide_eq_true  hyp
+  apply equal_of_equal_on_supports
+  exact p.left
+  exact p.right
+
+
+def decideEqualQuotient{X: Type}[DecidableEq X](s₁ s₂ : FormalSum X) : 
+  Decidable ( ⟦ s₁ ⟧ = ⟦ s₂ ⟧ )  := 
+        if ch₁ : equalOnSupport s₁.support s₁.coords s₂.coords then
+          if ch₂ : equalOnSupport s₂.support s₁.coords s₂.coords then
+            Decidable.isTrue ( 
+              by
+              apply Quotient.sound
+              apply funext
+              intro x
+              cases (Nat.eq_zero_or_pos <| s₁.coords x) with
+              | inl hz₁ => 
+                  cases (Nat.eq_zero_or_pos <| s₂.coords x) with
+                | inl hz₂ =>
+                    rw [hz₁, hz₂]
+                | inr hp => 
+                  have lem : x ∈ s₂.support := by 
+                      apply pos_coeff_in_support
+                      assumption
+                  let lem' :=   
+                    mem_of_equal_on_support s₂.support s₁.coords s₂.coords x lem ch₂
+                  exact lem'
+              | inr hp => 
+                have lem : x ∈ s₁.support := by 
+                    apply pos_coeff_in_support
+                    assumption
+                let lem' :=   
+                  mem_of_equal_on_support s₁.support s₁.coords s₂.coords x lem ch₁
+                exact lem'
+              )
+          else
+            Decidable.isFalse (
+              by
+                intro contra
+                let lem :=
+                  equal_on_support_of_equal 
+                    s₂.support s₁.coords s₂.coords (Quotient.exact contra) 
+                contradiction
+            )
+        else
+          Decidable.isFalse (
+            by
+              intro contra
+              let lem :=
+                  equal_on_support_of_equal 
+                    s₁.support s₁.coords s₂.coords (Quotient.exact contra)
+              contradiction
+          )
+
+instance {X: Type}[DecidableEq X]{s₁ s₂ : FormalSum X} :  
+  Decidable ( ⟦ s₁ ⟧ = ⟦ s₂ ⟧ ) := decideEqualQuotient s₁ s₂
+
+def FreeNatModule.beq?{X: Type}[DecidableEq X]
+    (x₁ x₂ : FreeNatModule X) : Bool := by
+    apply Quotient.lift₂ (fun (s₁ s₂ : FormalSum X) => 
+          decide ( ⟦ s₁ ⟧ = ⟦ s₂ ⟧))
+    intro a₁ b₁ a₂ b₂ eqv₁ eqv₂
+    let eq₁ : ⟦ a₁ ⟧ = ⟦ a₂ ⟧ := Quot.sound eqv₁
+    let eq₂ : ⟦ b₁⟧ = ⟦ b₂ ⟧ := Quot.sound eqv₂
+    simp [eq₁, eq₂]
+    exact x₁
+    exact x₂
+    
+def FreeNatModule.eq_of_beq_true{X: Type}[DecidableEq X]:
+    ∀ x₁ x₂ : FreeNatModule X,  x₁.beq? x₂ = true → x₁ = x₂ := by
+    let f := @Quotient.ind₂ (FormalSum X) (FormalSum X)
+              (formalSumSetoid X) (formalSumSetoid X)
+              (fun (x₁ x₂ : FreeNatModule X) =>   x₁.beq? x₂ = true → x₁ = x₂)
+    apply f
+    intro s₁ s₂ eqv
+    let eql := of_decide_eq_true eqv
+    assumption
+
+def FreeNatModule.neq_of_beq_false{X: Type}[DecidableEq X]:
+    ∀ x₁ x₂ : FreeNatModule X,  x₁.beq? x₂ = false → Not (x₁ = x₂) := by
+    let f := @Quotient.ind₂ (FormalSum X) (FormalSum X)
+              (formalSumSetoid X) (formalSumSetoid X)
+              (fun (x₁ x₂ : FreeNatModule X) =>   x₁.beq? x₂ = false →
+                Not (x₁ = x₂))
+    apply f
+    intro s₁ s₂ neqv
+    let neql := of_decide_eq_false neqv
+    assumption
+
+
+def FreeNatModule.decEq{X: Type}[DecidableEq X]
+    (x₁ x₂ : FreeNatModule X) : Decidable (x₁ = x₂) := by
+    match p:x₁.beq? x₂ with
+    | true => 
+      apply Decidable.isTrue
+      apply FreeNatModule.eq_of_beq_true
+      assumption
+    | false => 
+      apply Decidable.isFalse
+      apply FreeNatModule.neq_of_beq_false
+      assumption
+
+instance {X: Type}[DecidableEq X]: DecidableEq (FreeNatModule X) :=
+  fun x₁ x₂ => x₁.decEq x₂
+
+  
+--------------------------------------------------------    
 -- Probably not needed with Setoid approach
 
 theorem coeff_inj_aux{X: Type}[DecidableEq X]:(s₁ s₂ : FormalSum X) → 
