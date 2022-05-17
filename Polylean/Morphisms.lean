@@ -121,7 +121,7 @@ instance (P : G → Prop)
 
 end
 
-
+section Morphisms
 
 class AddCommGroup.Homomorphism {A B : Type _} [AddCommGroup A] [AddCommGroup B] (ϕ : A → B) where
   add_dist : ∀ a a' : A, ϕ (a + a') = ϕ a + ϕ a'
@@ -132,3 +132,5 @@ class Monoid.Homomorphism {M N : Type _} [Monoid M] [Monoid N] (ϕ : M → N) wh
 
 class CommRing.Homomorphism {R S : Type _} [CommRing R] [CommRing S] (ϕ : R → S)
   extends AddCommGroup.Homomorphism ϕ, Monoid.Homomorphism ϕ
+
+end Morphisms
