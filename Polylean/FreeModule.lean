@@ -1,4 +1,5 @@
 import Mathlib.Algebra.Ring.Basic
+import Mathlib.Algebra.Group.Defs
 
 /-
 Free module over a ring `R` which may be assumed to be commutative, will eventually be $Z/2`$. 
@@ -10,7 +11,7 @@ Outline:
 * Define the free module as a quotient of the above relation, via setoids.
 * Introduce an inductive type giving the elementary relations, i.e., single moves.
 * Define an auxiliary quotient by this relation (which is not an equivalence relation); and an auxiliary equivalence relation corresponding to this quotient.
-* Show that coefficients are equal if and only if formal sums satisfy the auxiliary relation.
+* Show that coordsicients are equal if and only if formal sums satisfy the auxiliary relation.
 * Deduce that the auxiliary relation is the original relation (may not need to make this explicit).
 * Deduce a universal property and construct the sum and product operations : these depend on each other, so one may need a weaker version of the universal property first. Alternatively, the operations may be constructed as special cases of the universal property.
 -/
@@ -30,13 +31,19 @@ def monomCoeff (x₀ : X) (nx : R × X) : R :=
 
 #check monomCoeff
 
-theorem monom_coeff_hom (x₀ x : X)(a b : R) :
+theorem monom_coords_hom (x₀ x : X)(a b : R) :
     monomCoeff R X x₀ (a + b, x) = 
       monomCoeff R X x₀ (a, x) + monomCoeff R X x₀ (b, x) := by
     repeat (rw [monomCoeff])
     cases x==x₀ <;> simp 
 
-theorem monom_coeff_at_zero (x₀ x : X) : monomCoeff R X x₀ (0, x) = 0 :=
+theorem monom_coords_mul (x₀ : X)(a b : R) :
+    monomCoeff R X x₀ (a * b, x) = 
+      a * monomCoeff R X x₀ (b, x) := by
+    repeat (rw [monomCoeff])
+    cases x==x₀ <;> simp
+
+theorem monom_coords_at_zero (x₀ x : X) : monomCoeff R X x₀ (0, x) = 0 :=
     by 
       rw [monomCoeff]
       cases x==x₀ <;> rfl
@@ -52,7 +59,7 @@ def FormalSum.support{R: Type}[Ring R][DecidableEq R]{X: Type}[DecidableEq X]
 
 open FormalSum
 
-#check Ring
+
 
 theorem nonzero_coord_in_support{R: Type}[Ring R][DecidableEq R]
     {X: Type}[DecidableEq X](s: FormalSum R X) :
@@ -302,3 +309,269 @@ def FreeModule.decEq{R: Type}[Ring R][DecidableEq R]
 instance {X: Type}[DecidableEq X]: DecidableEq (FreeModule R X) :=
   fun x₁ x₂ => x₁.decEq x₂
 
+/- Relation via moves and equivalence to "equal coordsicients"-/
+inductive BasicRel : FormalSum R X  → FormalSum R X   →  Prop where
+| zeroCoeff (tail: FormalSum R X)(x: X)(a : R)(h: a = 0):  
+        BasicRel  ((a, x):: tail) tail 
+| addCoeffs (a b: R)(x: X)(tail: FormalSum R X):  
+        BasicRel  ((a, x) :: (b, x) :: tail) ((a + b, x) :: tail)
+| cons (a: R)(x: X)(s₁ s₂ : FormalSum R X):
+        BasicRel  s₁ s₂ → BasicRel ((a, x) :: s₁) ((a, x) ::  s₂)
+| swap (a₁ a₂: R)(x₁ x₂: X)(tail : FormalSum R X):
+        BasicRel  ((a₁, x₁) :: (a₂, x₂) :: tail) 
+                    ((a₂, x₂) :: (a₁, x₁) :: tail)
+
+def FreeNatModuleAux := Quot (BasicRel R X)
+namespace FormalSum
+
+def sum {R: Type}[Ring R][DecidableEq R]{X: Type} [DecidableEq X] 
+  (s: FormalSum R X): FreeNatModuleAux R X :=
+      Quot.mk (BasicRel R X) s
+
+def equiv {R: Type}[Ring R][DecidableEq R]{X: Type} [DecidableEq X] (s₁ s₂: FormalSum R X): Prop :=
+      s₁.sum = s₂.sum
+
+end FormalSum
+
+infix:65 " ≃ " => FormalSum.equiv
+
+open FormalSum
+
+theorem coords_move_invariant (x₀ : X)
+  (s₁ s₂: FormalSum R X)(h: BasicRel R X s₁ s₂):
+        coords s₁ x₀  = coords s₂ x₀ := by
+          induction h with
+          | zeroCoeff tail x a hyp => simp [coords, hyp, monom_coords_at_zero]
+          | addCoeffs a b x tail => 
+            simp [coords, monom_coords_at_zero, ← add_assoc, monom_coords_hom]
+          | cons a x s₁ s₂ r step => 
+            simp [coords, step]
+          | swap a₁ a₂ x₁ x₂ tail => 
+            simp [coords, ← add_assoc, add_comm]
+
+def FreeNatModuleAux.coeff (x₀ : X) : FreeNatModuleAux R X → R := 
+      Quot.lift (fun s => s.coords  x₀) (coords_move_invariant R X x₀)
+
+theorem coeff_factors (x: X)(s: FormalSum R X):
+      FreeNatModuleAux.coeff R X x (sum s) = s.coords x  := by
+      simp [FreeNatModuleAux.coeff]
+      apply @Quot.liftBeta (r := BasicRel R X) (f:= fun s => s.coords  x)
+      apply coords_move_invariant
+
+theorem coords_well_defined{R: Type}[Ring R][DecidableEq R]
+  {X: Type}[DecidableEq X] (x: X)(s₁ s₂: FormalSum R X):
+      s₁ ≃ s₂ → s₁.coords x = s₂.coords x := by
+        intro hyp
+        have l : FreeNatModuleAux.coeff R X x (sum s₂) = s₂.coords x :=
+          by simp [coeff_factors, hyp]
+        rw [← l]
+        rw [← coeff_factors]        
+        rw [hyp]
+
+theorem cons_equiv_of_equiv{R: Type}[Ring R][DecidableEq R]
+  {X: Type}[DecidableEq X] (s₁ s₂ : FormalSum R X) (a: R) (x: X):
+      s₁ ≃ s₂ → (a, x) :: s₁ ≃ (a, x) :: s₂  := by
+        intro h
+        let f : FormalSum R X → FreeNatModuleAux R X := 
+            fun s => sum <| (a, x) :: s
+        let wit : (s₁ s₂ : FormalSum R X) → (BasicRel R X s₁ s₂) → f s₁ = f s₂ :=
+            by
+            intro s₁ s₂ hyp
+            apply Quot.sound
+            apply BasicRel.cons
+            assumption
+        let g := Quot.lift f wit
+        let factorizes : 
+            (s : FormalSum R X) → g (s.sum) = 
+              sum ((a, x) :: s) := Quot.liftBeta f wit
+        rw[equiv]
+        rw [← factorizes]
+        rw [← factorizes]
+        rw [h]
+
+theorem nonzero_coeff_has_complement{R: Type}[Ring R][DecidableEq R]
+  {X: Type}[DecidableEq X] (x₀ : X)(s : FormalSum R X) :
+        0 ≠  s.coords x₀  → 
+          (∃ ys: FormalSum R X, 
+            (((s.coords x₀, x₀) :: ys) ≃ s) ∧ 
+            (List.length ys < s.length))  := by 
+            induction s with 
+            | nil =>
+              intro contra
+              contradiction
+            | cons head tail hyp => 
+              let (a, x) := head
+              intro pos
+              cases c:x == x₀ with
+              | true => 
+                let k := FormalSum.coords tail x₀ 
+                have lem : a + k = 
+                      coords ((a, x) :: tail) x₀ := 
+                        by rw [coords, monomCoeff, c]
+                have c'' : x = x₀ := 
+                        of_decide_eq_true c
+                rw [c'']
+                rw [c''] at lem
+                exact if c':(0 = k) 
+                then by
+                  have lIneq : tail.length < List.length ((a, x) :: tail) := 
+                    by 
+                      simp [List.length_cons]
+                  rw [← c', add_zero] at lem
+                  rw [← lem]   
+                  exact ⟨tail, rfl, lIneq⟩
+                else by
+                  let ⟨ys, eqnStep, lIneqStep⟩ := hyp c'
+                  have eqn₁ : 
+                    (a, x₀) :: (k, x₀) :: ys ≃ (a + k, x₀) :: ys := by
+                    apply Quot.sound 
+                    apply BasicRel.addCoeffs 
+                  have eqn₂ : 
+                  (a, x₀) :: (k, x₀) :: ys ≃ (a, x₀) :: tail := 
+                    by 
+                      apply cons_equiv_of_equiv
+                      assumption
+                  have eqn : (a + k, x₀) :: ys ≃ 
+                          (a, x₀) :: tail :=
+                      Eq.trans (Eq.symm eqn₁) eqn₂    
+                  rw [← lem]
+                  have lIneq : ys.length < List.length ((a, x₀) :: tail) :=
+                    by
+                    apply Nat.le_trans lIneqStep 
+                    simp [List.length_cons, Nat.le_succ]
+                  exact ⟨ys, eqn, lIneq⟩
+              | false =>
+                let k := coords tail x₀
+                have lem : k = 
+                      coords ((a, x) :: tail) x₀ := 
+                        by 
+                          simp [coords, monomCoeff, c, zero_add]
+                rw [← lem] at pos          
+                let ⟨ys', eqnStep, lIneqStep⟩ := hyp pos   
+                rw [← lem]
+                let ys := (a, x) :: ys'      
+                have lIneq : ys.length < ((a, x) :: tail).length := 
+                  by 
+                    simp [List.length_cons]
+                    apply Nat.succ_lt_succ
+                    exact lIneqStep
+                have eqn₁ : 
+                  (k, x₀) :: ys ≃ (a, x) :: (k, x₀) :: ys' := by
+                    apply Quot.sound 
+                    apply BasicRel.swap
+                have eqn₂ : 
+                  (a, x) :: (k, x₀) :: ys' ≃ (a, x) :: tail := 
+                    by 
+                      apply cons_equiv_of_equiv
+                      assumption 
+                have eqn : (k, x₀) :: ys ≃ (a, x) :: tail := by 
+                    exact Eq.trans eqn₁ eqn₂
+                exact ⟨ys, eqn, lIneq⟩
+
+
+theorem equiv_e_of_zero_coeffs
+  {R: Type}[Ring R][DecidableEq R]{X: Type}[DecidableEq X]
+    (s: FormalSum R X)
+               (hyp :∀ x: X, s.coords x = 0) : s ≃ [] := 
+               let canc : IsAddLeftCancel R :=
+                ⟨fun a b c h => by 
+                      rw [← neg_add_cancel_left a b, h, neg_add_cancel_left]⟩
+               match mt:s with 
+               | [] => rfl
+               | h :: t => by
+                let (a₀, x₀) := h
+                let hyp₀ := hyp x₀
+                rw [coords] at hyp₀
+                have c₀ : monomCoeff R X x₀ (a₀, x₀) = a₀ := by
+                    simp [monomCoeff]                     
+                rw [c₀] at hyp₀
+                exact if hz: a₀ = 0 then by 
+                  rw [hz] at hyp₀
+                  rw [zero_add]at hyp₀
+                  have tail_coeffs: ∀ x: X, 
+                    coords t x = 0 := 
+                      by 
+                        intro x
+                        simp [coords]
+                        exact if c:(x₀ = x) then
+                        by
+                          rw [← c] 
+                          assumption
+                        else 
+                        by
+                          let hx := hyp x
+                          simp [coords, monomCoeff] at hx
+                          have lf : (x₀ == x) = false := 
+                            decide_eq_false c 
+                          rw [lf] at hx
+                          simp [zero_add] at hx
+                          assumption
+                  have dec : t.length <  (h :: t).length  := by
+                    simp [List.length_cons] 
+                  let step : t ≃ [] := by 
+                    apply equiv_e_of_zero_coeffs 
+                    exact tail_coeffs
+                  rw [hz]
+                  have ls : (0, x₀) :: t ≃ t := by
+                    apply Quot.sound
+                    apply BasicRel.zeroCoeff
+                    rfl
+                  exact Eq.trans ls step
+                else by
+                  have non_zero : 0 ≠ coords t x₀ := by 
+                    intro contra'
+                    let contra := Eq.symm contra'
+                    rw [contra, add_zero] at hyp₀
+                    contradiction              
+                  let ⟨ys, eqnStep, lIneqStep⟩ := 
+                    nonzero_coeff_has_complement x₀ t non_zero
+                  have tail_coeffs: ∀ x: X, 
+                    coords ys x = 0 := 
+                      by 
+                        intro x
+                        simp [coords]
+                        exact if c:(x₀ = x) then
+                        by
+                          rw [← c] 
+                          let ceq := coords_well_defined x₀ _ _  eqnStep
+                          simp [coords, monomCoeff] at ceq
+                          let pad : 
+                            coords t x₀ = coords t x₀ + 0 := by simp [add_zero]
+                          let ceq' := Eq.trans ceq pad
+                          let ceq'' := add_left_cancel ceq'
+                          assumption
+                        else 
+                        by
+                          let hx := hyp x
+                          simp [coords, monomCoeff] at hx
+                          have lf : (x₀ == x) = false := 
+                            decide_eq_false c 
+                          rw [lf] at hx
+                          simp [zero_add] at hx
+                          let ceq := coords_well_defined x _ _  eqnStep
+                          simp [coords, monomCoeff, lf] at ceq 
+                          rw [hx] at ceq
+                          exact ceq
+                  have d : ys.length < (h :: t).length := 
+                    by 
+                      simp [List.length_cons]
+                      apply Nat.le_trans lIneqStep
+                      apply Nat.le_succ
+                  let step : ys ≃ [] := by  
+                    apply equiv_e_of_zero_coeffs 
+                    exact tail_coeffs
+                  let eqn₁ := cons_equiv_of_equiv _ _ (coords t x₀) x₀ step
+                  let eqn₂ : t ≃ (coords t x₀, x₀) :: [] := Eq.trans ( Eq.symm eqnStep) eqn₁
+                  let eqn₃ := cons_equiv_of_equiv _ _ a₀ x₀ eqn₂
+                  apply Eq.trans eqn₃
+                  have eqn₄ : sum [(a₀, x₀), (coords t x₀, x₀)] =
+                      sum [(a₀ + coords t x₀, x₀)] := by
+                        apply Quot.sound
+                        apply BasicRel.addCoeffs
+                  apply Eq.trans eqn₄
+                  rw [hyp₀]
+                  apply Quot.sound
+                  apply BasicRel.zeroCoeff
+                  rfl
+termination_by _ R X s h => s.length
+decreasing_by assumption
