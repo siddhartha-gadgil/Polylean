@@ -1,5 +1,6 @@
 import Mathlib.Algebra.Ring.Basic
 import Mathlib.Algebra.Group.Defs
+import Polylean.SMul
 
 /-
 Free module over a ring `R` which may be assumed to be commutative, will eventually be $Z/2`$. 
@@ -309,8 +310,8 @@ def FreeModule.decEq{R: Type}[Ring R][DecidableEq R]
 instance {X: Type}[DecidableEq X]: DecidableEq (FreeModule R X) :=
   fun x₁ x₂ => x₁.decEq x₂
 
-/- Ring structure -/
 
+/- Ring structure -/
 
 def FormalSum.scmul{R: Type}[Ring R][DecidableEq R]
   {X: Type}[DecidableEq X] : R → FormalSum R X → FormalSum R X  
@@ -368,6 +369,17 @@ def FreeModule.add{R: Type}[Ring R][DecidableEq R]
     have l₂ := append_coords a₂ b₂ x₀
     rw [← l₁, ← l₂]
     rw [eq₁, eq₂]
+
+instance {R: Type}[Ring R][DecidableEq R]
+  {X: Type}[DecidableEq X] : Add (FreeModule R X) := 
+  ⟨FreeModule.add⟩
+
+instance {R: Type}[Ring R][DecidableEq R]
+  {X: Type}[DecidableEq X] : SMul R (FreeModule R X) := 
+  ⟨FreeModule.scmul⟩
+
+example: Prop := 
+  ∀ x : FreeModule ℤ ℕ, x + x = (2 : ℤ) • x
 
 /- Relation via moves and equivalence to "equal coordsicients"-/
 inductive BasicRel : FormalSum R X  → FormalSum R X   →  Prop where
