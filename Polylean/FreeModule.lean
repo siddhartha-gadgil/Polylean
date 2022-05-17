@@ -381,6 +381,25 @@ instance {R: Type}[Ring R][DecidableEq R]
 example: Prop := 
   ∀ x : FreeModule ℤ ℕ, x + x = (2 : ℤ) • x
 
+theorem FormalSum.action{R: Type}[Ring R][DecidableEq R]
+  {X: Type}[DecidableEq X](a b: R)(s : FormalSum R X):
+     (s.scmul b).scmul a = s.scmul (a * b) := by
+      induction s with
+      | nil =>
+        simp [scmul]
+      | cons h t ih =>
+        simp [scmul, ih, mul_assoc]
+
+theorem module_action{R: Type}[Ring R][DecidableEq R]
+  {X: Type}[DecidableEq X](a b: R)(x: FreeModule R X) :
+    a • (b • x) = (a * b) • x := by
+    apply @Quotient.ind 
+      (motive := fun x : FreeModule R X => a • (b • x) = (a * b) • x)
+    intro s
+    apply Quotient.sound
+    rw [FormalSum.action]
+    apply eqlCoords.refl
+
 /- Relation via moves and equivalence to "equal coordsicients"-/
 inductive BasicRel : FormalSum R X  → FormalSum R X   →  Prop where
 | zeroCoeff (tail: FormalSum R X)(x: X)(a : R)(h: a = 0):  
