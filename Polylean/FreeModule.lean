@@ -575,3 +575,89 @@ theorem equiv_e_of_zero_coeffs
                   rfl
 termination_by _ R X s h => s.length
 decreasing_by assumption
+
+theorem equiv_of_equal_coeffs{R: Type}[Ring R][DecidableEq R]
+  {X: Type}[DecidableEq X](s₁ s₂: FormalSum R X)
+               (hyp :∀ x: X, s₁.coords x = s₂.coords x) : s₁ ≃ s₂ := 
+               let canc : IsAddLeftCancel R :=
+                ⟨fun a b c h => by 
+                      rw [← neg_add_cancel_left a b, h, neg_add_cancel_left]⟩
+               match mt:s₁ with 
+               | [] => 
+                have coeffs : ∀ x: X, s₂.coords x = 0 := by
+                  intro x
+                  let h := hyp x
+                  rw [← h]
+                  rfl
+                let zl := equiv_e_of_zero_coeffs s₂ coeffs
+                Eq.symm zl
+               | h :: t => 
+                  let (a₀, x₀):= h
+                  by 
+                  exact if p:0 = a₀
+                  then by
+                    have eq₁ : (a₀, x₀) :: t ≃ t := by 
+                        apply Quot.sound
+                        apply BasicRel.zeroCoeff
+                        apply Eq.symm
+                        assumption
+                    have dec : t.length <  (h :: t).length  := by
+                      simp [List.length_cons] 
+                    have eq₂ : t ≃ s₂ := by 
+                      apply equiv_of_equal_coeffs t s₂
+                      intro x
+                      let ceq := coords_well_defined  x ((a₀, x₀) :: t) t eq₁
+                      simp [← ceq, hyp]
+                    exact Eq.trans eq₁ eq₂
+                  else by
+                    let a₁ := coords t x₀                     
+                    exact if p₁:0 = a₁  
+                    then by
+                        have cf₂ : s₂.coords x₀ = a₀ := by
+                          rw [← hyp]
+                          simp [coords, ← p₁, Nat.add_zero, monomCoeff]
+                        let ⟨ys, eqn, ineqn⟩ := 
+                          nonzero_coeff_has_complement x₀ s₂ (by 
+                            rw [cf₂]
+                            assumption)
+                        let cfs := fun x => 
+                          coords_well_defined  x _ _ eqn
+                        rw [cf₂] at cfs
+                        let cfs' := fun (x: X) =>
+                          Eq.trans (hyp x) (Eq.symm (cfs x))
+                        simp [coords] at cfs'
+                        have dec : t.length <  (h :: t).length  := by
+                         simp [List.length_cons] 
+                        let step := 
+                          equiv_of_equal_coeffs t ys cfs'
+                        let step' := cons_equiv_of_equiv t ys a₀ x₀ step 
+                        rw [cf₂] at eqn
+                        exact Eq.trans step' eqn  
+                    else by
+                        let ⟨ys, eqn, ineqn⟩ := 
+                          nonzero_coeff_has_complement  x₀ t p₁
+                        let s₃ := (a₀ + a₁, x₀) :: ys
+                        have eq₁ : (a₀, x₀) :: (a₁ , x₀) :: ys ≃ s₃ := by 
+                          apply Quot.sound
+                          let lem := BasicRel.addCoeffs a₀ a₁ x₀ ys
+                          exact lem
+                        have eq₂ : (a₀, x₀) :: (a₁ , x₀) :: ys ≃ 
+                            (a₀, x₀) :: t := by 
+                              apply cons_equiv_of_equiv
+                              assumption
+                        have eq₃ : s₃ ≃ s₂ := by 
+                          have bd : ys.length + 1 < t.length + 1 := 
+                            by
+                              apply Nat.succ_lt_succ
+                              exact ineqn
+                          apply equiv_of_equal_coeffs
+                          intro x
+                          rw [← hyp x]
+                          simp [coords]
+                          let d := coords_well_defined  x _ _ eqn
+                          rw [coords] at d
+                          rw [← d]
+                          simp [monom_coords_hom, coords, add_assoc]
+                        apply Eq.trans (Eq.trans (Eq.symm eq₂) eq₁) eq₃ 
+termination_by _ R X s _ _  => s.length
+decreasing_by assumption
