@@ -1,3 +1,5 @@
+import Mathlib.Algebra.Ring.Basic
+
 /-
 Free module over a ring `R` which may be assumed to be commutative, will eventually be $Z/2`$. 
 
