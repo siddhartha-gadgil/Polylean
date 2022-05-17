@@ -202,7 +202,7 @@ end eqlCoords
 instance formalSumSetoid:
     Setoid (FormalSum R X) := ⟨eqlCoords R X, eqlCoords.is_equivalence⟩
 
-def FreeModule := Quotient (formalSumSetoid R X)
+abbrev FreeModule := Quotient (formalSumSetoid R X)
 
 notation "⟦" a "⟧" => Quotient.mk' a
 
@@ -308,6 +308,45 @@ def FreeModule.decEq{R: Type}[Ring R][DecidableEq R]
 
 instance {X: Type}[DecidableEq X]: DecidableEq (FreeModule R X) :=
   fun x₁ x₂ => x₁.decEq x₂
+
+/- Ring structure -/
+
+
+def FormalSum.scmul{R: Type}[Ring R][DecidableEq R]
+  {X: Type}[DecidableEq X] : R → FormalSum R X → FormalSum R X  
+| _, [] => []
+| r, (h::t) =>
+    let (a₀, x₀) := h
+    (r * a₀, x₀) :: (scmul r t)
+
+theorem scmul_coords{R: Type}[Ring R][DecidableEq R]
+  {X: Type}[DecidableEq X](r: R)(s : FormalSum R X)(x₀ : X):
+    (r * s.coords x₀) =  (s.scmul r ).coords x₀ := by 
+    induction s with
+    | nil =>
+      simp [coords] 
+    | cons h t ih => 
+      simp [scmul, coords, monom_coords_mul, left_distrib, ih] 
+
+def FreeModule.scmul{R: Type}[Ring R][DecidableEq R]
+  {X: Type}[DecidableEq X] : R → FreeModule R X → FreeModule R X := by
+    intro r
+    let f : FormalSum R X → FreeModule R X := fun s => ⟦ s.scmul r ⟧
+    apply Quotient.lift f
+    intro s₁ s₂
+    simp
+    intro hypeq
+    apply Quotient.sound 
+    apply funext
+    intro x₀
+    have l₁ := scmul_coords r s₁ x₀
+    have l₂ := scmul_coords r s₂ x₀
+    rw [← l₁, ← l₂]
+    have eqc : eqlCoords R X s₁ s₂ := hypeq
+    rw [eqlCoords] at eqc
+    rw [eqc]
+
+    
 
 /- Relation via moves and equivalence to "equal coordsicients"-/
 inductive BasicRel : FormalSum R X  → FormalSum R X   →  Prop where
@@ -661,3 +700,24 @@ theorem equiv_of_equal_coeffs{R: Type}[Ring R][DecidableEq R]
                         apply Eq.trans (Eq.trans (Eq.symm eq₂) eq₁) eq₃ 
 termination_by _ R X s _ _  => s.length
 decreasing_by assumption
+
+theorem func_eql_of_move_equiv{R: Type}[Ring R][DecidableEq R]
+  {X: Type}[DecidableEq X]{β : Sort u}
+  (f : FormalSum R X → β):
+  (∀ s₁ s₂ : FormalSum R X, ∀ mv : BasicRel R X s₁ s₂, f s₁ = f s₂) → 
+  (∀ s₁ s₂ : FormalSum R X, s₁ ≈ s₂ →  f s₁ = f s₂) := by
+  intro hyp
+  let fbar : FreeNatModuleAux R X → β :=
+      Quot.lift f hyp
+  let fct : ∀ s : FormalSum R X, f s = fbar (sum s) := by
+      apply Quot.liftBeta
+      apply hyp
+  intro s₁ s₂ sim
+  have ec : eqlCoords R X s₁ s₂ := sim
+  rw [eqlCoords] at ec
+  have pullback: sum s₁ = sum s₂ := by
+    apply equiv_of_equal_coeffs
+    intro x
+    exact congrFun ec x
+  simp [fct, pullback]
+
