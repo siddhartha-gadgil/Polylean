@@ -342,11 +342,32 @@ def FreeModule.scmul{R: Type}[Ring R][DecidableEq R]
     have l₁ := scmul_coords r s₁ x₀
     have l₂ := scmul_coords r s₂ x₀
     rw [← l₁, ← l₂]
-    have eqc : eqlCoords R X s₁ s₂ := hypeq
-    rw [eqlCoords] at eqc
-    rw [eqc]
+    rw [hypeq]
 
-    
+theorem append_coords{R: Type}[Ring R][DecidableEq R]
+  {X: Type}[DecidableEq X](s₁ s₂ : FormalSum R X)(x₀ : X):
+    (s₁.coords x₀) + (s₂.coords x₀) = (s₁ ++ s₂).coords x₀ := by 
+    induction s₁ with
+    | nil =>
+      simp [coords] 
+    | cons h t ih => 
+      simp [coords, ← ih, add_assoc]    
+
+def FreeModule.add{R: Type}[Ring R][DecidableEq R]
+  {X: Type}[DecidableEq X] : FreeModule R X → FreeModule R X → FreeModule R X := by
+    let f : FormalSum R X → FormalSum R X → FreeModule R X := 
+      fun s₁ s₂ => ⟦ s₁ ++ s₂ ⟧
+    apply Quotient.lift₂ f
+    intro a₁ b₁ a₂ b₂
+    simp
+    intro eq₁ eq₂ 
+    apply Quotient.sound 
+    apply funext
+    intro x₀
+    have l₁ := append_coords a₁ b₁ x₀
+    have l₂ := append_coords a₂ b₂ x₀
+    rw [← l₁, ← l₂]
+    rw [eq₁, eq₂]
 
 /- Relation via moves and equivalence to "equal coordsicients"-/
 inductive BasicRel : FormalSum R X  → FormalSum R X   →  Prop where
