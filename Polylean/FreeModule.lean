@@ -439,6 +439,24 @@ theorem free_add_assoc{R: Type}[Ring R][DecidableEq R]
         (x₁ + x₂) + x₃ = x₁ + (x₂ + x₃))
     intro x₁
     apply free_add_assoc_aux
+
+theorem free_distrib{R: Type}[Ring R][DecidableEq R]
+  {X: Type}[DecidableEq X](a : R)(x₁ x₂ : FreeModule R X):
+    a • (x₁ + x₂) = a • x₁ + a • x₂ := by
+    apply @Quotient.ind₂ 
+      (motive := fun x₁ x₂ : FreeModule R X =>
+        a • (x₁ + x₂) = a • x₁ + a • x₂)
+    intro s₁ s₂
+    apply Quotient.sound
+    apply funext
+    intro x₀
+    rw [← scmul_coords]
+    rw [← append_coords]
+    rw [← append_coords]
+    rw [← scmul_coords]
+    rw [← scmul_coords]
+    simp [left_distrib]
+
     
 /- Relation via moves and equivalence to "equal coordsicients"-/
 inductive BasicRel : FormalSum R X  → FormalSum R X   →  Prop where
