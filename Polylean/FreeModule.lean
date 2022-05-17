@@ -459,23 +459,23 @@ theorem free_distrib{R: Type}[Ring R][DecidableEq R]
 
     
 /- Relation via moves and equivalence to "equal coordsicients"-/
-inductive BasicRel : FormalSum R X  → FormalSum R X   →  Prop where
+inductive ElementaryMove : FormalSum R X  → FormalSum R X   →  Prop where
 | zeroCoeff (tail: FormalSum R X)(x: X)(a : R)(h: a = 0):  
-        BasicRel  ((a, x):: tail) tail 
+        ElementaryMove  ((a, x):: tail) tail 
 | addCoeffs (a b: R)(x: X)(tail: FormalSum R X):  
-        BasicRel  ((a, x) :: (b, x) :: tail) ((a + b, x) :: tail)
+        ElementaryMove  ((a, x) :: (b, x) :: tail) ((a + b, x) :: tail)
 | cons (a: R)(x: X)(s₁ s₂ : FormalSum R X):
-        BasicRel  s₁ s₂ → BasicRel ((a, x) :: s₁) ((a, x) ::  s₂)
+        ElementaryMove  s₁ s₂ → ElementaryMove ((a, x) :: s₁) ((a, x) ::  s₂)
 | swap (a₁ a₂: R)(x₁ x₂: X)(tail : FormalSum R X):
-        BasicRel  ((a₁, x₁) :: (a₂, x₂) :: tail) 
+        ElementaryMove  ((a₁, x₁) :: (a₂, x₂) :: tail) 
                     ((a₂, x₂) :: (a₁, x₁) :: tail)
 
-def FreeNatModuleAux := Quot (BasicRel R X)
+def FreeNatModuleAux := Quot (ElementaryMove R X)
 namespace FormalSum
 
 def sum {R: Type}[Ring R][DecidableEq R]{X: Type} [DecidableEq X] 
   (s: FormalSum R X): FreeNatModuleAux R X :=
-      Quot.mk (BasicRel R X) s
+      Quot.mk (ElementaryMove R X) s
 
 def equiv {R: Type}[Ring R][DecidableEq R]{X: Type} [DecidableEq X] (s₁ s₂: FormalSum R X): Prop :=
       s₁.sum = s₂.sum
@@ -487,7 +487,7 @@ infix:65 " ≃ " => FormalSum.equiv
 open FormalSum
 
 theorem coords_move_invariant (x₀ : X)
-  (s₁ s₂: FormalSum R X)(h: BasicRel R X s₁ s₂):
+  (s₁ s₂: FormalSum R X)(h: ElementaryMove R X s₁ s₂):
         coords s₁ x₀  = coords s₂ x₀ := by
           induction h with
           | zeroCoeff tail x a hyp => simp [coords, hyp, monom_coords_at_zero]
@@ -504,7 +504,7 @@ def FreeNatModuleAux.coeff (x₀ : X) : FreeNatModuleAux R X → R :=
 theorem coeff_factors (x: X)(s: FormalSum R X):
       FreeNatModuleAux.coeff R X x (sum s) = s.coords x  := by
       simp [FreeNatModuleAux.coeff]
-      apply @Quot.liftBeta (r := BasicRel R X) (f:= fun s => s.coords  x)
+      apply @Quot.liftBeta (r := ElementaryMove R X) (f:= fun s => s.coords  x)
       apply coords_move_invariant
 
 theorem coords_well_defined{R: Type}[Ring R][DecidableEq R]
@@ -523,11 +523,11 @@ theorem cons_equiv_of_equiv{R: Type}[Ring R][DecidableEq R]
         intro h
         let f : FormalSum R X → FreeNatModuleAux R X := 
             fun s => sum <| (a, x) :: s
-        let wit : (s₁ s₂ : FormalSum R X) → (BasicRel R X s₁ s₂) → f s₁ = f s₂ :=
+        let wit : (s₁ s₂ : FormalSum R X) → (ElementaryMove R X s₁ s₂) → f s₁ = f s₂ :=
             by
             intro s₁ s₂ hyp
             apply Quot.sound
-            apply BasicRel.cons
+            apply ElementaryMove.cons
             assumption
         let g := Quot.lift f wit
         let factorizes : 
@@ -574,7 +574,7 @@ theorem nonzero_coeff_has_complement{R: Type}[Ring R][DecidableEq R]
                   have eqn₁ : 
                     (a, x₀) :: (k, x₀) :: ys ≃ (a + k, x₀) :: ys := by
                     apply Quot.sound 
-                    apply BasicRel.addCoeffs 
+                    apply ElementaryMove.addCoeffs 
                   have eqn₂ : 
                   (a, x₀) :: (k, x₀) :: ys ≃ (a, x₀) :: tail := 
                     by 
@@ -607,7 +607,7 @@ theorem nonzero_coeff_has_complement{R: Type}[Ring R][DecidableEq R]
                 have eqn₁ : 
                   (k, x₀) :: ys ≃ (a, x) :: (k, x₀) :: ys' := by
                     apply Quot.sound 
-                    apply BasicRel.swap
+                    apply ElementaryMove.swap
                 have eqn₂ : 
                   (a, x) :: (k, x₀) :: ys' ≃ (a, x) :: tail := 
                     by 
@@ -663,7 +663,7 @@ theorem equiv_e_of_zero_coeffs
                   rw [hz]
                   have ls : (0, x₀) :: t ≃ t := by
                     apply Quot.sound
-                    apply BasicRel.zeroCoeff
+                    apply ElementaryMove.zeroCoeff
                     rfl
                   exact Eq.trans ls step
                 else by
@@ -716,11 +716,11 @@ theorem equiv_e_of_zero_coeffs
                   have eqn₄ : sum [(a₀, x₀), (coords t x₀, x₀)] =
                       sum [(a₀ + coords t x₀, x₀)] := by
                         apply Quot.sound
-                        apply BasicRel.addCoeffs
+                        apply ElementaryMove.addCoeffs
                   apply Eq.trans eqn₄
                   rw [hyp₀]
                   apply Quot.sound
-                  apply BasicRel.zeroCoeff
+                  apply ElementaryMove.zeroCoeff
                   rfl
 termination_by _ R X s h => s.length
 decreasing_by assumption
@@ -747,7 +747,7 @@ theorem equiv_of_equal_coeffs{R: Type}[Ring R][DecidableEq R]
                   then by
                     have eq₁ : (a₀, x₀) :: t ≃ t := by 
                         apply Quot.sound
-                        apply BasicRel.zeroCoeff
+                        apply ElementaryMove.zeroCoeff
                         apply Eq.symm
                         assumption
                     have dec : t.length <  (h :: t).length  := by
@@ -788,7 +788,7 @@ theorem equiv_of_equal_coeffs{R: Type}[Ring R][DecidableEq R]
                         let s₃ := (a₀ + a₁, x₀) :: ys
                         have eq₁ : (a₀, x₀) :: (a₁ , x₀) :: ys ≃ s₃ := by 
                           apply Quot.sound
-                          let lem := BasicRel.addCoeffs a₀ a₁ x₀ ys
+                          let lem := ElementaryMove.addCoeffs a₀ a₁ x₀ ys
                           exact lem
                         have eq₂ : (a₀, x₀) :: (a₁ , x₀) :: ys ≃ 
                             (a₀, x₀) :: t := by 
@@ -814,7 +814,7 @@ decreasing_by assumption
 theorem func_eql_of_move_equiv{R: Type}[Ring R][DecidableEq R]
   {X: Type}[DecidableEq X]{β : Sort u}
   (f : FormalSum R X → β):
-  (∀ s₁ s₂ : FormalSum R X, ∀ mv : BasicRel R X s₁ s₂, f s₁ = f s₂) → 
+  (∀ s₁ s₂ : FormalSum R X, ∀ mv : ElementaryMove R X s₁ s₂, f s₁ = f s₂) → 
   (∀ s₁ s₂ : FormalSum R X, s₁ ≈ s₂ →  f s₁ = f s₂) := by
   intro hyp
   let fbar : FreeNatModuleAux R X → β :=
