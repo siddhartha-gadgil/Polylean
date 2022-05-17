@@ -400,6 +400,46 @@ theorem module_action{R: Type}[Ring R][DecidableEq R]
     rw [FormalSum.action]
     apply eqlCoords.refl
 
+theorem free_add_comm{R: Type}[Ring R][DecidableEq R]
+  {X: Type}[DecidableEq X](x₁ x₂ : FreeModule R X) :
+    x₁ + x₂ = x₂ + x₁ := by
+    apply @Quotient.ind₂
+      (motive := fun x₁ x₂ : FreeModule R X =>
+        x₁ + x₂ = x₂ + x₁)
+    intro s₁ s₂
+    apply Quotient.sound
+    apply funext
+    intro x₀
+    let lm₁ := append_coords s₁ s₂ x₀
+    let lm₂ := append_coords s₂ s₁ x₀
+    rw [← lm₁, ← lm₂]
+    simp [add_comm]
+
+theorem free_add_assoc_aux{R: Type}[Ring R][DecidableEq R]
+  {X: Type}[DecidableEq X](s₁ : FormalSum R X)(x₂ x₃ : FreeModule R X) : 
+    (⟦ s₁ ⟧ + x₂) + x₃ = ⟦ s₁ ⟧ + (x₂ + x₃) := by
+    apply @Quotient.ind₂
+      (motive := fun x₂ x₃ : FreeModule R X =>
+        (⟦ s₁ ⟧ + x₂) + x₃ = ⟦ s₁ ⟧ + (x₂ + x₃))
+    intro x₂ x₃
+    apply Quotient.sound
+    apply funext
+    intro x₀
+    rw [← append_coords]
+    rw [← append_coords]
+    rw [← append_coords]
+    rw [← append_coords]
+    simp [add_assoc]
+
+theorem free_add_assoc{R: Type}[Ring R][DecidableEq R]
+  {X: Type}[DecidableEq X](x₁ x₂ x₃ : FreeModule R X) : 
+    (x₁ + x₂) + x₃ = x₁ + (x₂ + x₃) := by
+    apply @Quotient.ind 
+      (motive := fun x₁ : FreeModule R X =>
+        (x₁ + x₂) + x₃ = x₁ + (x₂ + x₃))
+    intro x₁
+    apply free_add_assoc_aux
+    
 /- Relation via moves and equivalence to "equal coordsicients"-/
 inductive BasicRel : FormalSum R X  → FormalSum R X   →  Prop where
 | zeroCoeff (tail: FormalSum R X)(x: X)(a : R)(h: a = 0):  
