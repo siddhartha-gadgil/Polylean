@@ -66,11 +66,15 @@ theorem inv_kernel {g : G} : ϕ g = 1 → ϕ g⁻¹ = 1 := by
   rw [h, one_mul] at this
   assumption
 
+theorem Kernel.eq_of_val_eq (ϕ : G → H) [Group.Homomorphism ϕ] : ∀ {g h : kernel ϕ}, Eq g.val h.val → Eq g h
+  | ⟨v, h⟩, ⟨_, _⟩, rfl => rfl
 
 instance : Group (kernel ϕ) :=
   {
     mul := λ ⟨g₁, prf₁⟩ ⟨g₂, prf₂⟩ => ⟨g₁ * g₂, by rw [Homϕ.mul_dist g₁ g₂, prf₁, prf₂, mul_one]⟩
-    mul_assoc := λ ⟨a, _⟩ ⟨b, _⟩ ⟨c, _⟩ => by sorry
+    mul_assoc := λ ⟨a, _⟩ ⟨b, _⟩ ⟨c, _⟩ => by 
+      apply Kernel.eq_of_val_eq
+      apply mul_assoc
 
     one := ⟨1, one_image⟩
     mul_one := by intro ⟨a, prf⟩; sorry
