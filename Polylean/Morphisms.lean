@@ -145,4 +145,12 @@ instance {L M N : Type _} [Monoid L] [Monoid M] [Monoid N]
   mul_dist := by intros; simp [Monoid.Homomorphism.mul_dist]
   one_map := by simp [Monoid.Homomorphism.one_map]
 
+
+instance {A : Type _} [AddCommGroup A] : AddCommGroup.Homomorphism (id : A → A) where
+  add_dist := by intros; rfl
+
+instance {M : Type _} [Monoid M] : Monoid.Homomorphism (id : M → M) where
+  mul_dist := by intros; rfl
+  one_map := by rfl
+
 end Morphisms
