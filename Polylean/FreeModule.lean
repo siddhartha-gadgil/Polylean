@@ -320,6 +320,21 @@ theorem append_coords {R : Type} [Ring R] [DecidableEq R] {X : Type} [DecidableE
   | cons h t ih =>
     simp [coords, ← ih, add_assoc]
 
+theorem append_equiv {R : Type} [Ring R] [DecidableEq R] {X : Type} [DecidableEq X] (s₁ s₂ t₁ t₂ : FormalSum R X) :
+    (s₁ ≈ s₂) → (t₁ ≈ t₂) → s₁ ++ t₁ ≈ s₂ ++ t₂ := by
+    intro eqv₁ eqv₂
+    apply funext
+    intro x₀
+    rw [← append_coords]
+    rw [← append_coords]
+    have eq₁ : eqlCoords R X s₁ s₂ := by assumption
+    have ls : coords s₁ x₀ = coords s₂ x₀ := by 
+      apply congrFun eqv₁
+    have lt : coords t₁ x₀ = coords t₂ x₀ := by 
+      apply congrFun eqv₂
+    rw [← ls, ← lt]
+
+
 def FreeModule.add {R : Type} [Ring R] [DecidableEq R] {X : Type} [DecidableEq X] :
     FreeModule R X → FreeModule R X → FreeModule R X := by
   let f : FormalSum R X → FormalSum R X → FreeModule R X := fun s₁ s₂ => ⟦s₁ ++ s₂⟧
