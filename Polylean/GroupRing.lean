@@ -29,6 +29,34 @@ theorem mulTerm_zero (g x₀: G)(s: FormalSum R G):
     simp [mulTerm, coords, monom_coords_at_zero]
     assumption
 
+theorem mulTerm_add(b₁ b₂ : R)(h : G)(s: FormalSum R G):
+  coords (mulTerm R G (b₁ + b₂) h s) x₀ = coords (mulTerm R G b₁ h s) x₀ + coords (mulTerm R G b₂ h s) x₀ := by
+  induction s with
+  | nil => 
+  simp [mulTerm, coords]
+  | cons head tail ih => 
+    let (a, g) := head
+    simp [mulTerm, coords]
+    rw [left_distrib]
+    rw [monom_coords_hom]
+    rw [ih]
+    conv =>
+      lhs
+      rw [add_assoc]
+      congr
+      skip
+      rw [← add_assoc]
+      congr
+      rw [add_comm]    
+    conv =>
+      rhs
+      rw [add_assoc]
+    conv =>
+      rhs 
+      congr
+      skip 
+      rw [← add_assoc]
+
 theorem mul_zero_cons (s t : FormalSum R G)(g: G): 
     mul R G s ((0, h) :: t) ≈  mul R G s t := by
     induction s
@@ -46,6 +74,7 @@ theorem mul_zero_cons (s t : FormalSum R G)(g: G):
       let l := mulTerm_zero R G h x₀ tail
       rw [l]
       simp [zero_add]
+
   
 def mulAux : FormalSum R G → FreeModule R G → FreeModule R G := by
   intro s
@@ -70,8 +99,8 @@ def mulAux : FormalSum R G → FreeModule R G → FreeModule R G := by
     apply funext; intro x₀
     simp [mul]
     repeat (rw [← append_coords])
-    admit
-    
+    simp
+    simp [mulTerm_add, add_assoc]    
   | cons a x s₁ s₂ r step =>
     apply Quotient.sound
     apply funext ; intro x₀
