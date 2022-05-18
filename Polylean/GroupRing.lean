@@ -125,6 +125,29 @@ def mulAux : FormalSum R G → FreeModule R G → FreeModule R G := by
     rw [lc] 
 
 open ElementaryMove
+theorem mulTerm_invariant (b : R)(h x₀ : G)(s₁ s₂ : FormalSum R G)
+    (rel : ElementaryMove R G s₁ s₂) : 
+      coords (mulTerm R G b h s₁) x₀ = 
+      coords (mulTerm R G b h s₂) x₀ := by
+      induction rel with
+      | zeroCoeff tail g a hyp => 
+        rw [hyp]
+        simp [mulTerm, coords,monom_coords_at_zero]
+      | addCoeffs a₁ a₂ x tail => 
+        simp [mulTerm, coords, right_distrib, monom_coords_hom, add_assoc]
+        
+      | cons a x t₁ t₂ r step => 
+        simp [mulTerm, coords, step]
+      | swap a₁ a₂ x₁ x₂ tail => 
+        simp [mulTerm, coords]
+        conv =>
+          lhs
+          rw [← add_assoc]
+          arg 1
+          rw [add_comm]
+        rw [← add_assoc]      
+
+
 theorem first_arg_invariant (s₁ s₂ t : FormalSum R G) 
   (rel : ElementaryMove R G s₁ s₂) :
     FormalSum.mul R G s₁ t ≈  FormalSum.mul R G s₂ t := by 
@@ -143,16 +166,77 @@ theorem first_arg_invariant (s₁ s₂ t : FormalSum R G)
         simp
         simp [coords, monom_coords_at_zero]
         rw [← append_coords]
-        simp        
-        admit
-      | addCoeffs a b x tail => 
-        admit
+        simp  
+        let rel' : ElementaryMove R G ((0, g) :: tail)  tail := by 
+          apply ElementaryMove.zeroCoeff
+          rfl
+        let prev  := first_arg_invariant  _ _ tail' rel' 
+        let pl := congrFun prev x₀
+        rw [pl]  
+      | addCoeffs a₁ a₂ x tail => 
+        simp [mul]
+        apply funext; intro x₀
+        rw [← append_coords]
+        rw [← append_coords]
+        simp [coords]
+        rw [right_distrib]
+        simp [monom_coords_hom]
+        let rel' : ElementaryMove R G 
+          ((a₁, x) :: (a₂, x) :: tail)
+            ((a₁ + a₂, x) :: tail) := by 
+            apply ElementaryMove.addCoeffs
+        let prev  := first_arg_invariant  _ _ tail' rel' 
+        let pl := congrFun prev x₀
+        rw [pl]
+        simp [add_assoc] 
       | cons a x s₁ s₂ r step => 
-        
-        admit
+        simp [mul]
+        apply funext; intro x₀
+        rw [← append_coords]
+        rw [← append_coords]
+        simp [coords]
+        let rel' : ElementaryMove R G 
+          ((a, x) :: s₁)
+            ((a, x) :: s₂) := by 
+            apply ElementaryMove.cons
+            assumption 
+        let prev  := first_arg_invariant  _ _ tail' rel' 
+        let pl := congrFun prev x₀
+        rw [pl]
+        let ps := mulTerm_invariant R G b h x₀ s₁ s₂ r
+        rw [ps]       
       | swap a₁ a₂ x₁ x₂ tail => 
+        simp [mul]
+        apply funext; intro x₀
+        rw [← append_coords]
+        rw [← append_coords]
+        simp
+        rw [mulTerm]
+        rw [mulTerm]
+        rw [coords]
+        rw [coords]
+        rw [mulTerm]
+        rw [mulTerm]
+        rw [coords]
+        rw [coords]
+        simp
+        let rel' : ElementaryMove R G 
+          ((a₁, x₁) :: (a₂, x₂) :: tail)
+            ((a₂, x₂) :: (a₁, x₁) :: tail) := by 
+            apply ElementaryMove.swap
+        let prev  := first_arg_invariant  _ _ tail' rel' 
+        let pl := congrFun prev x₀
+        rw [pl]
+        simp 
+        rw [← add_assoc]
+        rw [← add_assoc]
+        simp
+        conv =>
+          lhs 
+          congr
+          congr
+          rw [add_comm]    
         
-        admit
 
 
 
