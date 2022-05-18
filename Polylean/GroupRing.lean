@@ -81,7 +81,7 @@ def mulAux : FormalSum R G → FreeModule R G → FreeModule R G := by
   let f  := fun t => ⟦ FormalSum.mul R G s t ⟧ 
   apply  Quotient.lift f
   apply func_eql_of_move_equiv
-  intro t t rel
+  intro t t' rel
   simp 
   induction rel with
   | zeroCoeff tail g a hyp =>
@@ -123,3 +123,56 @@ def mulAux : FormalSum R G → FreeModule R G → FreeModule R G := by
         (coords (mulTerm R G a₁ x₁ s) x₀)
         (coords (mulTerm R G a₂ x₂ s) x₀)
     rw [lc] 
+
+open ElementaryMove
+theorem first_arg_invariant (s₁ s₂ t : FormalSum R G) 
+  (rel : ElementaryMove R G s₁ s₂) :
+    FormalSum.mul R G s₁ t ≈  FormalSum.mul R G s₂ t := by 
+    cases t
+    case nil => 
+      simp [mul]
+      rfl
+    case cons head' tail' =>
+      let (b, h) := head'
+      induction rel with
+      | zeroCoeff tail g a hyp => 
+        rw [hyp]
+        simp [mul, mulTerm]
+        apply funext; intro x₀
+        rw [← append_coords]
+        simp
+        simp [coords, monom_coords_at_zero]
+        rw [← append_coords]
+        simp        
+        admit
+      | addCoeffs a b x tail => 
+        admit
+      | cons a x s₁ s₂ r step => 
+        
+        admit
+      | swap a₁ a₂ x₁ x₂ tail => 
+        
+        admit
+
+
+
+def FreeModule.mul : FreeModule R G → FreeModule R G → FreeModule R G := by
+  let f  := fun (s : FormalSum R G) => 
+    fun  (t : FreeModule R G) => mulAux R G s t 
+  apply  Quotient.lift f
+  apply func_eql_of_move_equiv  
+  intro s₁ s₂ rel
+  simp 
+  apply funext
+  apply Quotient.ind 
+  intro t
+  let lhs : mulAux R G s₁ (Quotient.mk (formalSumSetoid R G) t) = 
+    ⟦FormalSum.mul R G s₁ t⟧ := by rfl
+  let rhs : mulAux R G s₂ (Quotient.mk (formalSumSetoid R G) t) = 
+    ⟦FormalSum.mul R G s₂ t⟧ := by rfl
+  rw [lhs, rhs]
+  simp
+  apply Quotient.sound
+  apply first_arg_invariant
+  exact rel
+  
