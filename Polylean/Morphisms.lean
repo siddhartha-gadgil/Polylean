@@ -133,4 +133,16 @@ class Monoid.Homomorphism {M N : Type _} [Monoid M] [Monoid N] (ϕ : M → N) wh
 class CommRing.Homomorphism {R S : Type _} [CommRing R] [CommRing S] (ϕ : R → S)
   extends AddCommGroup.Homomorphism ϕ, Monoid.Homomorphism ϕ
 
+
+instance {A B C : Type _} [AddCommGroup A] [AddCommGroup B] [AddCommGroup C]
+         (ϕ : A → B) [AddCommGroup.Homomorphism ϕ] (ψ : B → C) [AddCommGroup.Homomorphism ψ] :
+         AddCommGroup.Homomorphism (ψ ∘ ϕ) where
+  add_dist := by intros; simp [AddCommGroup.Homomorphism.add_dist]
+
+instance {L M N : Type _} [Monoid L] [Monoid M] [Monoid N]
+         (ϕ : L → M) [Monoid.Homomorphism ϕ] (ψ : M → N) [Monoid.Homomorphism ψ] :
+         Monoid.Homomorphism (ψ ∘ ϕ) where
+  mul_dist := by intros; simp [Monoid.Homomorphism.mul_dist]
+  one_map := by simp [Monoid.Homomorphism.one_map]
+
 end Morphisms
