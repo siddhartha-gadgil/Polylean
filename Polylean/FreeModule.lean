@@ -340,8 +340,9 @@ theorem append_equiv  (s₁ s₂ t₁ t₂ : FormalSum R X) :
       apply congrFun eqv₂
     rw [← ls, ← lt]
 
+end FormalSum
 
-def add  :
+def FreeModule.add  :
     FreeModule R X → FreeModule R X → FreeModule R X := by
   let f : FormalSum R X → FormalSum R X → FreeModule R X := fun s₁ s₂ => ⟦s₁ ++ s₂⟧
   apply Quotient.lift₂ f
@@ -357,13 +358,15 @@ def add  :
   rw [eq₁, eq₂]
 
 instance  : Add (FreeModule R X) :=
-  ⟨add⟩
+  ⟨FreeModule.add⟩
 
 instance  : SMul R (FreeModule R X) :=
   ⟨FreeModule.scmul⟩
 
 example : Prop :=
   ∀ x : FreeModule ℤ ℕ, x + x = (2 : ℤ) • x
+
+namespace FormalSum
 
 theorem action  (a b : R) (s : FormalSum R X) :
     (s.scmul b).scmul a = s.scmul (a * b) := by
@@ -372,6 +375,33 @@ theorem action  (a b : R) (s : FormalSum R X) :
     simp [scmul]
   | cons h t ih =>
     simp [scmul, ih, mul_assoc]
+
+theorem act_sum (a b : R) (s : FormalSum R X) :
+    (s.scmul a) ++ (s.scmul b) ≈  s.scmul (a + b) := by
+  induction s with
+  | nil =>
+    simp [scmul]
+    apply eqlCoords.refl
+  | cons h t ih =>
+    apply funext; intro x₀
+    let il₁ := congrFun ih x₀    
+    rw [← append_coords]
+    simp [scmul, coords, right_distrib, monom_coords_hom]
+    rw [← append_coords] at il₁ 
+    rw [← il₁]
+    simp
+    conv =>
+      lhs
+      rw [add_assoc]
+      arg 2
+      rw [← add_assoc]
+      arg 1
+      rw [add_comm]
+    conv =>
+      lhs
+      rw [add_assoc]
+      rw [← add_assoc]
+    
 
 end FormalSum
 
@@ -416,7 +446,27 @@ theorem addn_assoc  (x₁ x₂ x₃ : FreeModule R X) :
   intro x₁
   apply add_assoc_aux
 
-theorem free_distrib  (a : R) (x₁ x₂ : FreeModule R X) :
+def zero : FreeModule R X := ⟦[]⟧
+
+theorem addn_zero (x: FreeModule R X) : x + zero = x := by
+  apply @Quotient.ind (motive := fun x : FreeModule R X => x + zero = x)
+  intro x
+  apply Quotient.sound
+  apply funext
+  intro x₀
+  rw [← append_coords]
+  simp [add_zero, coords]
+
+theorem zero_addn (x: FreeModule R X) : zero + x = x := by
+  apply @Quotient.ind (motive := fun x : FreeModule R X => zero + x = x)
+  intro x
+  apply Quotient.sound
+  apply funext
+  intro x₀
+  rw [← append_coords]
+  simp [add_zero, coords]
+
+theorem elem_distrib  (a : R) (x₁ x₂ : FreeModule R X) :
     a • (x₁ + x₂) = a • x₁ + a • x₂ := by
   apply @Quotient.ind₂ (motive := fun x₁ x₂ : FreeModule R X => a • (x₁ + x₂) = a • x₁ + a • x₂)
   intro s₁ s₂
@@ -429,6 +479,8 @@ theorem free_distrib  (a : R) (x₁ x₂ : FreeModule R X) :
   rw [← scmul_coords]
   rw [← scmul_coords]
   simp [left_distrib]
+
+
 
 end FreeModule
 
@@ -761,3 +813,69 @@ theorem func_eql_of_move_equiv  {β : Sort u}
   simp [fct, pullback]
 
 end FormalSum
+
+theorem FreeModule.coeff_distrib (a b: R)(x: FreeModule R X) :
+  a • x + b • x = (a + b) • x:= by
+  apply @Quotient.ind (motive := fun x : FreeModule R X => 
+    a • x + b • x = (a + b) • x)
+  intro s
+  apply Quotient.sound
+  apply funext
+  intro x₀
+  let l := act_sum a b s
+  let l'' := congrFun l x₀
+  exact l''
+
+theorem FreeModule.unit_coeff (x: FreeModule R X) :
+    (1 : R) • x =  x:= by
+  apply @Quotient.ind (motive := fun x : FreeModule R X => 
+    (1 : R) • x =  x)
+  intro s
+  apply Quotient.sound
+  apply funext
+  intro x₀
+  let l := scmul_coords 1 s x₀
+  rw [← l]
+  simp
+
+theorem FreeModule.zero_coeff (x: FreeModule R X) :
+    (0 : R) • x =  ⟦ [] ⟧:= by
+  apply @Quotient.ind (motive := fun x : FreeModule R X => 
+    (0 : R) • x =  ⟦ [] ⟧)
+  intro s
+  apply Quotient.sound
+  apply funext
+  intro x₀
+  let l := scmul_coords 0 s x₀
+  rw [← l]
+  simp [coords]
+
+instance : AddGroup (FreeModule R X) :=
+  {
+    zero := ⟦ []⟧
+    add := FreeModule.add
+    add_assoc := FreeModule.addn_assoc
+    add_zero := FreeModule.addn_zero
+    zero_add := FreeModule.zero_addn
+    neg := fun x => (-1 : R) • x
+
+    nsmul_zero' := by intros; rfl
+    nsmul_succ' := by intros; rfl
+    sub_eq_add_neg := by 
+      intro x y 
+      rfl
+    gsmul_zero' := by intros; rfl
+    gsmul_succ' := by intros; rfl
+    gsmul_neg' := by intros; rfl
+
+    add_left_neg := by 
+        intro x
+        let l := FreeModule.coeff_distrib (-1 : R) (1 : R) x
+        simp at l
+        have lc : (-1 : R) + 1 = 0 := by 
+            apply add_left_neg
+        rw [lc] at l
+        rw [FreeModule.unit_coeff] at l
+        rw [FreeModule.zero_coeff] at l
+        exact l
+  }
