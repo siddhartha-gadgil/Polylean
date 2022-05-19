@@ -16,7 +16,8 @@ Outline:
 * Deduce that the auxiliary relation is the original relation (may not need to make this explicit).
 * Deduce a universal property and construct the sum and product operations : these depend on each other, so one may need a weaker version of the universal property first. Alternatively, the operations may be constructed as special cases of the universal property.
 -/
-/-!Defining the free module. The basis set is `X` and the ring is `R`.
+/-
+Defining the free module. The basis set is `X` and the ring is `R`.
 -/
 
 
@@ -196,6 +197,8 @@ abbrev FreeModule (R X : Type) [Ring R] [DecidableEq R][DecidableEq X] :=
 
 notation "⟦" a "⟧" => Quotient.mk' a
 
+namespace FreeModule
+
 def decideEqualQuotient  (s₁ s₂ : FormalSum R X) :
     Decidable (⟦s₁⟧ = ⟦s₂⟧) :=
   if ch₁ : equalOnSupport s₁.support s₁.coords s₂.coords then
@@ -238,7 +241,7 @@ instance  {s₁ s₂ : FormalSum R X} :
     Decidable (⟦s₁⟧ = ⟦s₂⟧) :=
   decideEqualQuotient s₁ s₂
 
-def FreeModule.beq?  (x₁ x₂ : FreeModule R X) : Bool := by
+def beq?  (x₁ x₂ : FreeModule R X) : Bool := by
   apply Quotient.lift₂ (fun (s₁ s₂ : FormalSum R X) => decide (⟦s₁⟧ = ⟦s₂⟧))
   intro a₁ b₁ a₂ b₂ eqv₁ eqv₂
   let eq₁ : ⟦a₁⟧ = ⟦a₂⟧ := Quot.sound eqv₁
@@ -247,7 +250,7 @@ def FreeModule.beq?  (x₁ x₂ : FreeModule R X) : Bool := by
   exact x₁
   exact x₂
 
-def FreeModule.eq_of_beq_true  :
+def eq_of_beq_true  :
     ∀ x₁ x₂ : FreeModule R X, x₁.beq? x₂ = true → x₁ = x₂ := by
   let f :=
     @Quotient.ind₂ (FormalSum R X) (FormalSum R X) (formalSumSetoid R X) (formalSumSetoid R X)
@@ -257,7 +260,7 @@ def FreeModule.eq_of_beq_true  :
   let eql := of_decide_eq_true eqv
   assumption
 
-def FreeModule.neq_of_beq_false  :
+def neq_of_beq_false  :
     ∀ x₁ x₂ : FreeModule R X, x₁.beq? x₂ = false → Not (x₁ = x₂) := by
   let f :=
     @Quotient.ind₂ (FormalSum R X) (FormalSum R X) (formalSumSetoid R X) (formalSumSetoid R X)
@@ -267,7 +270,7 @@ def FreeModule.neq_of_beq_false  :
   let neql := of_decide_eq_false neqv
   assumption
 
-def FreeModule.decEq  (x₁ x₂ : FreeModule R X) :
+def decEq  (x₁ x₂ : FreeModule R X) :
     Decidable (x₁ = x₂) := by
   match p : x₁.beq? x₂ with
   | true =>
@@ -281,8 +284,11 @@ def FreeModule.decEq  (x₁ x₂ : FreeModule R X) :
 
 instance {X : Type} [DecidableEq X] : DecidableEq (FreeModule R X) := fun x₁ x₂ => x₁.decEq x₂
 
+end FreeModule
+
 /- Ring structure -/
-def FormalSum.scmul  : R → FormalSum R X → FormalSum R X
+namespace FormalSum
+def scmul  : R → FormalSum R X → FormalSum R X
   | _, [] => []
   | r, (h :: t) =>
     let (a₀, x₀) := h
@@ -335,7 +341,7 @@ theorem append_equiv  (s₁ s₂ t₁ t₂ : FormalSum R X) :
     rw [← ls, ← lt]
 
 
-def FreeModule.add  :
+def add  :
     FreeModule R X → FreeModule R X → FreeModule R X := by
   let f : FormalSum R X → FormalSum R X → FreeModule R X := fun s₁ s₂ => ⟦s₁ ++ s₂⟧
   apply Quotient.lift₂ f
@@ -351,7 +357,7 @@ def FreeModule.add  :
   rw [eq₁, eq₂]
 
 instance  : Add (FreeModule R X) :=
-  ⟨FreeModule.add⟩
+  ⟨add⟩
 
 instance  : SMul R (FreeModule R X) :=
   ⟨FreeModule.scmul⟩
@@ -359,13 +365,17 @@ instance  : SMul R (FreeModule R X) :=
 example : Prop :=
   ∀ x : FreeModule ℤ ℕ, x + x = (2 : ℤ) • x
 
-theorem FormalSum.action  (a b : R) (s : FormalSum R X) :
+theorem action  (a b : R) (s : FormalSum R X) :
     (s.scmul b).scmul a = s.scmul (a * b) := by
   induction s with
   | nil =>
     simp [scmul]
   | cons h t ih =>
     simp [scmul, ih, mul_assoc]
+
+end FormalSum
+
+namespace FreeModule
 
 theorem module_action  (a b : R) (x : FreeModule R X) :
     a • (b • x) = (a * b) • x := by
@@ -375,7 +385,7 @@ theorem module_action  (a b : R) (x : FreeModule R X) :
   rw [FormalSum.action]
   apply eqlCoords.refl
 
-theorem free_add_comm  (x₁ x₂ : FreeModule R X) :
+theorem addn_comm  (x₁ x₂ : FreeModule R X) :
     x₁ + x₂ = x₂ + x₁ := by
   apply @Quotient.ind₂ (motive := fun x₁ x₂ : FreeModule R X => x₁ + x₂ = x₂ + x₁)
   intro s₁ s₂
@@ -387,7 +397,7 @@ theorem free_add_comm  (x₁ x₂ : FreeModule R X) :
   rw [← lm₁, ← lm₂]
   simp [add_comm]
 
-theorem free_add_assoc_aux  (s₁ : FormalSum R X)
+theorem add_assoc_aux  (s₁ : FormalSum R X)
     (x₂ x₃ : FreeModule R X) : (⟦s₁⟧ + x₂) + x₃ = ⟦s₁⟧ + (x₂ + x₃) := by
   apply @Quotient.ind₂ (motive := fun x₂ x₃ : FreeModule R X => (⟦s₁⟧ + x₂) + x₃ = ⟦s₁⟧ + (x₂ + x₃))
   intro x₂ x₃
@@ -400,11 +410,11 @@ theorem free_add_assoc_aux  (s₁ : FormalSum R X)
   rw [← append_coords]
   simp [add_assoc]
 
-theorem free_add_assoc  (x₁ x₂ x₃ : FreeModule R X) :
+theorem addn_assoc  (x₁ x₂ x₃ : FreeModule R X) :
     (x₁ + x₂) + x₃ = x₁ + (x₂ + x₃) := by
   apply @Quotient.ind (motive := fun x₁ : FreeModule R X => (x₁ + x₂) + x₃ = x₁ + (x₂ + x₃))
   intro x₁
-  apply free_add_assoc_aux
+  apply add_assoc_aux
 
 theorem free_distrib  (a : R) (x₁ x₂ : FreeModule R X) :
     a • (x₁ + x₂) = a • x₁ + a • x₂ := by
@@ -419,6 +429,8 @@ theorem free_distrib  (a : R) (x₁ x₂ : FreeModule R X) :
   rw [← scmul_coords]
   rw [← scmul_coords]
   simp [left_distrib]
+
+end FreeModule
 
 /- Relation via moves and equivalence to "equal coordsicients"-/
 inductive ElementaryMove (R X : Type) [Ring R] [DecidableEq R][DecidableEq X] : FormalSum R X → FormalSum R X → Prop where
@@ -440,11 +452,7 @@ def sum  (s : FormalSum R X) : FreeNatModuleAux R X :=
 def equiv  (s₁ s₂ : FormalSum R X) : Prop :=
   s₁.sum = s₂.sum
 
-end FormalSum
-
 infix:65 " ≃ " => FormalSum.equiv
-
-open FormalSum
 
 theorem coords_move_invariant (x₀ : X) (s₁ s₂ : FormalSum R X) (h : ElementaryMove R X s₁ s₂) :
     coords s₁ x₀ = coords s₂ x₀ := by
@@ -458,8 +466,12 @@ theorem coords_move_invariant (x₀ : X) (s₁ s₂ : FormalSum R X) (h : Elemen
   | swap a₁ a₂ x₁ x₂ tail =>
     simp [coords, ← add_assoc, add_comm]
 
+end FormalSum
+
 def FreeNatModuleAux.coeff (x₀ : X) : FreeNatModuleAux R X → R :=
   Quot.lift (fun s => s.coords x₀) (coords_move_invariant  x₀)
+
+namespace FormalSum
 
 theorem coeff_factors (x : X) (s : FormalSum R X) : FreeNatModuleAux.coeff  x (sum s) = s.coords x := by
   simp [FreeNatModuleAux.coeff]
@@ -747,3 +759,5 @@ theorem func_eql_of_move_equiv  {β : Sort u}
     intro x
     exact congrFun ec x
   simp [fct, pullback]
+
+end FormalSum
