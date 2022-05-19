@@ -77,11 +77,13 @@ instance : Group (kernel ϕ) :=
       apply mul_assoc
 
     one := ⟨1, one_image⟩
-    mul_one := by intro ⟨a, prf⟩; sorry
-    one_mul := by intro ⟨a, prf⟩; sorry
+    mul_one := by intro ⟨a, prf⟩; apply Kernel.eq_of_val_eq; apply mul_one
+    one_mul := by intro ⟨a, prf⟩; apply Kernel.eq_of_val_eq; apply one_mul
 
     inv := λ ⟨g, prf⟩ => ⟨g⁻¹, inv_kernel prf⟩
-    mul_left_inv := by intro ⟨a, prf⟩; simp [Inv.inv]; sorry
+    mul_left_inv := by 
+          intro ⟨a, prf⟩; apply Kernel.eq_of_val_eq; simp [Inv.inv]; 
+          apply mul_left_inv
 
     npow_zero' := by intros; rfl
     npow_succ' := by intros; rfl
@@ -98,6 +100,12 @@ section
 
 variable {G : Type _} [Grp : Group G]
 
+def subType (P: G → Prop) := {g : G // P g}
+
+theorem Subgroup.eq_of_val_eq (P : G → Prop)  : 
+    ∀ {g h : subType P}, Eq g.val h.val → Eq g h
+  | ⟨v, h⟩, ⟨_, _⟩, rfl => rfl
+
 instance (P : G → Prop)
   (mul_closure : ∀ {a b : G}, P a → P b → P (a * b))
   (inv_closure : ∀ {a : G}, P a → P a⁻¹)
@@ -105,14 +113,23 @@ instance (P : G → Prop)
   Group {g : G // P g} :=
    {
     mul := λ ⟨g₁, prf₁⟩ ⟨g₂, prf₂⟩ => ⟨g₁ * g₂, mul_closure prf₁ prf₂⟩
-    mul_assoc := λ ⟨a, _⟩ ⟨b, _⟩ ⟨c, _⟩ => sorry
+    mul_assoc := λ ⟨a, _⟩ ⟨b, _⟩ ⟨c, _⟩ => by
+      apply Subgroup.eq_of_val_eq; apply mul_assoc
 
     one := ⟨1, id_closure⟩
-    mul_one := by intro α; cases α; sorry
-    one_mul := by intro ⟨a, prf⟩; sorry
+    mul_one := by intro α 
+                  apply Subgroup.eq_of_val_eq
+                  apply mul_one 
+    one_mul := by intro α 
+                  apply Subgroup.eq_of_val_eq
+                  apply one_mul
 
     inv := λ ⟨g, prf⟩ => ⟨g⁻¹, inv_closure prf⟩
-    mul_left_inv := by intro ⟨a, prf⟩; simp [Inv.inv]; sorry
+    mul_left_inv := by 
+                        intro ⟨a, prf⟩
+                        simp [Inv.inv]
+                        apply Subgroup.eq_of_val_eq
+                        apply mul_left_inv
 
     npow_zero' := by intros; rfl
     npow_succ' := by intros; rfl
