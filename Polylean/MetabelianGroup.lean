@@ -133,8 +133,6 @@ instance : @Cocycle Q K _ _ trivial_action trivial_cocycle :=
     cocycleCondition := λ _ _ _ => rfl
   }
 
--- def product : Group (K × Q) := @MetabelianGroup.metabeliangroup Q K _ _ trivial_action trivial_cocycle _
-
 theorem product_comm : ∀ g h : K × Q, MetabelianGroup.mul trivial_cocycle g h = MetabelianGroup.mul trivial_cocycle h g := by
   intro (k, q)
   intro (k', q')
@@ -170,7 +168,7 @@ instance to_additive {G : Type _} [Grp : Group G] (mul_comm : ∀ g h : G, g * h
     gsmul_neg' := by intros; rfl
   }
 
-def directSum {A B : Type _} [AddCommGroup A] [AddCommGroup B] : AddCommGroup (A × B) :=
+instance directSum {A B : Type _} [AddCommGroup A] [AddCommGroup B] : AddCommGroup (A × B) :=
   to_additive product_comm
 
 end DirectSum
