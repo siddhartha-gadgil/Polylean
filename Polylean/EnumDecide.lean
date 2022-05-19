@@ -133,3 +133,30 @@ example : ∀ x : Fin 3, x + 0 = x := by decide
 
 example : ∀ x y : Fin 3, x + y = y + x := by decide
 
+theorem Zmod3.assoc {n: Nat} :
+  ∀ x y z : Fin 2, (x + y) + z = x + (y + z) := by decide
+
+def decideProd {α β : Type}[dfa : DecideForall α][dfb : DecideForall β]
+  (p:α × β → Prop)[DecidablePred p] :
+  Decidable (∀ xy :α × β, p xy) := 
+    if c: (∀ x: α, ∀ y : β, p (x, y)) 
+    then
+      by
+      apply Decidable.isTrue
+      intro (x, y)
+      exact c x y
+    else    
+      by
+      apply Decidable.isFalse
+      intro contra
+      apply c 
+      intro x y
+      exact contra (x, y)
+
+instance {α β : Type}[dfa : DecideForall α][dfb : DecideForall β] :
+  DecideForall (α × β) := 
+  ⟨by apply decideProd⟩
+
+example : ∀ xy : (Fin 3) × (Fin 2), 
+      xy.1.val + xy.2.val  = xy.2.val + xy.1.val := by decide
+
