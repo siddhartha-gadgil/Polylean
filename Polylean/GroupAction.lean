@@ -15,7 +15,7 @@ class Group.Action (G X : Type _) [Group G] extends SMul G X where
 
 class AddCommGroup.Action (A X : Type _) [AddCommGroup A] extends SMul A X where
   id_action : ∀ {x : X}, (0 : A) • x = x
-  compatibiity : ∀ {a a' : A}, ∀ {x : X}, (a + a') • x = a • (a' • x)
+  compatibility : ∀ {a a' : A}, ∀ {x : X}, (a + a') • x = a • (a' • x)
 
 class AddCommGroup.ActionByAutomorphisms (A B : Type _) [AddCommGroup A] [AddCommGroup B] extends AddCommGroup.Action A B where
   add_dist : ∀ {a : A}, ∀ b b' : B, a • (b + b') = a • b + a • b'
