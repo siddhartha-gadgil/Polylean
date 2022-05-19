@@ -174,4 +174,29 @@ instance {M : Type _} [Monoid M] : Monoid.Homomorphism (id : M → M) where
   mul_dist := by intros; rfl
   one_map := by rfl
 
+
 end Morphisms
+
+section AddCommGroup.Homomorphism
+
+variable {A : Type _} [α : AddCommGroup A]
+
+theorem nsmul_hom : ∀ n : ℕ, ∀ a b : A, nsmul_rec n (a + b) = nsmul_rec n a + nsmul_rec n b := by
+  intros n a b
+  cases n
+  · simp [nsmul_rec]
+  · simp [nsmul_rec]
+    rw [add_assoc, add_assoc, add_left_cancel_iff, ← add_assoc, add_comm (nsmul_rec _ a) _, add_assoc, add_left_cancel_iff]
+    exact nsmul_hom _ a b
+
+theorem gsmul_hom : ∀ n : ℤ, ∀ a b : A, gsmul_rec n (a + b) = gsmul_rec n a + gsmul_rec n b := by
+  intros n a b
+  cases n
+  · simp [gsmul_rec]; exact nsmul_hom _ a b
+  · simp [gsmul_rec]; apply neg_eq_of_add_eq_zero
+    rw [nsmul_hom _ a b, add_assoc, add_comm (nsmul_rec _ b) _, ← add_assoc, ← add_assoc, add_right_neg, zero_add, add_left_neg]
+
+instance {n : ℤ} : AddCommGroup.Homomorphism (gsmul_rec n : A → A) where
+  add_dist := gsmul_hom n
+
+end AddCommGroup.Homomorphism
