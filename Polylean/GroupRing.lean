@@ -4,9 +4,9 @@ import Polylean.FreeModule
 Group ring given a group. The ring structures is constructed using the universal property of R-modules, with uniqueness used to show that it is a ring. This is only an additional structure, i.e., no need to wrap. 
 -/
 
-variable (R : Type) [Ring R] [DecidableEq R]
+variable {R : Type} [Ring R] [DecidableEq R]
 
-variable (G: Type) [Group G] [DecidableEq G]
+variable {G: Type} [Group G] [DecidableEq G]
 
 
 def FormalSum.mulTerm (b: R)(h: G) : FormalSum R G → FormalSum R G 
@@ -16,12 +16,12 @@ def FormalSum.mulTerm (b: R)(h: G) : FormalSum R G → FormalSum R G
 def FormalSum.mul(fst: FormalSum R G) : FormalSum R G → FormalSum R G
 | [] =>    []
 | (b, h) :: ys =>  
-  (FormalSum.mulTerm R G b h fst) ++ (mul fst ys)
+  (FormalSum.mulTerm  b h fst) ++ (mul fst ys)
 
 open FormalSum
 
 theorem mulTerm_zero (g x₀: G)(s: FormalSum R G):
-  coords (mulTerm R G 0 g s) x₀ = 0 := by
+  coords (mulTerm 0 g s) x₀ = 0 := by
   induction s with
   | nil =>  
     simp [mulTerm, coords]
@@ -30,7 +30,7 @@ theorem mulTerm_zero (g x₀: G)(s: FormalSum R G):
     assumption
 
 theorem mulTerm_add(b₁ b₂ : R)(h : G)(s: FormalSum R G):
-  coords (mulTerm R G (b₁ + b₂) h s) x₀ = coords (mulTerm R G b₁ h s) x₀ + coords (mulTerm R G b₂ h s) x₀ := by
+  coords (mulTerm (b₁ + b₂) h s) x₀ = coords (mulTerm b₁ h s) x₀ + coords (mulTerm b₂ h s) x₀ := by
   induction s with
   | nil => 
   simp [mulTerm, coords]
@@ -58,7 +58,7 @@ theorem mulTerm_add(b₁ b₂ : R)(h : G)(s: FormalSum R G):
       rw [← add_assoc]
 
 theorem mul_zero_cons (s t : FormalSum R G)(g: G): 
-    mul R G s ((0, h) :: t) ≈  mul R G s t := by
+    mul s ((0, h) :: t) ≈  mul s t := by
     induction s
     case nil =>
       simp [mul, mulTerm]
@@ -71,14 +71,14 @@ theorem mul_zero_cons (s t : FormalSum R G)(g: G):
       rw [zero_add]
       rw [← append_coords]
       simp [coords, mul]
-      let l := mulTerm_zero R G h x₀ tail
+      let l := mulTerm_zero h x₀ tail
       rw [l]
       simp [zero_add]
 
   
 def mulAux : FormalSum R G → FreeModule R G → FreeModule R G := by
   intro s
-  let f  := fun t => ⟦ FormalSum.mul R G s t ⟧ 
+  let f  := fun t => ⟦ FormalSum.mul s t ⟧ 
   apply  Quotient.lift f
   apply func_eql_of_move_equiv
   intro t t' rel
@@ -91,7 +91,7 @@ def mulAux : FormalSum R G → FreeModule R G → FreeModule R G := by
     apply funext
     intro x₀
     rw [← append_coords]
-    let l := mulTerm_zero R G g x₀ s
+    let l := mulTerm_zero g x₀ s
     rw [l]
     simp [zero_add]
   | addCoeffs a b x tail =>
@@ -120,15 +120,15 @@ def mulAux : FormalSum R G → FreeModule R G → FreeModule R G := by
     simp
     let lc := 
       add_comm 
-        (coords (mulTerm R G a₁ x₁ s) x₀)
-        (coords (mulTerm R G a₂ x₂ s) x₀)
+        (coords (mulTerm a₁ x₁ s) x₀)
+        (coords (mulTerm a₂ x₂ s) x₀)
     rw [lc] 
 
 open ElementaryMove
 theorem mulTerm_invariant (b : R)(h x₀ : G)(s₁ s₂ : FormalSum R G)
     (rel : ElementaryMove R G s₁ s₂) : 
-      coords (mulTerm R G b h s₁) x₀ = 
-      coords (mulTerm R G b h s₂) x₀ := by
+      coords (mulTerm b h s₁) x₀ = 
+      coords (mulTerm b h s₂) x₀ := by
       induction rel with
       | zeroCoeff tail g a hyp => 
         rw [hyp]
@@ -150,7 +150,7 @@ theorem mulTerm_invariant (b : R)(h x₀ : G)(s₁ s₂ : FormalSum R G)
 
 theorem first_arg_invariant (s₁ s₂ t : FormalSum R G) 
   (rel : ElementaryMove R G s₁ s₂) :
-    FormalSum.mul R G s₁ t ≈  FormalSum.mul R G s₂ t := by 
+    FormalSum.mul s₁ t ≈  FormalSum.mul s₂ t := by 
     cases t
     case nil => 
       simp [mul]
@@ -203,7 +203,7 @@ theorem first_arg_invariant (s₁ s₂ t : FormalSum R G)
         let prev  := first_arg_invariant  _ _ tail' rel' 
         let pl := congrFun prev x₀
         rw [pl]
-        let ps := mulTerm_invariant R G b h x₀ s₁ s₂ r
+        let ps := mulTerm_invariant b h x₀ s₁ s₂ r
         rw [ps]       
       | swap a₁ a₂ x₁ x₂ tail => 
         simp [mul]
@@ -242,7 +242,7 @@ theorem first_arg_invariant (s₁ s₂ t : FormalSum R G)
 
 def FreeModule.mul : FreeModule R G → FreeModule R G → FreeModule R G := by
   let f  := fun (s : FormalSum R G) => 
-    fun  (t : FreeModule R G) => mulAux R G s t 
+    fun  (t : FreeModule R G) => mulAux  s t 
   apply  Quotient.lift f
   apply func_eql_of_move_equiv  
   intro s₁ s₂ rel
@@ -250,10 +250,10 @@ def FreeModule.mul : FreeModule R G → FreeModule R G → FreeModule R G := by
   apply funext
   apply Quotient.ind 
   intro t
-  let lhs : mulAux R G s₁ (Quotient.mk (formalSumSetoid R G) t) = 
-    ⟦FormalSum.mul R G s₁ t⟧ := by rfl
-  let rhs : mulAux R G s₂ (Quotient.mk (formalSumSetoid R G) t) = 
-    ⟦FormalSum.mul R G s₂ t⟧ := by rfl
+  let lhs : mulAux s₁ (Quotient.mk (formalSumSetoid R G) t) = 
+    ⟦FormalSum.mul s₁ t⟧ := by rfl
+  let rhs : mulAux s₂ (Quotient.mk (formalSumSetoid R G) t) = 
+    ⟦FormalSum.mul s₂ t⟧ := by rfl
   rw [lhs, rhs]
   simp
   apply Quotient.sound
