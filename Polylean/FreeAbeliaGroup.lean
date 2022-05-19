@@ -49,7 +49,8 @@ theorem gsmul_succ (n: ℤ) (x : A) : gsmul (n+1) x = x + gsmul n x  := by
           arg 2
           rw [add_comm]
         
-        admit
+        apply @add_left_cancel _ _ _ y _ _
+        rw [← add_assoc, add_right_neg, add_right_neg]
 
 
 
