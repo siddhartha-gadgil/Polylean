@@ -1,6 +1,7 @@
 import Mathlib.Algebra.Group.Defs
 import Mathlib.Algebra.Ring.Basic
 import Polylean.Morphisms
+import Polylean.EnumDecide
 open SubNegMonoid
 
 -- currently mainly experiments
@@ -228,6 +229,11 @@ class FreeAbelianGroup(F: Type)[AddCommGroup F]
     (f g : F → A)[AddCommGroup.Homomorphism f][AddCommGroup.Homomorphism g] :
        f ∘ i = g ∘ i  → f = g 
 
+theorem unique_extension{F: Type}[AddCommGroup F]
+  {X: Type}(i: X → F)[fgp : FreeAbelianGroup F X i]{A: Type}[AddCommGroup A] 
+    (f g : F → A)[AddCommGroup.Homomorphism f][AddCommGroup.Homomorphism g] :
+       f ∘ i = g ∘ i  → f = g := fgp.unique_extension f g
+
 def unitBasis : Unit → ℤ  := fun _ => 1
 
 instance intFree : FreeAbelianGroup ℤ Unit unitBasis where
@@ -247,4 +253,32 @@ instance intFree : FreeAbelianGroup ℤ Unit unitBasis where
     let at1 := congrFun hyp ()
     simp [unitBasis] at at1
     apply unique_morphism f g at1
+
+open EnumDecide
+
+def decideHomsEqual{F: Type}[AddCommGroup F]
+  (X: Type)(i: X → F)[fgp : FreeAbelianGroup F X i]
+  {A: Type}[AddCommGroup A][DecidableEq A][DecideForall X]
+    (f g : F → A)[AddCommGroup.Homomorphism f][AddCommGroup.Homomorphism g] :
+      Decidable (f = g) := 
+        if c : ∀ x : X, f (i x) = g (i x) then 
+        by
+          apply Decidable.isTrue
+          apply unique_extension i f g
+          apply funext
+          intro x  
+          exact c x
+        else by
+          apply Decidable.isFalse
+          intro contra
+          let c' : ∀ (x : X), f (i x) = g (i x) := by
+            intro x
+            apply congrFun contra (i x)
+          contradiction 
+
+instance decHomsEqual{F: Type}[AddCommGroup F]
+  {X: Type}{i: X → F}[fgp : FreeAbelianGroup F X i]
+  {A: Type}[AddCommGroup A][DecidableEq A][DecideForall X]
+    (f g : F → A)[AddCommGroup.Homomorphism f][AddCommGroup.Homomorphism g] :
+      Decidable (f = g) := by apply decideHomsEqual X i
 
