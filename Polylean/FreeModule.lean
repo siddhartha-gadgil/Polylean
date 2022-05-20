@@ -850,7 +850,7 @@ theorem FreeModule.zero_coeff (x: FreeModule R X) :
   rw [← l]
   simp [coords]
 
-instance : AddGroup (FreeModule R X) :=
+instance : AddCommGroup (FreeModule R X) :=
   {
     zero := ⟦ []⟧
     add := FreeModule.add
@@ -878,4 +878,6 @@ instance : AddGroup (FreeModule R X) :=
         rw [FreeModule.unit_coeff] at l
         rw [FreeModule.zero_coeff] at l
         exact l
+
+    add_comm := FreeModule.addn_comm
   }

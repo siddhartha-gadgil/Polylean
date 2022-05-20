@@ -259,5 +259,57 @@ def mul : FreeModule R G → FreeModule R G → FreeModule R G := by
   apply Quotient.sound
   apply first_arg_invariant
   exact rel
-  
+
+instance : Ring (FreeModule R G) :=
+  {
+    zero := ⟦ []⟧
+    add := FreeModule.add
+    add_assoc := FreeModule.addn_assoc
+    add_zero := FreeModule.addn_zero
+    zero_add := FreeModule.zero_addn
+    neg := fun x => (-1 : R) • x
+
+    nsmul_zero' := by intros; rfl
+    nsmul_succ' := by intros; rfl
+    sub_eq_add_neg := by 
+      intro x y 
+      rfl
+    gsmul_zero' := by intros; rfl
+    gsmul_succ' := by intros; rfl
+    gsmul_neg' := by intros; rfl
+
+    add_left_neg := by 
+        intro x
+        let l := FreeModule.coeff_distrib (-1 : R) (1 : R) x
+        simp at l
+        have lc : (-1 : R) + 1 = 0 := by 
+            apply add_left_neg
+        rw [lc] at l
+        rw [FreeModule.unit_coeff] at l
+        rw [FreeModule.zero_coeff] at l
+        exact l
+
+    add_comm := FreeModule.addn_comm
+
+    mul := mul
+    left_distrib := sorry
+    right_distrib := sorry
+    zero_mul := sorry
+    mul_zero := sorry
+    one := ⟦[(1, 1)]⟧
+    natCast := fun n => ⟦ [(n, 1)] ⟧
+    natCast_zero := sorry
+    natCast_succ := sorry
+    mul_assoc := sorry
+    mul_one := sorry
+    one_mul := sorry 
+    npow_zero' := sorry
+    npow_succ' := sorry
+
+    intCast := fun n => ⟦ [(n, 1)] ⟧
+    intCast_ofNat := sorry
+    intCast_negSucc := sorry
+  }
+
+
 end GroupRing
