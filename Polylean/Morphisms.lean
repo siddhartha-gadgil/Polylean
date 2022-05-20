@@ -210,4 +210,17 @@ theorem gsmul_hom : ∀ n : ℤ, ∀ a b : A, gsmul_rec n (a + b) = gsmul_rec n 
 instance {n : ℤ} : AddCommGroup.Homomorphism (gsmul_rec n : A → A) where
   add_dist := gsmul_hom n
 
+theorem neg_hom : ∀ a a' : A, -(a + a') = -a + -a' := by
+  intro a a'
+  rw [← @add_left_cancel_iff _ _ _ a _ _, ← @add_left_cancel_iff _ _ _ a' _ _, ← add_assoc a (-a) _, add_right_neg, zero_add, add_right_neg,
+  ← add_assoc, add_comm a a', add_right_neg]
+
+def neg (a : A) := -a
+
+instance : AddCommGroup.Homomorphism (neg : A → A) where
+  add_dist := neg_hom
+
+instance : AddCommGroup.Homomorphism (id : A → A) where
+  add_dist := λ _ _ => rfl
+
 end AddCommGroup.Homomorphism

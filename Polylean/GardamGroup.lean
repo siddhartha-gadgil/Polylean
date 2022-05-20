@@ -1,5 +1,6 @@
 import Mathlib.Data.Fin.Basic
 import Polylean.MetabelianGroup
+import Polylean.ProductGroups
 import Polylean.EnumDecide
 
 /-
