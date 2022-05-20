@@ -174,15 +174,18 @@ instance {M : Type _} [Monoid M] : Monoid.Homomorphism (id : M → M) where
   mul_dist := by intros; rfl
   one_map := by rfl
 
-theorem add_dist{A B : Type _} [AddCommGroup A] [AddCommGroup B] 
-    (ϕ : A → B)[abg : AddCommGroup.Homomorphism ϕ] :
-     ∀ a a' : A, ϕ (a + a') = ϕ a + ϕ a' := abg.add_dist
-
 end Morphisms
 
 section AddCommGroup.Homomorphism
 
-variable {A : Type _} [α : AddCommGroup A]
+variable {A B : Type _} [α : AddCommGroup A] [β : AddCommGroup B]
+variable (ϕ : A → B) [abg : AddCommGroup.Homomorphism ϕ]
+
+theorem add_dist : ∀ a a' : A, ϕ (a + a') = ϕ a + ϕ a' := abg.add_dist
+
+theorem zero_image : ϕ (0 : A) = (0 : B) := by
+  have : ϕ 0 + ϕ 0 = ϕ 0 + 0 := by rw [← add_dist, add_zero, add_zero]
+  exact add_left_cancel this
 
 theorem nsmul_hom : ∀ n : ℕ, ∀ a b : A, nsmul_rec n (a + b) = nsmul_rec n a + nsmul_rec n b := by
   intros n a b
