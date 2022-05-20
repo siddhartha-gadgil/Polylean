@@ -312,4 +312,7 @@ instance : Ring (FreeModule R G) :=
   }
 
 
+instance groupRingMul : Mul (FreeModule R G) := 
+  ⟨mul⟩
+  
 end GroupRing
