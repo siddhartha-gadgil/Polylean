@@ -159,6 +159,25 @@ instance {α β : Type}[dfa : DecideForall α][dfb : DecideForall β] :
   DecideForall (α × β) := 
   ⟨by apply decideProd⟩
 
+def decideUnit (p: Unit → Prop)[DecidablePred p] :
+  Decidable (∀ x : Unit, p x) := 
+   if c : p (()) then by 
+      apply Decidable.isTrue
+      intro x
+      have l : x = () := by rfl
+      rw [l]
+      exact c
+    else by 
+      apply Decidable.isFalse
+      intro contra
+      apply c
+      exact contra ()
+
+instance : DecideForall Unit := 
+  ⟨by apply decideUnit⟩
+
+
+
 example : ∀ xy : (Fin 3) × (Fin 2), 
       xy.1.val + xy.2.val  = xy.2.val + xy.1.val := by decide
 
