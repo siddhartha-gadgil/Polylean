@@ -174,6 +174,9 @@ instance {M : Type _} [Monoid M] : Monoid.Homomorphism (id : M → M) where
   mul_dist := by intros; rfl
   one_map := by rfl
 
+theorem add_dist{A B : Type _} [AddCommGroup A] [AddCommGroup B] 
+    (ϕ : A → B)[abg : AddCommGroup.Homomorphism ϕ] :
+     ∀ a a' : A, ϕ (a + a') = ϕ a + ϕ a' := abg.add_dist
 
 end Morphisms
 
