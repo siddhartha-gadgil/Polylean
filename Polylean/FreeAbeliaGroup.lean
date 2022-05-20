@@ -89,3 +89,45 @@ theorem isHom₁ (x : A) (n : ℤ) (m: Nat) : f x (n + m) = f x n + f x m :=
         arg 1
         rw [add_comm]
       rw [← add_assoc]
+
+theorem isHom₂ (x : A) (n m : Nat) : 
+        f x ((Int.negSucc n) + (Int.negSucc m)) = 
+          f x (Int.negSucc m) + f x (Int.negSucc n) :=
+  by
+    simp [f]
+    repeat (rw [abg.gsmul_neg'])
+    simp
+    simp [Int.add]
+    have l₀ : -[1+ n] + -[1+ m] = -[1+ (n + m) + 1] := by rfl
+    rw [l₀]
+    rw [abg.gsmul_neg']
+    simp
+    have l₁ : ((n : ℤ) + m + 1 + 1) = (n + 1) + (m + 1) := by 
+        rw [← add_assoc]
+        simp [add_comm]
+        rw [← add_assoc]
+        simp [add_comm]
+    rw [l₁]
+    simp 
+    let l₂ := isHom₁ x (n  + 1) (m + 1)
+    simp [f] at l₂
+    rw [l₂]
+    simp
+    let a := gsmul (n + 1) x
+    let b := gsmul (m + 1) x
+    show -(a + b) = -b + -a
+    have lab : (-(a + b) + a) + b = (-b + -a + a) + b := by 
+          conv =>
+            lhs
+            rw [add_assoc]
+          rw [neg_add_self]
+          let la := add_assoc (-b) (-a) (a + b)
+          rw [← add_assoc] at la
+          rw [la]
+          simp      
+    let lab₁ := add_right_cancel lab 
+    let lab₂ := add_right_cancel lab₁
+    assumption
+
+
+#check Int.add
