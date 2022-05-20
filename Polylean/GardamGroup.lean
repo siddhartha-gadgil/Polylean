@@ -1,5 +1,6 @@
 import Mathlib.Data.Fin.Basic
 import Polylean.MetabelianGroup
+import Polylean.EnumDecide
 
 /-
 We construct the group `P` as a Metabelian group. Helper functions for defining elements in the group etc. should be defined.
@@ -24,7 +25,7 @@ def action : Q → K → K
   | (0, 0) , (p, q, r) => (p, q, r)
   | (0, 1) , (p, q, r) => (-p, q, -r)
   | (1, 0) , (p, q, r) => (p, -q, -r)
-  | (1, 1), (p, q, r) => (-p, -q, r)
+  | (1, 1) , (p, q, r) => (-p, -q, r)
 
 instance : AddCommGroup.ActionByAutomorphisms Q K :=
   {
