@@ -294,6 +294,7 @@ instance : Ring (FreeModule R G) :=
     mul := mul
     left_distrib := sorry
     right_distrib := sorry
+
     zero_mul := by
       apply Quotient.ind
       intro x
@@ -311,26 +312,97 @@ instance : Ring (FreeModule R G) :=
         rw [lih]
         simp
         rw [mulMonom]
+
     mul_zero := by 
       apply Quotient.ind
       intro x
       rfl
+
     one := ⟦[(1, 1)]⟧
     natCast := fun n => ⟦ [(n, 1)] ⟧
     natCast_zero := 
       by
+      apply Quotient.sound
+      apply funext; intro x₀
+      simp [coords, monomCoeff]
+      cases 1 == x₀ <;> rfl
+    natCast_succ := by 
+      intro n
+      apply Quotient.sound
+      apply funext; intro x₀
+      rw [← append_coords]
       simp
-      sorry
-    natCast_succ := by simp ; sorry
+      cases m:1 == x₀ with
+      | true =>
+          repeat (rw [coords])
+          repeat (rw [monomCoeff])
+          simp
+          rw [m]
+      | false => 
+          repeat (rw [coords])
+          repeat (rw [monomCoeff])
+          simp
+          rw [m]
+          simp          
     mul_assoc := sorry
-    mul_one := sorry
-    one_mul := sorry 
-    npow_zero' := sorry
-    npow_succ' := sorry
+    mul_one := by
+      apply Quotient.ind
+      intro x
+      apply Quotient.sound
+      apply funext; intro x₀
+      repeat (rw[FormalSum.mul])
+      simp
+      induction x with
+      | nil => rfl
+      | cons h t ih => 
+        let (a, x) := h
+        rw [mulMonom, coords, monomCoeff]
+        simp
+        rw [coords, monomCoeff]
+        cases m:x == x₀ <;> simp [ih]
+        
+    one_mul := by
+      apply Quotient.ind
+      intro x
+      apply Quotient.sound
+      apply funext; intro x₀
+      induction x with
+      | nil => rfl
+      | cons h t ih => 
+        let (a, x) := h
+        repeat (rw [coords])
+        simp
+        rw [FormalSum.mul]
+        rw [← append_coords]
+        simp [ih, mulMonom, coords]
+    npow_zero' := by
+      apply Quotient.ind
+      intro x
+      apply Quotient.sound
+      apply eqlCoords.refl
+    npow_succ' := by
+      admit
 
     intCast := fun n => ⟦ [(n, 1)] ⟧
-    intCast_ofNat := sorry
-    intCast_negSucc := sorry
+    intCast_ofNat := by 
+      intro n
+      apply Quotient.sound
+      apply funext; intro x₀
+      simp
+    intCast_negSucc := by 
+      intro n
+      apply Quotient.sound
+      apply funext; intro x₀
+      simp [scmul, coords, monomCoeff]
+      cases m:1 == x₀ <;> simp 
+      have l₁ : - (↑n + 1) + (↑n + 1) = 0:= neg_add_self (Int.ofNat n + 1)
+      have l₂ := right_distrib (-1) 1 ((↑n : ℤ)  + 1)
+      have l₃ : -1 + 1 = 0 := by rfl
+      rw [l₃] at l₂
+      rw [zero_mul, one_mul] at l₂
+      rw [l₂] at l₁
+      let l₀ := add_right_cancel l₁
+      admit
   }
 
 
