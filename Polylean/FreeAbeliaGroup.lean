@@ -1,6 +1,7 @@
 import Mathlib.Algebra.Group.Defs
 import Mathlib.Algebra.Ring.Basic
 import Polylean.Morphisms
+import Polylean.ProductGroups
 import Polylean.EnumDecide
 open SubNegMonoid
 
@@ -282,3 +283,30 @@ instance decHomsEqual{F: Type}[AddCommGroup F]
     (f g : F → A)[AddCommGroup.Homomorphism f][AddCommGroup.Homomorphism g] :
       Decidable (f = g) := by apply decideHomsEqual X i
 
+section Product
+
+variable {A B : Type _} [AddCommGroup A] [AddCommGroup B]
+variable {X_A X_B : Type _} (i_A : X_A → A) (i_B : X_B → B)
+variable [FAb_A : FreeAbelianGroup A X_A i_A] [FAb_B : FreeAbelianGroup B X_B i_B]
+
+def ι : (X_A ⊕ X_B) → A × B
+  | Sum.inl x_a => (i_A x_a, 0)
+  | Sum.inr x_b => (0, i_B x_b)
+
+def inducedMap (G : Type _) [AddCommGroup G] (f : X_A ⊕ X_B → G) : A × B → G
+  | (a, b) =>
+    let f_A : X_A → G := f ∘ Sum.inl
+    let f_B : X_B → G := f ∘ Sum.inr
+    let ϕ_A : A → G := FAb_A.inducedMap _ G f_A
+    let ϕ_B : B → G := FAb_B.inducedMap _ G f_B
+    ϕ_A a + ϕ_B b
+
+instance : FreeAbelianGroup (A × B) (X_A ⊕ X_B) (@ι A B _ _ X_A X_B i_A i_B) :=
+  {
+    inducedMap := inducedMap i_A i_B
+    induced_extends := sorry
+    induced_hom := sorry
+    unique_extension := sorry
+  }
+
+end Product
