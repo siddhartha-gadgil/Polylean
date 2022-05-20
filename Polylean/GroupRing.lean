@@ -259,5 +259,8 @@ def mul : FreeModule R G → FreeModule R G → FreeModule R G := by
   apply Quotient.sound
   apply first_arg_invariant
   exact rel
+
+instance groupRingMul : Mul (FreeModule R G) := 
+  ⟨mul⟩
   
 end GroupRing
