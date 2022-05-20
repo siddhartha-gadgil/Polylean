@@ -187,6 +187,11 @@ theorem zero_image : ϕ (0 : A) = (0 : B) := by
   have : ϕ 0 + ϕ 0 = ϕ 0 + 0 := by rw [← add_dist, add_zero, add_zero]
   exact add_left_cancel this
 
+theorem neg_push : ∀ a : A, ϕ (-a) = -ϕ a := by
+  intro a
+  have : ϕ a + ϕ (-a) = ϕ a + - ϕ a := by rw [← add_dist, add_right_neg, add_right_neg, zero_image ϕ]
+  exact add_left_cancel this
+
 theorem nsmul_hom : ∀ n : ℕ, ∀ a b : A, nsmul_rec n (a + b) = nsmul_rec n a + nsmul_rec n b := by
   intros n a b
   cases n
