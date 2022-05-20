@@ -64,8 +64,16 @@ instance to_additive {G : Type _} [Grp : Group G] (mul_comm : ∀ g h : G, g * h
     gsmul_neg' := by intros; rfl
   }
 
-instance directSum {A B : Type _} [AddCommGroup A] [AddCommGroup B] : AddCommGroup (A × B) :=
+variable {A B : Type _} [AddCommGroup A] [AddCommGroup B]
+
+instance directSum : AddCommGroup (A × B) :=
   to_additive product_comm
+
+theorem directSum_mul {a a' : A} {b b' : B} : MetabelianGroup.mul trivial_cocycle (a, b) (a', b') = (a + a', b + b') := by
+    simp [MetabelianGroup.mul, trivial_cocycle]
+    rfl
+
+theorem directSum_add {a a' : A} {b b' : B} : directSum.add (a, b) (a', b') = (a + a', b + b') := directSum_mul
 
 end DirectSum
 
@@ -73,7 +81,14 @@ section Homomorphisms
 
 variable {A B : Type _} [AddCommGroup A] [AddCommGroup B]
 
-instance (ϕ : A → A) [AddCommGroup.Homomorphism ϕ] (ψ : B → B) [AddCommGroup.Homomorphism ψ] :
-  AddCommGroup.Homomorphism (λ (a, b) => (ϕ a, ψ b)) := sorry
+instance (ϕ : A → A) [ϕHom : AddCommGroup.Homomorphism ϕ] (ψ : B → B) [ψHom : AddCommGroup.Homomorphism ψ] :
+  AddCommGroup.Homomorphism (λ (a, b) => (ϕ a, ψ b)) where
+    add_dist := by
+                intro (a, b)
+                intro (a', b')
+                simp [trivial_cocycle, MetabelianGroup.mul]
+                have : b • a' = a' := rfl
+                rw [this, ϕHom.add_dist, ψHom.add_dist, ← DirectSum.directSum_add]
+                rfl
 
 end Homomorphisms
