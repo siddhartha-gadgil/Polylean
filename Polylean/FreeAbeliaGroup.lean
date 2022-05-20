@@ -1,5 +1,6 @@
 import Mathlib.Algebra.Group.Defs
 import Mathlib.Algebra.Ring.Basic
+import Polylean.Morphisms
 open SubNegMonoid
 
 -- currently mainly experiments
@@ -154,6 +155,96 @@ theorem zhom_is_hom (x: A) (n m : ℤ) :
         rhs
         rw [add_comm]
       assumption
+  
+theorem zhom_one (x : A) : zhom x 1 = x := by
+  simp [zhom]
+  let l : gsmul 1 x = x + gsmul 0 x := abg.gsmul_succ' 0 x
+  rw [l]
+  rw [abg.gsmul_zero' x]
+  simp [add_zero]
+  
+instance zhomHom(a : A) : AddCommGroup.Homomorphism  (zhom a) := 
+  ⟨zhom_is_hom a⟩
+
+theorem unique_morphism_nat (f g : ℤ → A)[AddCommGroup.Homomorphism f]
+        [AddCommGroup.Homomorphism g]: 
+          f 1 = g 1  → ∀ n: ℕ, f (n + 1) = g (n + 1) := by
+          intro hyp
+          intro n
+          induction n with
+          | zero =>
+            simp [hyp]            
+          | succ k ih => 
+            let lf := add_dist f (Nat.succ k) 1
+            rw [lf]
+            let lg := add_dist g (Nat.succ k) 1
+            rw [lg]
+            rw [hyp]
+            simp [add_right_cancel]
+            assumption
+
+theorem unique_morphism (f g : ℤ → A)[AddCommGroup.Homomorphism f]
+        [AddCommGroup.Homomorphism g]: f 1 = g 1  → f = g := by
+          intro hyp
+          have fzero : f (Int.ofNat Nat.zero) = 0 := 
+            by
+                apply zero_image f
+          have gzero : g (Int.ofNat Nat.zero) = 0 := 
+            by
+                apply zero_image g
+          apply funext
+          intro n
+          cases n
+          case ofNat k =>
+            cases k
+            case zero => 
+              rw [fzero, gzero]
+            case succ k' =>
+              apply unique_morphism_nat f g hyp
+          case negSucc k =>
+            have fn : f (Int.negSucc k)  = -f (k + 1) := by
+              let l := neg_push f (k + 1) 
+              rw [← l]
+              rfl
+            have gn : g (Int.negSucc k)  = -g (k + 1) := by
+              let l := neg_push g (k + 1) 
+              rw [← l]
+              rfl
+            rw [fn, gn]
+            let l := unique_morphism_nat f g hyp k
+            rw [l]           
+
+
 
 end Zhom
+
+class FreeAbelianGroup(F: Type)[AddCommGroup F]
+  (X: Type)(i: X → F) where
+  inducedMap : (A: Type) →  [AddCommGroup A] →  (X → A) → (F → A)
+  induced_extends{A: Type}[AddCommGroup A] : ∀ f : X → A, (inducedMap A f) ∘ i = f
+  induced_hom: (A: Type) → [abg : AddCommGroup A] → 
+      (f : X → A) →  AddCommGroup.Homomorphism (@inducedMap A abg f)
+  unique_extension{A: Type}[AddCommGroup A] 
+    (f g : F → A)[AddCommGroup.Homomorphism f][AddCommGroup.Homomorphism g] :
+       f ∘ i = g ∘ i  → f = g 
+
+def unitBasis : Unit → ℤ  := fun _ => 1
+
+instance intFree : FreeAbelianGroup ℤ Unit unitBasis where
+  inducedMap := fun A _ f => zhom (f ())
+  induced_extends := by
+    intro A _ f
+    apply funext; intro u
+    simp [unitBasis]
+    apply zhom_one 
+
+  induced_hom := by
+    intro A abg f
+    simp
+    exact ⟨zhom_is_hom (f ())⟩
+  unique_extension := by
+    intro A abg f g fh gh hyp
+    let at1 := congrFun hyp ()
+    simp [unitBasis] at at1
+    apply unique_morphism f g at1
 
