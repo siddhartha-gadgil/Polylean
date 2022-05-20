@@ -59,7 +59,7 @@ theorem gsmul_succ (n: ℤ) (x : A) : gsmul (n+1) x = x + gsmul n x  := by
               rw [l₃]
               rw [neg_add_self]
         let l₂ := add_left_cancel l₁
-        assumption
+        assumption      
 
 
 theorem isHom₁ (x : A) (n : ℤ) (m: Nat) : f x (n + m) = f x n + f x m :=
