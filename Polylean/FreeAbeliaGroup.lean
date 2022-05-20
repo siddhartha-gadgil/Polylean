@@ -48,17 +48,21 @@ theorem gsmul_succ (n: ℤ) (x : A) : gsmul (n+1) x = x + gsmul n x  := by
           lhs
           arg 2
           rw [add_comm]
-        
-        admit
+        let l₁ : y + (x + -(y + x)) = y + -y := 
+            by
+              conv =>
+                rhs
+                rw [add_comm]
+              rw [neg_add_self]
+              rw [← add_assoc]
+              let l₃ := add_comm (y + x) (- (y + x))
+              rw [l₃]
+              rw [neg_add_self]
+        let l₂ := add_left_cancel l₁
+        assumption
 
 
-
-        
-#check add_left_cancel
-    
-#check neg_add_self
-
-theorem isHomPos (x : A) (n m: Nat) : f x (n + m) = f x n + f x m :=
+theorem isHom₁ (x : A) (n : ℤ) (m: Nat) : f x (n + m) = f x n + f x m :=
   by 
     induction m with
     | zero =>
@@ -71,11 +75,10 @@ theorem isHomPos (x : A) (n m: Nat) : f x (n + m) = f x n + f x m :=
       rw [← add_assoc]
       simp
       let l₁ := abg.gsmul_succ' k x
-
       simp at l₁
       rw [l₁]
       simp
-      let l₂ := abg.gsmul_succ' (n + k) x
+      let l₂ := gsmul_succ (n + k) x
       simp at l₂
       rw [l₂] 
       rw [ih]
@@ -86,4 +89,3 @@ theorem isHomPos (x : A) (n m: Nat) : f x (n + m) = f x n + f x m :=
         arg 1
         rw [add_comm]
       rw [← add_assoc]
-
