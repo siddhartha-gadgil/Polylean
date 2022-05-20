@@ -4,9 +4,12 @@ open SubNegMonoid
 
 -- currently mainly experiments
 
+
+section Zhom
+
 variable {A : Type} [abg : AddCommGroup A]
 
-def f (a: A) : ℤ → A := 
+def zhom (a: A) : ℤ → A := 
   fun n => abg.gsmul n a
 
 theorem gsmul_succ (n: ℤ) (x : A) : gsmul (n+1) x = x + gsmul n x  := by 
@@ -62,16 +65,17 @@ theorem gsmul_succ (n: ℤ) (x : A) : gsmul (n+1) x = x + gsmul n x  := by
         assumption      
 
 
-theorem isHom₁ (x : A) (n : ℤ) (m: Nat) : f x (n + m) = f x n + f x m :=
+theorem isHom₁ (x : A) (n : ℤ) (m: Nat) : 
+      zhom x (n + m) = zhom x n + zhom x m :=
   by 
     induction m with
     | zero =>
-      simp [f]
+      simp [zhom]
       rw [abg.gsmul_zero']
       simp     
     | succ k ih =>
-      simp [f]
-      simp [f] at ih
+      simp [zhom]
+      simp [zhom] at ih
       rw [← add_assoc]
       simp
       let l₁ := abg.gsmul_succ' k x
@@ -91,10 +95,10 @@ theorem isHom₁ (x : A) (n : ℤ) (m: Nat) : f x (n + m) = f x n + f x m :=
       rw [← add_assoc]
 
 theorem isHom₂ (x : A) (n m : Nat) : 
-        f x ((Int.negSucc n) + (Int.negSucc m)) = 
-          f x (Int.negSucc m) + f x (Int.negSucc n) :=
+        zhom x ((Int.negSucc n) + (Int.negSucc m)) = 
+          zhom x (Int.negSucc m) + zhom x (Int.negSucc n) :=
   by
-    simp [f]
+    simp [zhom]
     repeat (rw [abg.gsmul_neg'])
     simp
     simp [Int.add]
@@ -110,7 +114,7 @@ theorem isHom₂ (x : A) (n m : Nat) :
     rw [l₁]
     simp 
     let l₂ := isHom₁ x (n  + 1) (m + 1)
-    simp [f] at l₂
+    simp [zhom] at l₂
     rw [l₂]
     simp
     let a := gsmul (n + 1) x
@@ -130,4 +134,26 @@ theorem isHom₂ (x : A) (n m : Nat) :
     assumption
 
 
-#check Int.add
+theorem zhom_is_hom (x: A) (n m : ℤ) :
+  zhom x (n + m) = zhom x n + zhom x m := by
+  cases m
+  case ofNat k =>
+    apply isHom₁ x n k
+  case negSucc k =>
+    cases n
+    case ofNat l =>
+      let l₀ := isHom₁ x (Int.negSucc k) l
+      rw [add_comm] at l₀
+      conv =>
+        rhs
+        rw [add_comm]
+      assumption
+    case negSucc l =>
+      let l₁ := isHom₂ x l k
+      conv =>
+        rhs
+        rw [add_comm]
+      assumption
+
+end Zhom
+
