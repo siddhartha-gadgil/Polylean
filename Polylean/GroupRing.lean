@@ -294,12 +294,34 @@ instance : Ring (FreeModule R G) :=
     mul := mul
     left_distrib := sorry
     right_distrib := sorry
-    zero_mul := sorry
-    mul_zero := sorry
+    zero_mul := by
+      apply Quotient.ind
+      intro x
+      apply Quotient.sound
+      induction x with
+      | nil =>        
+        rfl
+      | cons h t ih =>        
+        rw [FormalSum.mul]
+        simp
+        apply funext ; intro x₀
+        let lih := congrFun ih x₀
+        rw [coords] at lih
+        rw [← append_coords]
+        rw [lih]
+        simp
+        rw [mulMonom]
+    mul_zero := by 
+      apply Quotient.ind
+      intro x
+      rfl
     one := ⟦[(1, 1)]⟧
     natCast := fun n => ⟦ [(n, 1)] ⟧
-    natCast_zero := sorry
-    natCast_succ := sorry
+    natCast_zero := 
+      by
+      simp
+      sorry
+    natCast_succ := by simp ; sorry
     mul_assoc := sorry
     mul_one := sorry
     one_mul := sorry 
