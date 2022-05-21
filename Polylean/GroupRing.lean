@@ -260,6 +260,12 @@ def mul : FreeModule R G → FreeModule R G → FreeModule R G := by
   apply first_arg_invariant
   exact rel
 
+instance groupRingMul : Mul (FreeModule R G) := 
+  ⟨mul⟩
+
+instance : One (FreeModule R G) := 
+  ⟨⟦[(1, 1)]⟧⟩
+
 instance : Ring (FreeModule R G) :=
   {
     zero := ⟦ []⟧
@@ -381,9 +387,13 @@ instance : Ring (FreeModule R G) :=
       apply Quotient.sound
       apply eqlCoords.refl
     npow_succ' := by
-      admit
+      intro n x
+      rw [npow_rec]
 
-    intCast := fun n => ⟦ [(n, 1)] ⟧
+    intCast := fun n => 
+      match n with 
+      | Int.ofNat k =>  ⟦ [(Int.ofNat k, 1)] ⟧
+      | Int.negSucc k => - ⟦ [(Int.ofNat k + 1, 1)] ⟧
     intCast_ofNat := by 
       intro n
       apply Quotient.sound
@@ -391,22 +401,11 @@ instance : Ring (FreeModule R G) :=
       simp
     intCast_negSucc := by 
       intro n
-      apply Quotient.sound
-      apply funext; intro x₀
-      simp [scmul, coords, monomCoeff]
-      cases m:1 == x₀ <;> simp 
-      have l₁ : - (↑n + 1) + (↑n + 1) = 0:= neg_add_self (Int.ofNat n + 1)
-      have l₂ := right_distrib (-1) 1 ((↑n : ℤ)  + 1)
-      have l₃ : -1 + 1 = 0 := by rfl
-      rw [l₃] at l₂
-      rw [zero_mul, one_mul] at l₂
-      rw [l₂] at l₁
-      let l₀ := add_right_cancel l₁
-      admit
+      simp
+      simp [NonUnitalNonAssocSemiring.natCast]            
   }
 
 
-instance groupRingMul : Mul (FreeModule R G) := 
-  ⟨mul⟩
+
   
 end GroupRing
