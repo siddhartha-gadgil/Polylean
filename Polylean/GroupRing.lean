@@ -31,7 +31,56 @@ theorem mul_monom_zero (g x₀: G)(s: FormalSum R G):
     simp [mulMonom, coords, monom_coords_at_zero]
     assumption
 
-theorem mul_monom_add(b₁ b₂ : R)(h : G)(s: FormalSum R G):
+theorem mul_monom_dist(b : R)(h x₀ : G)(s₁ s₂: FormalSum R G):
+  coords (mulMonom b h (s₁  ++ s₂)) x₀ = coords (mulMonom b h s₁) x₀ + coords (mulMonom b h s₂) x₀ := by
+    induction s₁ with
+    | nil => 
+      simp [mulMonom, coords]
+    | cons head tail ih =>
+      simp [mulMonom, coords]
+      rw [ih]
+      simp [add_assoc]
+
+theorem mul_dist(x₀ : G)(s₁ s₂ s₃: FormalSum R G):
+  coords (mul s₁ (s₂  ++ s₃)) x₀ = coords (mul s₁ s₂) x₀ + coords (mul s₁ s₃) x₀ := by
+    induction s₂ with
+    | nil => 
+      simp [mulMonom, coords]
+    | cons head tail ih =>
+      simp [mulMonom, coords, mul]
+      rw [← append_coords]
+      rw [← append_coords]
+      rw [ih]
+      simp [add_assoc]
+
+theorem mul_monom_monom_assoc(a b : R)(h x₀ : G)(s : FormalSum R G):
+  coords (mulMonom b h (mulMonom a x s)) x₀ = 
+    coords (mulMonom (a * b) (x * h) s) x₀  := by 
+    induction s with
+    | nil => 
+      simp [mulMonom, coords]
+    | cons head tail ih =>
+      let (a₁, x₁) := head
+      simp [mulMonom, coords, mul_assoc]
+      rw [ih]
+
+theorem mul_monom_assoc(b : R)(h x₀ : G)(s₁ s₂: FormalSum R G):
+  coords (mulMonom b h (mul s₁ s₂)) x₀ = 
+    coords (mul s₁ (mulMonom b h s₂)) x₀  := by
+    induction s₂ with
+    | nil => 
+      simp [mulMonom, coords]
+    | cons head tail ih =>
+      let (a, x) := head
+      simp [mulMonom, coords, mul]
+      rw [← append_coords]
+      simp
+      rw [mul_monom_dist]
+      rw [ih]
+      simp [add_assoc, mulMonom]
+      rw [mul_monom_monom_assoc]
+
+theorem mul_monom_add(b₁ b₂ : R)(h x₀ : G)(s: FormalSum R G):
   coords (mulMonom (b₁ + b₂) h s) x₀ = coords (mulMonom b₁ h s) x₀ + coords (mulMonom b₂ h s) x₀ := by
   induction s with
   | nil => 
@@ -262,5 +311,226 @@ def mul : FreeModule R G → FreeModule R G → FreeModule R G := by
 
 instance groupRingMul : Mul (FreeModule R G) := 
   ⟨mul⟩
+
+instance : One (FreeModule R G) := 
+  ⟨⟦[(1, 1)]⟧⟩
+
+
+instance : Ring (FreeModule R G) :=
+  {
+    zero := ⟦ []⟧
+    add := FreeModule.add
+    add_assoc := FreeModule.addn_assoc
+    add_zero := FreeModule.addn_zero
+    zero_add := FreeModule.zero_addn
+    neg := fun x => (-1 : R) • x
+
+    nsmul_zero' := by intros; rfl
+    nsmul_succ' := by intros; rfl
+    sub_eq_add_neg := by 
+      intro x y 
+      rfl
+    gsmul_zero' := by intros; rfl
+    gsmul_succ' := by intros; rfl
+    gsmul_neg' := by intros; rfl
+
+    add_left_neg := by 
+        intro x
+        let l := FreeModule.coeff_distrib (-1 : R) (1 : R) x
+        simp at l
+        have lc : (-1 : R) + 1 = 0 := by 
+            apply add_left_neg
+        rw [lc] at l
+        rw [FreeModule.unit_coeff] at l
+        rw [FreeModule.zero_coeff] at l
+        exact l
+
+    add_comm := FreeModule.addn_comm
+
+    mul := mul
+    left_distrib := by
+      apply @Quotient.ind (motive := fun a  =>
+        ∀ b c, a * (b + c) = a * b + a * c)
+      intro x
+      apply @Quotient.ind₂ (motive := fun b c =>
+        ⟦ x ⟧ * (b + c) = ⟦ x ⟧ * b + ⟦ x ⟧ * c)
+      intro y z
+      apply Quotient.sound
+      induction y with
+      | nil => 
+          simp
+          simp [FormalSum.mul]
+          apply eqlCoords.refl
+      | cons h t ih => 
+          simp [FormalSum.mul]
+          apply funext; intro x₀
+          repeat (rw [← append_coords])
+          simp
+          let lih := congrFun ih x₀
+          rw [← append_coords] at lih
+          rw [lih]
+          simp [add_assoc]
+    right_distrib := by
+      apply @Quotient.ind (motive := fun a  =>
+        ∀ b c, (a + b) * c = a * c + b * c)
+      intro x
+      apply @Quotient.ind₂ (motive := fun b c =>
+        (⟦ x ⟧ + b) * c = ⟦ x ⟧ * c + b * c)
+      intro y z
+      apply Quotient.sound
+      induction z with
+      | nil => 
+          simp
+          simp [FormalSum.mul]
+          apply eqlCoords.refl
+      | cons h t ih => 
+          let (a, h) := h
+          simp [FormalSum.mul, mulMonom]
+          apply funext; intro x₀
+          repeat (rw [← append_coords])
+          simp
+          let lih := congrFun ih x₀
+          rw [← append_coords] at lih
+          rw [lih]
+          simp [add_assoc]
+          rw [mul_monom_dist]
+          simp [add_assoc, add_left_cancel]
+          conv =>
+            lhs
+            arg 2
+            rw [← add_assoc]
+            arg 1
+            rw [add_comm]
+          conv =>
+            rhs
+            arg 2
+            rw [← add_assoc]
+
+    zero_mul := by
+      apply Quotient.ind
+      intro x
+      apply Quotient.sound
+      induction x with
+      | nil =>        
+        rfl
+      | cons h t ih =>        
+        rw [FormalSum.mul]
+        simp
+        apply funext ; intro x₀
+        let lih := congrFun ih x₀
+        rw [coords] at lih
+        rw [← append_coords]
+        rw [lih]
+        simp
+        rw [mulMonom]
+
+    mul_zero := by 
+      apply Quotient.ind
+      intro x
+      rfl
+
+    one := ⟦[(1, 1)]⟧
+    natCast := fun n => ⟦ [(n, 1)] ⟧
+    natCast_zero := 
+      by
+      apply Quotient.sound
+      apply funext; intro x₀
+      simp [coords, monomCoeff]
+      cases 1 == x₀ <;> rfl
+    natCast_succ := by 
+      intro n
+      apply Quotient.sound
+      apply funext; intro x₀
+      rw [← append_coords]
+      simp
+      cases m:1 == x₀ with
+      | true =>
+          repeat (rw [coords])
+          repeat (rw [monomCoeff])
+          simp
+          rw [m]
+      | false => 
+          repeat (rw [coords])
+          repeat (rw [monomCoeff])
+          simp
+          rw [m]
+          simp          
+    mul_assoc := by
+      apply @Quotient.ind (motive := fun a  =>
+        ∀ b c, a * b * c = a * (b * c))
+      intro x
+      apply @Quotient.ind₂ (motive := fun b c =>
+        ⟦ x ⟧ * b * c = ⟦ x ⟧ * (b  * c))
+      intro y z
+      apply Quotient.sound
+      apply funext; intro x₀
+      simp [coords]
+      induction z with
+      | nil => 
+          simp
+          simp [FormalSum.mul]
+      | cons h t ih => 
+          let (a, h) := h
+          simp [FormalSum.mul, mulMonom]
+          repeat (rw [← append_coords])
+          rw [mul_dist]
+          rw [ih]
+          rw [mul_monom_assoc]
+    mul_one := by
+      apply Quotient.ind
+      intro x
+      apply Quotient.sound
+      apply funext; intro x₀
+      repeat (rw[FormalSum.mul])
+      simp
+      induction x with
+      | nil => rfl
+      | cons h t ih => 
+        let (a, x) := h
+        rw [mulMonom, coords, monomCoeff]
+        simp
+        rw [coords, monomCoeff]
+        cases m:x == x₀ <;> simp [ih]
+        
+    one_mul := by
+      apply Quotient.ind
+      intro x
+      apply Quotient.sound
+      apply funext; intro x₀
+      induction x with
+      | nil => rfl
+      | cons h t ih => 
+        let (a, x) := h
+        repeat (rw [coords])
+        simp
+        rw [FormalSum.mul]
+        rw [← append_coords]
+        simp [ih, mulMonom, coords]
+    npow_zero' := by
+      apply Quotient.ind
+      intro x
+      apply Quotient.sound
+      apply eqlCoords.refl
+    npow_succ' := by
+      intro n x
+      rw [npow_rec]
+
+    intCast := fun n => 
+      match n with 
+      | Int.ofNat k =>  ⟦ [(Int.ofNat k, 1)] ⟧
+      | Int.negSucc k => - ⟦ [(Int.ofNat k + 1, 1)] ⟧
+    intCast_ofNat := by 
+      intro n
+      apply Quotient.sound
+      apply funext; intro x₀
+      simp
+    intCast_negSucc := by 
+      intro n
+      simp
+      simp [NonUnitalNonAssocSemiring.natCast]            
+  }
+
+
+
   
 end GroupRing
