@@ -41,6 +41,45 @@ theorem mul_monom_dist(b : R)(h x₀ : G)(s₁ s₂: FormalSum R G):
       rw [ih]
       simp [add_assoc]
 
+theorem mul_dist(x₀ : G)(s₁ s₂ s₃: FormalSum R G):
+  coords (mul s₁ (s₂  ++ s₃)) x₀ = coords (mul s₁ s₂) x₀ + coords (mul s₁ s₃) x₀ := by
+    induction s₂ with
+    | nil => 
+      simp [mulMonom, coords]
+    | cons head tail ih =>
+      simp [mulMonom, coords, mul]
+      rw [← append_coords]
+      rw [← append_coords]
+      rw [ih]
+      simp [add_assoc]
+
+theorem mul_monom_monom_assoc(a b : R)(h x₀ : G)(s : FormalSum R G):
+  coords (mulMonom b h (mulMonom a x s)) x₀ = 
+    coords (mulMonom (a * b) (x * h) s) x₀  := by 
+    induction s with
+    | nil => 
+      simp [mulMonom, coords]
+    | cons head tail ih =>
+      let (a₁, x₁) := head
+      simp [mulMonom, coords, mul_assoc]
+      rw [ih]
+
+theorem mul_monom_assoc(b : R)(h x₀ : G)(s₁ s₂: FormalSum R G):
+  coords (mulMonom b h (mul s₁ s₂)) x₀ = 
+    coords (mul s₁ (mulMonom b h s₂)) x₀  := by
+    induction s₂ with
+    | nil => 
+      simp [mulMonom, coords]
+    | cons head tail ih =>
+      let (a, x) := head
+      simp [mulMonom, coords, mul]
+      rw [← append_coords]
+      simp
+      rw [mul_monom_dist]
+      rw [ih]
+      simp [add_assoc, mulMonom]
+      rw [mul_monom_monom_assoc]
+
 theorem mul_monom_add(b₁ b₂ : R)(h x₀ : G)(s: FormalSum R G):
   coords (mulMonom (b₁ + b₂) h s) x₀ = coords (mulMonom b₁ h s) x₀ + coords (mulMonom b₂ h s) x₀ := by
   induction s with
@@ -416,7 +455,27 @@ instance : Ring (FreeModule R G) :=
           simp
           rw [m]
           simp          
-    mul_assoc := sorry
+    mul_assoc := by
+      apply @Quotient.ind (motive := fun a  =>
+        ∀ b c, a * b * c = a * (b * c))
+      intro x
+      apply @Quotient.ind₂ (motive := fun b c =>
+        ⟦ x ⟧ * b * c = ⟦ x ⟧ * (b  * c))
+      intro y z
+      apply Quotient.sound
+      apply funext; intro x₀
+      simp [coords]
+      induction z with
+      | nil => 
+          simp
+          simp [FormalSum.mul]
+      | cons h t ih => 
+          let (a, h) := h
+          simp [FormalSum.mul, mulMonom]
+          repeat (rw [← append_coords])
+          rw [mul_dist]
+          rw [ih]
+          rw [mul_monom_assoc]
     mul_one := by
       apply Quotient.ind
       intro x
