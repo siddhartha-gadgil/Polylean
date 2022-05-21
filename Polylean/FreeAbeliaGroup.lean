@@ -313,9 +313,9 @@ end Product
 
 namespace Z3
 
--- elements in the bais of Z3
-def  x : Unit ⊕ Unit ⊕ Unit := Sum.inl ()
-def  y : Unit ⊕ Unit ⊕ Unit := Sum.inr (Sum.inl ())
-def  z : Unit ⊕ Unit ⊕ Unit := Sum.inr (Sum.inr ())
+-- elements in the basis `X` of Z3 ; to be mapped by inclusion
+def  ex : Unit ⊕ Unit ⊕ Unit := Sum.inl ()
+def  ey : Unit ⊕ Unit ⊕ Unit := Sum.inr (Sum.inl ())
+def  ez : Unit ⊕ Unit ⊕ Unit := Sum.inr (Sum.inr ())
 
 end Z3
