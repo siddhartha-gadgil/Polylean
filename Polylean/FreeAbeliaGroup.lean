@@ -310,3 +310,12 @@ instance : FreeAbelianGroup (A × B) (X_A ⊕ X_B) (@ι A B _ _ X_A X_B i_A i_B)
   }
 
 end Product
+
+namespace Z3
+
+-- elements in the bais of Z3
+def  x : Unit ⊕ Unit ⊕ Unit := Sum.inl ()
+def  y : Unit ⊕ Unit ⊕ Unit := Sum.inr (Sum.inl ())
+def  z : Unit ⊕ Unit ⊕ Unit := Sum.inr (Sum.inr ())
+
+end Z3
