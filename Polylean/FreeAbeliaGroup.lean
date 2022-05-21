@@ -318,4 +318,10 @@ def  ex : Unit ⊕ Unit ⊕ Unit := Sum.inl ()
 def  ey : Unit ⊕ Unit ⊕ Unit := Sum.inr (Sum.inl ())
 def  ez : Unit ⊕ Unit ⊕ Unit := Sum.inr (Sum.inr ())
 
+def onX {α : Type _} : α × α × α →   Unit ⊕ Unit ⊕ Unit → α 
+| (a, _, _), (Sum.inl _) => a
+| (_, b, _), (Sum.inr (Sum.inl _)) => b
+| (_, _, c), (Sum.inr (Sum.inr _)) => c
+
+
 end Z3
