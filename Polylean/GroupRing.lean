@@ -31,7 +31,17 @@ theorem mul_monom_zero (g x₀: G)(s: FormalSum R G):
     simp [mulMonom, coords, monom_coords_at_zero]
     assumption
 
-theorem mul_monom_add(b₁ b₂ : R)(h : G)(s: FormalSum R G):
+theorem mul_monom_dist(b : R)(h x₀ : G)(s₁ s₂: FormalSum R G):
+  coords (mulMonom b h (s₁  ++ s₂)) x₀ = coords (mulMonom b h s₁) x₀ + coords (mulMonom b h s₂) x₀ := by
+    induction s₁ with
+    | nil => 
+      simp [mulMonom, coords]
+    | cons head tail ih =>
+      simp [mulMonom, coords]
+      rw [ih]
+      simp [add_assoc]
+
+theorem mul_monom_add(b₁ b₂ : R)(h x₀ : G)(s: FormalSum R G):
   coords (mulMonom (b₁ + b₂) h s) x₀ = coords (mulMonom b₁ h s) x₀ + coords (mulMonom b₂ h s) x₀ := by
   induction s with
   | nil => 
@@ -266,6 +276,7 @@ instance groupRingMul : Mul (FreeModule R G) :=
 instance : One (FreeModule R G) := 
   ⟨⟦[(1, 1)]⟧⟩
 
+
 instance : Ring (FreeModule R G) :=
   {
     zero := ⟦ []⟧
@@ -298,8 +309,63 @@ instance : Ring (FreeModule R G) :=
     add_comm := FreeModule.addn_comm
 
     mul := mul
-    left_distrib := sorry
-    right_distrib := sorry
+    left_distrib := by
+      apply @Quotient.ind (motive := fun a  =>
+        ∀ b c, a * (b + c) = a * b + a * c)
+      intro x
+      apply @Quotient.ind₂ (motive := fun b c =>
+        ⟦ x ⟧ * (b + c) = ⟦ x ⟧ * b + ⟦ x ⟧ * c)
+      intro y z
+      apply Quotient.sound
+      induction y with
+      | nil => 
+          simp
+          simp [FormalSum.mul]
+          apply eqlCoords.refl
+      | cons h t ih => 
+          simp [FormalSum.mul]
+          apply funext; intro x₀
+          repeat (rw [← append_coords])
+          simp
+          let lih := congrFun ih x₀
+          rw [← append_coords] at lih
+          rw [lih]
+          simp [add_assoc]
+    right_distrib := by
+      apply @Quotient.ind (motive := fun a  =>
+        ∀ b c, (a + b) * c = a * c + b * c)
+      intro x
+      apply @Quotient.ind₂ (motive := fun b c =>
+        (⟦ x ⟧ + b) * c = ⟦ x ⟧ * c + b * c)
+      intro y z
+      apply Quotient.sound
+      induction z with
+      | nil => 
+          simp
+          simp [FormalSum.mul]
+          apply eqlCoords.refl
+      | cons h t ih => 
+          let (a, h) := h
+          simp [FormalSum.mul, mulMonom]
+          apply funext; intro x₀
+          repeat (rw [← append_coords])
+          simp
+          let lih := congrFun ih x₀
+          rw [← append_coords] at lih
+          rw [lih]
+          simp [add_assoc]
+          rw [mul_monom_dist]
+          simp [add_assoc, add_left_cancel]
+          conv =>
+            lhs
+            arg 2
+            rw [← add_assoc]
+            arg 1
+            rw [add_comm]
+          conv =>
+            rhs
+            arg 2
+            rw [← add_assoc]
 
     zero_mul := by
       apply Quotient.ind
