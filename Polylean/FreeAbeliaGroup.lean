@@ -368,17 +368,58 @@ def inducedMap (G : Type _) [AddCommGroup G] (f : X_A ⊕ X_B → G) : A × B �
     let ϕ_B : B → G := FAb_B.inducedMap  G f_B
     ϕ_A a + ϕ_B b
 
-#check @ι
-
 instance prodFree : FreeAbelianGroup (A × B) (X_A ⊕ X_B)  :=
   {
     i := ι
     inducedMap := inducedMap 
-    induced_extends := sorry
-    induced_hom := sorry
-    unique_extension := sorry
+    induced_extends := by
+      intro G GrpG f
+      simp [inducedMap]
+      apply funext
+      intro x
+      simp
+      cases x
+      · rename_i x_A
+        simp [ι]
+        have fA_extends := congrFun (FAb_A.induced_extends (f ∘ Sum.inl)) x_A
+        simp at fA_extends
+        rw [fA_extends]
+        have : FreeAbelianGroup.inducedMap G (f ∘ Sum.inr) (0 : B) = (0 : G) := by
+ --          apply @AddCommGroup.Homomorphism.zero_image B G _ _ _ _
+             sorry
+        rw [this, add_zero]
+      · rename_i x_B
+        simp [ι]
+        have fB_extends := congrFun (FAb_B.induced_extends (f ∘ Sum.inr)) x_B
+        simp at fB_extends
+        rw [fB_extends]
+        have : FreeAbelianGroup.inducedMap G (f ∘ Sum.inl) (0 : A) = (0 : G) := sorry
+        rw [this, zero_add]
+    induced_hom := by
+      intro G GrpG f
+      apply AddCommGroup.Homomorphism.mk
+      intro (a, b)
+      intro (a', b')
+      simp [inducedMap, DirectSum.directSum_mul]
+      sorry
+    unique_extension := by
+      intro G GrpG f g Homf Homg
+      intro h
+      apply funext
+      intro (a, b)
+      have coordsplit : (a, b) = (a, 0) + (0, b) := by
+        have := DirectSum.directSum_add a 0 0 b
+        rw [zero_add, add_zero] at this
+        exact Eq.symm this
+      rw [coordsplit, Homf.add_dist, Homg.add_dist]
+      have A_unique : f ∘ ι₁ = g ∘ ι₁ := by
+--       have := (FAb_A.unique_extension (f ∘ ι₁) (g ∘ ι₁))
+       sorry
+      have B_unique : f ∘ ι₂ = g ∘ ι₂ := sorry
+      have acoordeq : f (a, 0) = g (a, 0) := congrFun A_unique a
+      have bcoordeq : f (0, b) = g (0, b) := congrFun B_unique b
+      rw [acoordeq, bcoordeq]
   }
-
 
 end Product
 
