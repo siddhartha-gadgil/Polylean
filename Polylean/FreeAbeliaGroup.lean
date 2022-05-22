@@ -353,12 +353,12 @@ theorem egIsAction: ∀ (x y: Fin 2),
 section Product
 
 variable {A B : Type _} [AddCommGroup A] [AddCommGroup B]
-variable {X_A X_B : Type _} (i_A : X_A → A) (i_B : X_B → B)
+variable {X_A X_B : Type _} 
 variable [FAb_A : FreeAbelianGroup A X_A] [FAb_B : FreeAbelianGroup B X_B ]
 
 def ι : (X_A ⊕ X_B) → A × B
-  | Sum.inl x_a => (i_A x_a, 0)
-  | Sum.inr x_b => (0, i_B x_b)
+  | Sum.inl x_a => (FAb_A.i x_a, 0)
+  | Sum.inr x_b => (0, FAb_B.i x_b)
 
 def inducedMap (G : Type _) [AddCommGroup G] (f : X_A ⊕ X_B → G) : A × B → G
   | (a, b) =>
@@ -370,14 +370,15 @@ def inducedMap (G : Type _) [AddCommGroup G] (f : X_A ⊕ X_B → G) : A × B �
 
 #check @ι
 
-instance : FreeAbelianGroup (A × B) (X_A ⊕ X_B)  :=
+instance prodFree : FreeAbelianGroup (A × B) (X_A ⊕ X_B)  :=
   {
-    i := ι i_A i_B
+    i := ι
     inducedMap := inducedMap 
     induced_extends := sorry
     induced_hom := sorry
     unique_extension := sorry
   }
+
 
 end Product
 
@@ -393,5 +394,8 @@ def onX {α : Type _} : α × α × α →   Unit ⊕ Unit ⊕ Unit → α
 | (_, b, _), (Sum.inr (Sum.inl _)) => b
 | (_, _, c), (Sum.inr (Sum.inr _)) => c
 
+
+instance free : FreeAbelianGroup (ℤ × ℤ × ℤ) (Unit ⊕ Unit ⊕ Unit) :=
+        inferInstance
 
 end Z3
