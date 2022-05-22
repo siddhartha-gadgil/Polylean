@@ -57,7 +57,7 @@ def cocycle : Q → Q → K
 instance : Cocycle cocycle :=
   {
     cocycleId := rfl
-    cocycleCondition := sorry
+    cocycleCondition := by decide
   }
 
 end P
