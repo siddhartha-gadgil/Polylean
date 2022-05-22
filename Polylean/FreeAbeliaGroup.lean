@@ -248,6 +248,19 @@ instance fromBasisHom {F: Type}[AddCommGroup F]
     (@fromBasis F _ X  fag A _ f) := by
     apply fag.induced_hom
 
+@[inline] def fromBasisFamily (F: Type)[AddCommGroup F]
+  {X: Type}[fag : FreeAbelianGroup F X]{A: Type}[AddCommGroup A](D: Type)
+  (f: D → X → A) : D →  F → A := by
+    intro p
+    apply fag.inducedMap
+    exact f p
+
+instance fromBasisFamilyHom {F: Type}[AddCommGroup F]
+  {X: Type}[fag : FreeAbelianGroup F X]{A: Type}[AddCommGroup A]{D : Type}
+  {f: D → X → A}{p : D} :  @AddCommGroup.Homomorphism F A _ _ 
+    ((@fromBasisFamily F _ X  fag A _ D f) p) := by
+    apply fag.induced_hom
+
 instance fromBasisHom' {F: Type}[AddCommGroup F]
   {X: Type}[fag : FreeAbelianGroup F X]{A: Type}[AddCommGroup A]
   {f: X → A} : @AddCommGroup.Homomorphism F A _ _ 
@@ -282,6 +295,23 @@ open EnumDecide
 abbrev double : ℤ → ℤ := fromBasis (fun _ : Unit => 2)
 
 def dblHom : AddCommGroup.Homomorphism (double ) := inferInstance
+
+abbrev egAction : Fin 2 → ℤ → ℤ 
+| ⟨0, _⟩ => fromBasis (fun _ : Unit => 1)
+| ⟨1, _⟩ => fromBasis (fun _ : Unit => -1)
+
+def egHom₀  : AddCommGroup.Homomorphism (egAction 0) := inferInstance
+
+-- def egHom (x: Fin 2)  : AddCommGroup.Homomorphism (egAction x) := inferInstance -- fails
+
+def egActionBasis : Fin 2 → Unit → ℤ 
+| ⟨0, _⟩ => fun _ => 1
+| ⟨1, _⟩ => fun _ => -1
+
+abbrev egAction' := fromBasisFamily ℤ (Fin 2)  (egActionBasis)
+
+def egHom' (x: Fin 2)  : 
+  AddCommGroup.Homomorphism (egAction' x) := inferInstance -- works!
 
 -- decidability
 
