@@ -255,6 +255,10 @@ instance fromBasisHom {F: Type}[AddCommGroup F]
     apply fag.inducedMap
     exact f p
 
+instance inducedHomomorphism (F : Type) [AddCommGroup F] {X : Type} [fag : FreeAbelianGroup F X]
+  {A : Type} [abg : AddCommGroup A] (f : X → A) : AddCommGroup.Homomorphism (fag.inducedMap A f) :=
+    fag.induced_hom A f
+
 instance fromBasisFamilyHom {F: Type}[AddCommGroup F]
   {X: Type}[fag : FreeAbelianGroup F X]{A: Type}[AddCommGroup A]{D : Type}
   {f: D → X → A}{p : D} :  @AddCommGroup.Homomorphism F A _ _ 
@@ -385,15 +389,15 @@ instance prodFree : FreeAbelianGroup (A × B) (X_A ⊕ X_B)  :=
         simp at fA_extends
         rw [fA_extends]
         have : FreeAbelianGroup.inducedMap G (f ∘ Sum.inr) (0 : B) = (0 : G) := by
- --          apply @AddCommGroup.Homomorphism.zero_image B G _ _ _ _
-             sorry
+              rw [zero_image (FAb_B.inducedMap G (f ∘ Sum.inr))]
         rw [this, add_zero]
       · rename_i x_B
         simp [ι]
         have fB_extends := congrFun (FAb_B.induced_extends (f ∘ Sum.inr)) x_B
         simp at fB_extends
         rw [fB_extends]
-        have : FreeAbelianGroup.inducedMap G (f ∘ Sum.inl) (0 : A) = (0 : G) := sorry
+        have : FreeAbelianGroup.inducedMap G (f ∘ Sum.inl) (0 : A) = (0 : G) := by
+          rw [zero_image (FAb_A.inducedMap G (f ∘ Sum.inl))]
         rw [this, zero_add]
     induced_hom := by
       intro G GrpG f
@@ -401,7 +405,8 @@ instance prodFree : FreeAbelianGroup (A × B) (X_A ⊕ X_B)  :=
       intro (a, b)
       intro (a', b')
       simp [inducedMap, DirectSum.directSum_mul]
-      sorry
+      rw [add_dist (FAb_A.inducedMap G (f ∘ Sum.inl)), add_dist (FAb_B.inducedMap G (f ∘ Sum.inr))]
+      rw [add_assoc, add_assoc, add_left_cancel_iff, ← add_assoc, ← add_assoc, add_right_cancel_iff, add_comm]
     unique_extension := by
       intro G GrpG f g Homf Homg
       intro h
@@ -413,9 +418,21 @@ instance prodFree : FreeAbelianGroup (A × B) (X_A ⊕ X_B)  :=
         exact Eq.symm this
       rw [coordsplit, Homf.add_dist, Homg.add_dist]
       have A_unique : f ∘ ι₁ = g ∘ ι₁ := by
---       have := (FAb_A.unique_extension (f ∘ ι₁) (g ∘ ι₁))
-       sorry
-      have B_unique : f ∘ ι₂ = g ∘ ι₂ := sorry
+        apply FAb_A.unique_extension (f ∘ ι₁) (g ∘ ι₁)
+        apply funext
+        intro x_A
+        simp [ι₁]
+        have := congrFun h (Sum.inl x_A)
+        simp [ι] at this
+        assumption
+      have B_unique : f ∘ ι₂ = g ∘ ι₂ := by
+        apply FAb_B.unique_extension (f ∘ ι₂) (g ∘ ι₂)
+        apply funext
+        intro x_B
+        simp [ι₂]
+        have := congrFun h (Sum.inr x_B)
+        simp [ι] at this
+        assumption
       have acoordeq : f (a, 0) = g (a, 0) := congrFun A_unique a
       have bcoordeq : f (0, b) = g (0, b) := congrFun B_unique b
       rw [acoordeq, bcoordeq]
