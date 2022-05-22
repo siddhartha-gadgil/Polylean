@@ -304,14 +304,6 @@ def egHom₀  : AddCommGroup.Homomorphism (egAction 0) := inferInstance
 
 -- def egHom (x: Fin 2)  : AddCommGroup.Homomorphism (egAction x) := inferInstance -- fails
 
-def egActionBasis : Fin 2 → Unit → ℤ 
-| ⟨0, _⟩ => fun _ => 1
-| ⟨1, _⟩ => fun _ => -1
-
-abbrev egAction' := fromBasisFamily ℤ (Fin 2)  (egActionBasis)
-
-def egHom' (x: Fin 2)  : 
-  AddCommGroup.Homomorphism (egAction' x) := inferInstance -- works!
 
 -- decidability
 
@@ -341,6 +333,23 @@ instance decHomsEqual{F: Type}[AddCommGroup F]
     (f g : F → A)[AddCommGroup.Homomorphism f][AddCommGroup.Homomorphism g] :
       Decidable (f = g) := by apply decideHomsEqual X 
 
+-- proof of being an action
+
+def egActionBasis' : Fin 2 → Unit → ℤ 
+| ⟨0, _⟩ => fun _ => 1
+| ⟨1, _⟩ => fun _ => -1
+
+abbrev egAction' := fromBasisFamily ℤ (Fin 2)  (egActionBasis')
+
+def egHom' (x: Fin 2)  : 
+  AddCommGroup.Homomorphism (egAction' x) := inferInstance -- works!
+
+def egHom'' (x y: Fin 2)  : 
+  AddCommGroup.Homomorphism <| 
+      (egAction' x) ∘ (egAction' y) := inferInstance -- works!
+
+theorem egIsAction: ∀ (x y: Fin 2), 
+  (egAction' x) ∘ (egAction' y) = egAction' (x + y) := by decide -- works!
 section Product
 
 variable {A B : Type _} [AddCommGroup A] [AddCommGroup B]
