@@ -236,7 +236,7 @@ theorem unique_extension{F: Type}[AddCommGroup F]
     (f g : F → A)[AddCommGroup.Homomorphism f][AddCommGroup.Homomorphism g] :
        f ∘ fgp.i = g ∘ fgp.i  → f = g := fgp.unique_extension f g
 
-@[simp] def fromBasis {F: Type}[AddCommGroup F]
+@[inline] def fromBasis {F: Type}[AddCommGroup F]
   {X: Type}[fag : FreeAbelianGroup F X]{A: Type}[AddCommGroup A]
   (f: X → A) : F → A := by
     apply fag.inducedMap
@@ -279,11 +279,9 @@ instance intFree : FreeAbelianGroup ℤ Unit  where
 open EnumDecide
 
 -- example
-@[simp] def double : ℤ → ℤ := fromBasis (fun _ : Unit => 2)
+abbrev double : ℤ → ℤ := fromBasis (fun _ : Unit => 2)
 
-def dblHom : AddCommGroup.Homomorphism (double ) := by
-    simp  
-    exact inferInstance
+def dblHom : AddCommGroup.Homomorphism (double ) := inferInstance
 
 -- decidability
 
