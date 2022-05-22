@@ -221,7 +221,8 @@ theorem unique_morphism (f g : ℤ → A)[AddCommGroup.Homomorphism f]
 end Zhom
 
 class FreeAbelianGroup(F: Type)[AddCommGroup F]
-  (X: Type)(i: X → F) where
+  (X: Type) where
+  i: X → F
   inducedMap : (A: Type) →  [AddCommGroup A] →  (X → A) → (F → A)
   induced_extends{A: Type}[AddCommGroup A] : ∀ f : X → A, (inducedMap A f) ∘ i = f
   induced_hom: (A: Type) → [abg : AddCommGroup A] → 
@@ -231,25 +232,26 @@ class FreeAbelianGroup(F: Type)[AddCommGroup F]
        f ∘ i = g ∘ i  → f = g 
 
 theorem unique_extension{F: Type}[AddCommGroup F]
-  {X: Type}(i: X → F)[fgp : FreeAbelianGroup F X i]{A: Type}[AddCommGroup A] 
+  {X: Type}[fgp : FreeAbelianGroup F X]{A: Type}[AddCommGroup A] 
     (f g : F → A)[AddCommGroup.Homomorphism f][AddCommGroup.Homomorphism g] :
-       f ∘ i = g ∘ i  → f = g := fgp.unique_extension f g
+       f ∘ fgp.i = g ∘ fgp.i  → f = g := fgp.unique_extension f g
 
 def fromBasis {F: Type}[AddCommGroup F]
-  {X: Type}{i: X → F}[fag : FreeAbelianGroup F X i]{A: Type}[AddCommGroup A]
+  {X: Type}[fag : FreeAbelianGroup F X]{A: Type}[AddCommGroup A]
   (f: X → A) : F → A := by
     apply fag.inducedMap
     exact f
 
 instance fromBasisHom {F: Type}[AddCommGroup F]
-  {X: Type}{i: X → F}[fag : FreeAbelianGroup F X i]{A: Type}[AddCommGroup A]
+  {X: Type}[fag : FreeAbelianGroup F X]{A: Type}[AddCommGroup A]
   {f: X → A} : @AddCommGroup.Homomorphism F A _ _ 
-    (@fromBasis F _ X i fag A _ f) := by
+    (@fromBasis F _ X  fag A _ f) := by
     apply fag.induced_hom
 
 def unitBasis : Unit → ℤ  := fun _ => 1
 
-instance intFree : FreeAbelianGroup ℤ Unit unitBasis where
+instance intFree : FreeAbelianGroup ℤ Unit  where
+  i := unitBasis
   inducedMap := fun A _ f => zhom (f ())
   induced_extends := by
     intro A _ f
@@ -269,37 +271,44 @@ instance intFree : FreeAbelianGroup ℤ Unit unitBasis where
 
 open EnumDecide
 
+-- example
+def double : ℤ → ℤ := fromBasis (fun _ : Unit => 2)
+
+def dblHom : AddCommGroup.Homomorphism (double ) := by
+    simp [double] 
+    exact inferInstance
+
 def decideHomsEqual{F: Type}[AddCommGroup F]
-  (X: Type)(i: X → F)[fgp : FreeAbelianGroup F X i]
+  (X: Type)[fgp : FreeAbelianGroup F X]
   {A: Type}[AddCommGroup A][DecidableEq A][DecideForall X]
     (f g : F → A)[AddCommGroup.Homomorphism f][AddCommGroup.Homomorphism g] :
       Decidable (f = g) := 
-        if c : ∀ x : X, f (i x) = g (i x) then 
+        if c : ∀ x : X, f (fgp.i x) = g (fgp.i x) then 
         by
           apply Decidable.isTrue
-          apply unique_extension i f g
+          apply fgp.unique_extension f g
           apply funext
           intro x  
           exact c x
         else by
           apply Decidable.isFalse
           intro contra
-          let c' : ∀ (x : X), f (i x) = g (i x) := by
+          let c' : ∀ (x : X), f (fgp.i x) = g (fgp.i x) := by
             intro x
-            apply congrFun contra (i x)
+            apply congrFun contra (fgp.i x)
           contradiction 
 
 instance decHomsEqual{F: Type}[AddCommGroup F]
-  {X: Type}{i: X → F}[fgp : FreeAbelianGroup F X i]
+  {X: Type}[fgp : FreeAbelianGroup F X]
   {A: Type}[AddCommGroup A][DecidableEq A][DecideForall X]
     (f g : F → A)[AddCommGroup.Homomorphism f][AddCommGroup.Homomorphism g] :
-      Decidable (f = g) := by apply decideHomsEqual X i
+      Decidable (f = g) := by apply decideHomsEqual X 
 
 section Product
 
 variable {A B : Type _} [AddCommGroup A] [AddCommGroup B]
 variable {X_A X_B : Type _} (i_A : X_A → A) (i_B : X_B → B)
-variable [FAb_A : FreeAbelianGroup A X_A i_A] [FAb_B : FreeAbelianGroup B X_B i_B]
+variable [FAb_A : FreeAbelianGroup A X_A] [FAb_B : FreeAbelianGroup B X_B ]
 
 def ι : (X_A ⊕ X_B) → A × B
   | Sum.inl x_a => (i_A x_a, 0)
@@ -309,13 +318,16 @@ def inducedMap (G : Type _) [AddCommGroup G] (f : X_A ⊕ X_B → G) : A × B �
   | (a, b) =>
     let f_A : X_A → G := f ∘ Sum.inl
     let f_B : X_B → G := f ∘ Sum.inr
-    let ϕ_A : A → G := FAb_A.inducedMap _ G f_A
-    let ϕ_B : B → G := FAb_B.inducedMap _ G f_B
+    let ϕ_A : A → G := FAb_A.inducedMap  G f_A
+    let ϕ_B : B → G := FAb_B.inducedMap  G f_B
     ϕ_A a + ϕ_B b
 
-instance : FreeAbelianGroup (A × B) (X_A ⊕ X_B) (@ι A B _ _ X_A X_B i_A i_B) :=
+#check @ι
+
+instance : FreeAbelianGroup (A × B) (X_A ⊕ X_B)  :=
   {
-    inducedMap := inducedMap i_A i_B
+    i := ι i_A i_B
+    inducedMap := inducedMap 
     induced_extends := sorry
     induced_hom := sorry
     unique_extension := sorry
