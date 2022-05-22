@@ -235,6 +235,18 @@ theorem unique_extension{F: Type}[AddCommGroup F]
     (f g : F → A)[AddCommGroup.Homomorphism f][AddCommGroup.Homomorphism g] :
        f ∘ i = g ∘ i  → f = g := fgp.unique_extension f g
 
+def fromBasis {F: Type}[AddCommGroup F]
+  {X: Type}{i: X → F}[fag : FreeAbelianGroup F X i]{A: Type}[AddCommGroup A]
+  (f: X → A) : F → A := by
+    apply fag.inducedMap
+    exact f
+
+instance fromBasisHom {F: Type}[AddCommGroup F]
+  {X: Type}{i: X → F}[fag : FreeAbelianGroup F X i]{A: Type}[AddCommGroup A]
+  {f: X → A} : @AddCommGroup.Homomorphism F A _ _ 
+    (@fromBasis F _ X i fag A _ f) := by
+    apply fag.induced_hom
+
 def unitBasis : Unit → ℤ  := fun _ => 1
 
 instance intFree : FreeAbelianGroup ℤ Unit unitBasis where
