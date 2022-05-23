@@ -79,14 +79,19 @@ end DirectSum
 
 section Homomorphisms
 
-variable {A B : Type _} [AddCommGroup A] [AddCommGroup B]
+variable {A B C D : Type _} [AddCommGroup A] [AddCommGroup B] [AddCommGroup C] [AddCommGroup D]
 
-instance (ϕ : A → A) [ϕHom : AddCommGroup.Homomorphism ϕ] (ψ : B → B) [ψHom : AddCommGroup.Homomorphism ψ] :
-  AddCommGroup.Homomorphism (λ (a, b) => (ϕ a, ψ b)) where
+def prod (f : A → C) (g : B → D) : A × B → C × D
+  | (a, b) => (f a, g b)
+
+infixr:100 " × " => prod
+
+instance (ϕ : A → C) [ϕHom : AddCommGroup.Homomorphism ϕ] (ψ : B → D) [ψHom : AddCommGroup.Homomorphism ψ] :
+  AddCommGroup.Homomorphism (ϕ × ψ) where
     add_dist := by
                 intro (a, b)
                 intro (a', b')
-                simp [trivial_cocycle, MetabelianGroup.mul]
+                simp [trivial_cocycle, MetabelianGroup.mul, prod]
                 have : b • a' = a' := rfl
                 rw [this, ϕHom.add_dist, ψHom.add_dist, ← DirectSum.directSum_add]
                 rfl

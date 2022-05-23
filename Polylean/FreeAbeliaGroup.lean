@@ -354,6 +354,7 @@ def egHom'' (x y: Fin 2)  :
 
 theorem egIsAction: ∀ (x y: Fin 2), 
   (egAction' x) ∘ (egAction' y) = egAction' (x + y) := by decide -- works!
+
 section Product
 
 variable {A B : Type _} [AddCommGroup A] [AddCommGroup B]
