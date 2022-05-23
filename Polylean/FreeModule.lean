@@ -881,3 +881,7 @@ instance : AddCommGroup (FreeModule R X) :=
 
     add_comm := FreeModule.addn_comm
   }
+
+#eval (fun s n => s!"{s}⁻{Nat.toSuperscriptString n}") "x"  347
+
+#check Int.natAbs

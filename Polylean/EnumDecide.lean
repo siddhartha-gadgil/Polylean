@@ -204,6 +204,23 @@ instance {α β : Type}[dfa : DecideForall α][dfb : DecideForall β] :
   DecideForall (α ⊕ β) := 
   ⟨by apply decideSum⟩
 
+instance funEnum {α β : Type}[dfa : DecideForall α][dfb : DecidableEq β] :
+    DecidableEq (α → β) := fun f g => 
+      if c:∀ x:α, f x = g x then
+        by
+        apply Decidable.isTrue
+        apply funext
+        intro x  
+        exact c x
+      else 
+        by
+        apply Decidable.isFalse
+        intro contra
+        apply c
+        intro x
+        exact congrFun  contra x
+        
+
 example : ∀ xy : (Fin 3) × (Fin 2), 
       xy.1.val + xy.2.val  = xy.2.val + xy.1.val := by decide
 

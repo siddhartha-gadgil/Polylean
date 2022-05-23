@@ -49,6 +49,9 @@ theorem isAction: ∀ (x y: Q),
     let chk : AddCommGroup.Homomorphism (action' x) := inferInstance
     let chk' : AddCommGroup.Homomorphism <| 
          (action' x) ∘  (action' y) := inferInstance
+    apply @unique_extension _ _ X
+    apply funext 
+    simp
     admit 
 
 abbrev egAction' := fromBasisFamily ℤ (Fin 2)  (egActionBasis')
