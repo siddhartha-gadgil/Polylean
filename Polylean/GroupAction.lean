@@ -23,9 +23,19 @@ class AddCommGroup.ActionByAutomorphisms (A B : Type _) [AddCommGroup A] [AddCom
 -- an alternative definition for actions of a group by automorphisms
 class AutAction (A B : Type _) [AddCommGroup A] [AddCommGroup B] extends SMul A B where
   [aut_action : ∀ a : A, AddCommGroup.Homomorphism (sMul a)]
-  id_action : sMul a = id
+  id_action : sMul 0 = id
   compatibility : ∀ a a' : A, sMul (a + a') = sMul a ∘ sMul a'
 
+instance (A B : Type _) [AddCommGroup A] [AddCommGroup B] [AA : AutAction A B] : AddCommGroup.Action A B :=
+  {
+    id_action := λ {x : B} => congrFun AA.id_action x
+    compatibility := λ {a a' : A} {x : B} => congrFun (AA.compatibility a a') x
+  }
+
+instance actionaut (A B : Type _) [AddCommGroup A] [AddCommGroup B] [AA : AutAction A B] : AddCommGroup.ActionByAutomorphisms A B :=
+  {
+    add_dist := λ {a} => (AA.aut_action a).add_dist
+  }
 
 theorem AddCommGroup.ActionByAutomorphisms.act_zero {A B : Type _} [AddCommGroup A] [AddCommGroup B] [AddCommGroup.ActionByAutomorphisms A B] :
   ∀ {a : A}, a • (0 : B) = (0 : B) := by
