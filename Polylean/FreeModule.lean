@@ -885,3 +885,23 @@ instance : AddCommGroup (FreeModule R X) :=
 #eval (fun s n => s!"{s}⁻{Nat.toSuperscriptString n}") "x"  347
 
 #check Int.natAbs
+
+theorem fst_le_max (a b : Nat): a ≤ max a b  := by
+    simp [max]
+    exact if c:b < a 
+          then by
+              simp [if_pos c]
+          else by
+              simp [if_neg c]
+              apply le_of_not_lt
+              assumption
+            
+theorem snd_le_max (a b : Nat): b ≤ max a b  := by
+    simp [max]
+    exact if c:b < a 
+    then by 
+      simp [if_pos c]
+      apply le_of_lt
+      assumption
+    else by 
+      simp [if_neg c]
