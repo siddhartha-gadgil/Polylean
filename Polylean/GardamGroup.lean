@@ -97,7 +97,7 @@ instance : AutAction Q K :=
       apply Q.rec <;> revert q <;> apply Q.rec <;> simp [SMul.sMul]
   }
 
-instance : AddCommGroup.ActionByAutomorphisms Q K := @actionaut _ _ _ _ inferInstance
+instance P_action : AddCommGroup.ActionByAutomorphisms Q K := @actionaut _ _ _ _ inferInstance
 
 def cocycle : Q → Q → K
   | (0, 0), (0, 0) => 0
@@ -117,7 +117,7 @@ def cocycle : Q → Q → K
   | (1, 1), (1, 0) => -y + z
   | (1, 1), (1, 1) => z
 
-instance : Cocycle cocycle :=
+instance P_cocycle : Cocycle cocycle :=
   {
     cocycleId := rfl
     cocycleCondition := by decide
