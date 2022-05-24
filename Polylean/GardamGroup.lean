@@ -128,4 +128,12 @@ def P := K × Q
 
 instance PGrp : Group P := MetabelianGroup.metabeliangroup cocycle
 
+instance : DecidableEq P := inferInstanceAs (DecidableEq (K × Q))
+
+theorem P_mul : ∀ k k' : K, ∀ q q' : Q, (k, q) * (k', q') = (k + q • k' + cocycle q q', q + q') :=
+  λ k k' q q' => by
+    show PGrp.mul (k, q) (k', q') = _
+    simp [Mul.mul, MetabelianGroup.mul]
+    sorry -- rfl -- not working for some reason
+
 end P
