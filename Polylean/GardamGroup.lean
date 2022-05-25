@@ -12,17 +12,27 @@ namespace P
 
 abbrev K := ℤ × ℤ × ℤ
 
+instance KGrp : AddCommGroup K := inferInstance
+
 abbrev Q := Fin 2 × Fin 2
 
-def x : K := (1, 0, 0)
-def y : K := (0, 1, 0)
-def z : K := (0, 0, 1)
+instance QGrp : AddCommGroup Q := inferInstance
+
+abbrev x : K := (1, 0, 0)
+abbrev y : K := (0, 1, 0)
+abbrev z : K := (0, 0, 1)
 
 abbrev e  : Q := (⟨0, by decide⟩, ⟨0, by decide⟩)
 abbrev a  : Q := (⟨1, by decide⟩, ⟨0, by decide⟩)
 abbrev b  : Q := (⟨0, by decide⟩, ⟨1, by decide⟩)
 abbrev ab : Q := (⟨1, by decide⟩, ⟨1, by decide⟩)
 
+-- perhaps an unnecessary theorem
+theorem K_add (p q r p' q' r' : ℤ) : (p, q, r) + (p', q', r') = (p + p', q + q', r + r') := by
+  show Add.add (p, q, r) (p', q', r') = _
+  simp [DirectSum.directSum_add]
+  show Add.add (q, r) (q', r') = _
+  simp [DirectSum.directSum_add]
 
 section Demo
 
@@ -131,9 +141,11 @@ instance PGrp : Group P := MetabelianGroup.metabeliangroup cocycle
 
 instance : DecidableEq P := inferInstanceAs (DecidableEq (K × Q))
 
-theorem P_mul : ∀ k k' : K, ∀ q q' : Q, (k, q) * (k', q') = (k + q • k' + cocycle q q', q + q') :=
+theorem P_mul : ∀ k k' : K, ∀ q q' : Q, (k, q) * (k', q') = (k + action q k' + cocycle q q', q + q') :=
   λ k k' q q' => by
     show PGrp.mul (k, q) (k', q') = _
     simp [Mul.mul, MetabelianGroup.mul]
+    have : q • k' = action q k' := rfl
+    rw [this]
 
 end P
