@@ -18,10 +18,11 @@ def x : K := (1, 0, 0)
 def y : K := (0, 1, 0)
 def z : K := (0, 0, 1)
 
-abbrev e  : Q := (0, 0)
-abbrev a  : Q := (1, 0)
-abbrev b  : Q := (0, 1)
-abbrev ab : Q := (1, 1)
+abbrev e  : Q := (⟨0, by decide⟩, ⟨0, by decide⟩)
+abbrev a  : Q := (⟨1, by decide⟩, ⟨0, by decide⟩)
+abbrev b  : Q := (⟨0, by decide⟩, ⟨1, by decide⟩)
+abbrev ab : Q := (⟨1, by decide⟩, ⟨1, by decide⟩)
+
 
 section Demo
 
@@ -32,10 +33,10 @@ def egActionBasis' : Fin 2 → Unit → ℤ
 | ⟨1, _⟩ => fun _ => -1
 
 def actionBasis' : Q → X → K
-| (0, 0) => Z3.onX ((1, 0, 0), (0, 1, 0), (0, 0, 1))
-| (0, 1) => Z3.onX ((-1, 0, 0), (0, 1, 0), (0, 0, -1))
-| (1, 0) => Z3.onX ((1, 0, 0), (0, -1, 0), (0, 0, -1))
-| (1, 1) => Z3.onX ((-1, 0, 0), (0, -1, 0), (0, 0, 1))
+| (⟨0, _⟩, ⟨0, _⟩)  => Z3.onX ((1, 0, 0), (0, 1, 0), (0, 0, 1))
+| (⟨0, _⟩, ⟨1, _⟩)  => Z3.onX ((-1, 0, 0), (0, 1, 0), (0, 0, -1))
+| (⟨1, _⟩, ⟨0, _⟩)  => Z3.onX ((1, 0, 0), (0, -1, 0), (0, 0, -1))
+| (⟨1, _⟩, ⟨1, _⟩)  => Z3.onX ((-1, 0, 0), (0, -1, 0), (0, 0, 1))
 
 abbrev action' := fromBasisFamily K Q actionBasis' -- shows basis is inferred
 
@@ -54,17 +55,17 @@ end Demo
 
 /-
 def action : Q → K → K
-  | (0, 0) , (p, q, r) => (p, q, r)
-  | (0, 1) , (p, q, r) => (-p, q, -r)
-  | (1, 0) , (p, q, r) => (p, -q, -r)
-  | (1, 1) , (p, q, r) => (-p, -q, r)
+  | (⟨0, _⟩, ⟨0, _⟩)  , (p, q, r) => (p, q, r)
+  | (⟨0, _⟩, ⟨1, _⟩)  , (p, q, r) => (-p, q, -r)
+  | (⟨1, _⟩, ⟨0, _⟩)  , (p, q, r) => (p, -q, -r)
+  | (⟨1, _⟩, ⟨1, _⟩)  , (p, q, r) => (-p, -q, r)
 -/
 
 def action : Q → K → K
-  | (0, 0) => id × id × id
-  | (0, 1) => neg × id × neg
-  | (1, 0) => id × neg × neg
-  | (1, 1) => neg × neg × id
+  | (⟨0, _⟩, ⟨0, _⟩) => id × id × id
+  | (⟨0, _⟩, ⟨1, _⟩) => neg × id × neg
+  | (⟨1, _⟩, ⟨0, _⟩) => id × neg × neg
+  | (⟨1, _⟩, ⟨1, _⟩) => neg × neg × id
 
 def Q.rec (P : Q → Sort _) :
   P (⟨0, by decide⟩, ⟨0, by decide⟩) →
@@ -75,10 +76,10 @@ def Q.rec (P : Q → Sort _) :
   ∀ (q : Q), P q :=
     λ p00 p01 p10 p11 q =>
       match q with
-        | (0, 0) => p00
-        | (0, 1) => p01
-        | (1, 0) => p10
-        | (1, 1) => p11
+        | (⟨0, _⟩, ⟨0, _⟩) => p00
+        | (⟨0, _⟩, ⟨1, _⟩) => p01
+        | (⟨1, _⟩, ⟨0, _⟩) => p10
+        | (⟨1, _⟩, ⟨1, _⟩) => p11
 
 instance (q : Q) : AddCommGroup.Homomorphism (action q) := by
   revert q; apply Q.rec <;> simp [action] <;> exact inferInstance
@@ -100,22 +101,22 @@ instance : AutAction Q K :=
 instance P_action : AddCommGroup.ActionByAutomorphisms Q K := @actionaut _ _ _ _ inferInstance
 
 def cocycle : Q → Q → K
-  | (0, 0), (0, 0) => 0
-  | (0, 0), (0, 1) => 0
-  | (0, 0), (1, 0) => 0
-  | (0, 0), (1, 1) => 0
-  | (0, 1), (0, 0) => 0
-  | (0, 1), (0, 1) => y
-  | (0, 1), (1, 0) => -x + y + -z
-  | (0, 1), (1, 1) => -x + -z
-  | (1, 0), (0, 0) => 0
-  | (1, 0), (0, 1) => 0
-  | (1, 0), (1, 0) => x
-  | (1, 0), (1, 1) => x
-  | (1, 1), (0, 0) => 0
-  | (1, 1), (0, 1) => -y
-  | (1, 1), (1, 0) => -y + z
-  | (1, 1), (1, 1) => z
+  | (⟨0, _⟩, ⟨0, _⟩) , (⟨0, _⟩, ⟨0, _⟩)  => 0
+  | (⟨0, _⟩, ⟨0, _⟩) , (⟨0, _⟩, ⟨1, _⟩)  => 0
+  | (⟨0, _⟩, ⟨0, _⟩) , (⟨1, _⟩, ⟨0, _⟩)  => 0
+  | (⟨0, _⟩, ⟨0, _⟩) , (⟨1, _⟩, ⟨1, _⟩)  => 0
+  | (⟨0, _⟩, ⟨1, _⟩) , (⟨0, _⟩, ⟨0, _⟩)  => 0
+  | (⟨0, _⟩, ⟨1, _⟩) , (⟨0, _⟩, ⟨1, _⟩)  => y
+  | (⟨0, _⟩, ⟨1, _⟩) , (⟨1, _⟩, ⟨0, _⟩)  => -x + y + -z
+  | (⟨0, _⟩, ⟨1, _⟩) , (⟨1, _⟩, ⟨1, _⟩)  => -x + -z
+  | (⟨1, _⟩, ⟨0, _⟩) , (⟨0, _⟩, ⟨0, _⟩)  => 0
+  | (⟨1, _⟩, ⟨0, _⟩) , (⟨0, _⟩, ⟨1, _⟩)  => 0
+  | (⟨1, _⟩, ⟨0, _⟩) , (⟨1, _⟩, ⟨0, _⟩)  => x
+  | (⟨1, _⟩, ⟨0, _⟩) , (⟨1, _⟩, ⟨1, _⟩)  => x
+  | (⟨1, _⟩, ⟨1, _⟩) , (⟨0, _⟩, ⟨0, _⟩)  => 0
+  | (⟨1, _⟩, ⟨1, _⟩) , (⟨0, _⟩, ⟨1, _⟩)  => -y
+  | (⟨1, _⟩, ⟨1, _⟩) , (⟨1, _⟩, ⟨0, _⟩)  => -y + z
+  | (⟨1, _⟩, ⟨1, _⟩) , (⟨1, _⟩, ⟨1, _⟩)  => z
 
 instance P_cocycle : Cocycle cocycle :=
   {
@@ -130,10 +131,15 @@ instance PGrp : Group P := MetabelianGroup.metabeliangroup cocycle
 
 instance : DecidableEq P := inferInstanceAs (DecidableEq (K × Q))
 
+set_option pp.all true
+
 theorem P_mul : ∀ k k' : K, ∀ q q' : Q, (k, q) * (k', q') = (k + q • k' + cocycle q q', q + q') :=
   λ k k' q q' => by
     show PGrp.mul (k, q) (k', q') = _
     simp [Mul.mul, MetabelianGroup.mul]
-    sorry -- rfl -- not working for some reason
+    apply congrArg (Prod.mk _)
+    sorry
 
+
+  
 end P

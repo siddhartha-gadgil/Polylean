@@ -1,3 +1,28 @@
+# New debug data
+
+```
+@Eq.{1} P.Q
+    (@HAdd.hAdd.{0, 0, 0} P.Q P.Q P.Q
+      (@instHAdd.{0} P.Q
+        (@AddZeroClass.toAdd.{0} P.Q
+          (@AddMonoid.toAddZeroClass.{0} P.Q
+            (@SubNegMonoid.toAddMonoid.{0} P.Q
+              (@AddGroup.toSubNegMonoid.{0} P.Q
+                (@AddCommGroup.toAddGroup.{0} P.Q
+                  (@DirectSum.directSum.{0, 0} (Fin (@OfNat.ofNat.{0} Nat 2 (instOfNatNat 2)))
+                    (Fin (@OfNat.ofNat.{0} Nat 2 (instOfNatNat 2)))
+                    (@Ring.toAddCommGroup.{0} (Fin (@OfNat.ofNat.{0} Nat 2 (instOfNatNat 2)))
+                      (@CommRing.toRing.{0} (Fin (@OfNat.ofNat.{0} Nat 2 (instOfNatNat 2)))
+                        (@instCommRingFin (@OfNat.ofNat.{0} Nat 2 (instOfNatNat 2)) P.PGrp.proof_1)))
+                    (@Ring.toAddCommGroup.{0} (Fin (@OfNat.ofNat.{0} Nat 2 (instOfNatNat 2)))
+                      (@CommRing.toRing.{0} (Fin (@OfNat.ofNat.{0} Nat 2 (instOfNatNat 2)))
+                        (@instCommRingFin (@OfNat.ofNat.{0} Nat 2 (instOfNatNat 2)) P.PGrp.proof_1))))))))))
+      q q')
+    (@HAdd.hAdd.{0, 0, 0} P.Q P.Q P.Q (@instHAdd.{0} P.Q EnumDecide.instAddQ) q q')
+```
+
+# Old debug data
+
 Look for `P.PGrp.proof_1` on the two sides
 
 ```
