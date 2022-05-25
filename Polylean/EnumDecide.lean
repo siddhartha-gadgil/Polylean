@@ -223,32 +223,3 @@ instance funEnum {α β : Type}[dfa : DecideForall α][dfb : DecidableEq β] :
 
 example : ∀ xy : (Fin 3) × (Fin 2), 
       xy.1.val + xy.2.val  = xy.2.val + xy.1.val := by decide
-
-/- The group Q (rough code) -/
-
-abbrev Q := (Fin 2) × (Fin 2)
-
-instance : Add Q := 
-  ⟨fun (x₁, y₁) (x₂ , y₂) => (x₁ + x₂, y₁ + y₂)⟩
-
-namespace Q 
-
-theorem comm : ∀ a b : Q, a + b = b + a := by decide
-
-theorem assoc : ∀ a b c : Q, a + b + c = a + (b + c) := by decide
-
-def zero : Q := (0, 0)
-
-theorem zero_add : ∀ a : Q, zero + a = a := by decide
-
-theorem add_zero : ∀ a : Q, a + zero = a := by decide
-
-def neg : Q → Q
-  | (x, y) => (x, y)
-
-theorem neg_add : ∀ a : Q, (neg a) + a = zero := by decide
-
-theorem add_neg : ∀ a : Q, a + (neg a) = zero := by decide
-
-end Q
-
