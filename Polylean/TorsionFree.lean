@@ -107,8 +107,8 @@ end Mod2
 theorem square_free : ∀ g : P, g ^ 2 = 1 → g = 1 := by
   intro ⟨(p, q, r), x⟩
   apply Q.rec (λ x => ((p, q, r), x) ^ 2 = ((0, 0, 0), (⟨0, _⟩, ⟨0, _⟩)) → ((p, q, r), x) = ((0, 0, 0), (⟨0, _⟩, ⟨0, _⟩)))
-  <;> rw [s_square, s] <;> simp <;> intro hyp <;> (try (exact odd_ne_zero hyp))
-  · sorry -- showing `p + p = 0 → p = 0` needs the fact that ℤ is an integral domain
+  <;> rw [s_square, s] <;> simp <;> intros <;> (try (apply odd_ne_zero; assumption))
+  exact ⟨sorry, sorry, sorry⟩
 
 theorem torsion_implies_square_torsion : ∀ g : P, ∀ n : ℕ, g ^ n = 1 → (g ^ 2) ^ n = 1 :=
   λ g n g_tor =>
