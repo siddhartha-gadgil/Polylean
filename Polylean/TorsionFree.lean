@@ -90,16 +90,25 @@ theorem Int.mod2_add_dist : ∀ m n : ℤ, Int.mod2 (m + n) = Int.mod2 m + Int.m
 instance : AddCommGroup.Homomorphism (Int.mod2) where
   add_dist := Int.mod2_add_dist
 
+theorem odd_ne_zero : {a : ℤ} → ¬(a + a + 1 = 0) := by
+  intro a
+  intro h
+  have hyp := congrArg Int.mod2 h
+  rw [Int.mod2_add_dist, Int.mod2_add_dist] at hyp
+  have : (Int.mod2 a + Int.mod2 a) = (0 : Fin 2) :=
+    match (Int.mod2 a) with
+      | ⟨0, _⟩ => rfl
+      | ⟨1, _⟩ => rfl
+  rw [this, AddMonoid.zero_add] at hyp
+  contradiction
+
 end Mod2
 
 theorem square_free : ∀ g : P, g ^ 2 = 1 → g = 1 := by
   intro ⟨(p, q, r), x⟩
   apply Q.rec (λ x => ((p, q, r), x) ^ 2 = ((0, 0, 0), (⟨0, _⟩, ⟨0, _⟩)) → ((p, q, r), x) = ((0, 0, 0), (⟨0, _⟩, ⟨0, _⟩)))
-  <;> rw [s_square, s] <;> simp <;> intro hyp
+  <;> rw [s_square, s] <;> simp <;> intro hyp <;> (try (exact odd_ne_zero hyp))
   · sorry -- showing `p + p = 0 → p = 0` needs the fact that ℤ is an integral domain
-  · sorry
-  · sorry
-  · sorry
 
 theorem torsion_implies_square_torsion : ∀ g : P, ∀ n : ℕ, g ^ n = 1 → (g ^ 2) ^ n = 1 :=
   λ g n g_tor =>
