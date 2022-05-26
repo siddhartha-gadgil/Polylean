@@ -928,12 +928,66 @@ theorem eq_fst_or_snd_of_max (a b : Nat) :
         else by
           simp [if_neg c]
 
-def maxNormSucc (norm: X → Nat)(crds : X → R)(s: List X) : Nat :=
+def maxNormSuccOnSupp (norm: X → Nat)(crds : X → R)(s: List X) : Nat :=
   match s with
   | [] => 0
   | head :: tail =>
       if crds head ≠ 0 then 
-        max (norm head) (maxNormSucc norm crds tail)
+        max (norm head + 1) (maxNormSuccOnSupp norm crds tail)
       else
-        maxNormSucc norm crds tail        
+        maxNormSuccOnSupp norm crds tail        
     
+theorem max_in_support (norm: X → Nat)(crds : X → R)(s: List X) :
+  maxNormSuccOnSupp norm crds s > 0 → 
+  ∃ x : X, x ∈ s ∧ maxNormSuccOnSupp norm crds s = norm x + 1 := by
+  intro h
+  induction s with
+  | nil => 
+    simp [maxNormSuccOnSupp] at h
+  | cons head tail ih => 
+    exact if c : crds head =0 then
+      by 
+        simp [maxNormSuccOnSupp, c]
+        simp [maxNormSuccOnSupp, c] at h
+        let l := ih h
+        let ⟨x₀, p⟩ := l
+        let p₁ : (x₀ = head) ∨ (x₀ ∈ tail) := Or.inr p.left
+        exact ⟨x₀, And.intro p₁  p.right⟩
+    else by    
+        simp [maxNormSuccOnSupp, c]
+        simp [maxNormSuccOnSupp, c] at h
+        let sl := eq_fst_or_snd_of_max (norm head + 1) (maxNormSuccOnSupp norm crds tail)
+        cases sl
+        case inr p =>
+            rw [p]
+            rw [p] at h
+            let l := ih h
+            let ⟨x₀, p⟩ := l
+            let p₁ : (x₀ = head) ∨ (x₀ ∈ tail) := Or.inr p.left
+            exact ⟨x₀, And.intro p₁  p.right⟩  
+        case inl p =>
+            rw [p]
+            rw [p] at h
+            exact ⟨head, And.intro (Or.inl rfl) rfl⟩
+
+theorem supp_below_max(norm: X → Nat)(crds : X → R)(s: List X) :
+  (x: X) → x ∈ s →  crds x ≠ 0 → norm x + 1 ≤ maxNormSuccOnSupp norm crds s := by
+    intro x h₁ h₂
+    cases h₁
+    case head as => 
+      rw [maxNormSuccOnSupp]
+      simp [h₂]
+      apply fst_le_max  
+    case tail a as th =>
+      rw [maxNormSuccOnSupp]
+      let l := supp_below_max norm crds as  x  th h₂ 
+      exact if c:crds a ≠ 0 then
+        by
+        simp [c]
+        apply Nat.le_trans l 
+        apply snd_le_max
+      else
+        by 
+        simp [c]
+        exact l
+
