@@ -1,5 +1,6 @@
 import Polylean.GardamGroup
 
+
 /-
 This file contains a proof that the group `P` defined is in fact torsion-free.
  .
@@ -104,11 +105,47 @@ theorem odd_ne_zero : {a : ℤ} → ¬(a + a + 1 = 0) := by
 
 end Mod2
 
+theorem zero_of_double_zero (n: Int) : n + n = 0 → n = 0 := by
+  cases n
+  case ofNat k => 
+    simp [Int.add]
+    intro hyp
+    have l : Int.ofNat k + Int.ofNat k = Int.ofNat (k + k) := by rfl
+    let hyp' : Int.ofNat k + Int.ofNat k = Int.ofNat 0 := hyp
+    rw [l] at hyp'
+    have l' : k + k = 0 := by 
+      injection hyp'
+      assumption
+    have ll' : k = 0 := by 
+        cases k
+        assumption
+        case succ k' =>
+          have l'' : Nat.succ k' + Nat.succ k' =
+           Nat.succ (Nat.succ k' +  k') := by rfl
+          rw [l''] at l' 
+          simp [Nat.add] at l'
+    show Int.ofNat k = 0
+    rw [ll']
+    rfl
+  case negSucc k =>
+    simp [Int.add] 
+    intro hyp
+    let hyp' : Int.negSucc k + Int.negSucc k = 0 := hyp
+    have lem : Int.negSucc k + Int.negSucc k = 
+      Int.negSucc (Nat.succ (k + k)) := by rfl
+    rw [lem] at hyp'
+    have hyp'' : Int.negSucc (Nat.succ (k + k)) = Int.ofNat 0 := hyp'
+    simp at hyp''
+
+
+
 theorem square_free : ∀ g : P, g ^ 2 = 1 → g = 1 := by
   intro ⟨(p, q, r), x⟩
   apply Q.rec (λ x => ((p, q, r), x) ^ 2 = ((0, 0, 0), (⟨0, _⟩, ⟨0, _⟩)) → ((p, q, r), x) = ((0, 0, 0), (⟨0, _⟩, ⟨0, _⟩)))
   <;> rw [s_square, s] <;> simp <;> intros <;> (try (apply odd_ne_zero; assumption))
-  exact ⟨sorry, sorry, sorry⟩
+  exact ⟨by apply zero_of_double_zero ; assumption, 
+         by apply zero_of_double_zero ; assumption,
+         by apply zero_of_double_zero ; assumption⟩
 
 theorem torsion_implies_square_torsion : ∀ g : P, ∀ n : ℕ, g ^ n = 1 → (g ^ 2) ^ n = 1 :=
   λ g n g_tor =>
@@ -118,7 +155,7 @@ theorem torsion_implies_square_torsion : ∀ g : P, ∀ n : ℕ, g ^ n = 1 → (
               _      = (1 : P) ^ 2 := by rw [← g_tor]
               _      = (1 : P)     := rfl
 
-  theorem P_torsion_free : ∀ g : P, torsion_free P g := by
+theorem P_torsion_free : ∀ g : P, torsion_free P g := by
     intros g n g_tor
     have square_tor : (g ^ 2) ^ n.succ = 1 := torsion_implies_square_torsion g n.succ g_tor
     have square_eq : g ^ 2 = (s g.fst g.snd, 0) := s_square g
