@@ -284,6 +284,19 @@ def decEq  (x₁ x₂ : FreeModule R X) :
 
 instance {X : Type} [DecidableEq X] : DecidableEq (FreeModule R X) := fun x₁ x₂ => x₁.decEq x₂
 
+theorem equal_coords_of_approx (s₁ s₂ : FormalSum R X):
+  s₁ ≈ s₂ → s₁.coords = s₂.coords := by
+    intro hyp
+    apply funext; intro x₀
+    exact congrFun hyp x₀
+
+def coordinates (x₀ : X) : FreeModule R X →  R := by
+  apply Quotient.lift (fun s : FormalSum R X => s.coords x₀)
+  intro a b
+  intro hyp
+  let l :=  equal_coords_of_approx _ _ hyp
+  exact congrFun l x₀ 
+
 end FreeModule
 
 /- Ring structure -/
@@ -905,3 +918,22 @@ theorem snd_le_max (a b : Nat): b ≤ max a b  := by
       assumption
     else by 
       simp [if_neg c]
+
+theorem eq_fst_or_snd_of_max (a b : Nat) :
+      (max a b = a) ∨ (max a b = b) := by
+      simp [max]
+      exact if c:b < a 
+        then by
+          simp [if_pos c]
+        else by
+          simp [if_neg c]
+
+def maxNormSucc (norm: X → Nat)(crds : X → R)(s: List X) : Nat :=
+  match s with
+  | [] => 0
+  | head :: tail =>
+      if crds head ≠ 0 then 
+        max (norm head) (maxNormSucc norm crds tail)
+      else
+        maxNormSucc norm crds tail        
+    
