@@ -66,7 +66,7 @@ Proving the corresponding fact for natural numbers may be easier with help from 
 
 In particular, this shows that the sub-group of square elements is isomorphic to $\mathbb{Z}^3$.
 
-### Deduce that the image of `K` in `K x Q` is torsion-free.
+### Deduce that in Gardam's example, the image of `K` in `K x Q` is torsion-free.
 
 This will be an `inferInstance` that will follow from the previous results. 
 
