@@ -2,7 +2,7 @@ import Mathlib.Data.Fin.Basic
 import Polylean.MetabelianGroup
 import Polylean.ProductGroups
 import Polylean.EnumDecide
-import Polylean.FreeAbeliaGroup
+import Polylean.FreeAbelianGroup
 
 /-
 We construct the group `P` as a Metabelian group. Helper functions for defining elements in the group etc. should be defined.

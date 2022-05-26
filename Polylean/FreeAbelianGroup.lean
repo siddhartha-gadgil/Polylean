@@ -458,3 +458,7 @@ instance free : FreeAbelianGroup (ℤ × ℤ × ℤ) (Unit ⊕ Unit ⊕ Unit) :=
         inferInstance
 
 end Z3
+
+#check Int.sign
+
+#check Int.add

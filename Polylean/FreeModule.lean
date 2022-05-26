@@ -991,3 +991,18 @@ theorem supp_below_max(norm: X → Nat)(crds : X → R)(s: List X) :
         simp [c]
         exact l
 
+theorem supp_zero_of_max_zero(norm: X → Nat)(crds : X → R)(s: List X) :
+  maxNormSuccOnSupp norm crds s = 0 → 
+    (x: X) → x ∈ s →  crds x = 0 := fun hyp x hm =>
+      if c:crds x = 0 then c 
+      else by 
+        simp
+        let l := supp_below_max norm crds s x hm c 
+        rw [hyp] at l
+        let l' := Nat.zero_lt_succ (norm x)
+        contradiction
+
+def FormalSum.normSucc (norm : X → Nat)(s: FormalSum R X) : Nat :=
+      maxNormSuccOnSupp norm s.coords (s.support)
+
+
