@@ -48,7 +48,7 @@ For a homomorphism $f: K \to K$, show:
 
 #### The sign function
 
-Define the sign function $$\sigma : \mathbb{Z} \to \mathbb{Z}/3\mathbb{\Z}$$ and show that it is multiplicative with the pre-image of zero in $$\mathbb{Z}/3\mathbb{Z}$$ being the singleton zero set in $$\mathbb{Z}$$. An analysis by cases on $$\mathbb{Z}/3\mathbb{Z}$$ will show that $$0 = \sigma(m \cdot n) = \sigma(m) \cdot \sigma(n) \implies \sigma(m) = 0 \wedge \sigma(n) = 0 \implies m = 0 \wedge n = 0$$.
+Define the sign function $$\sigma : \mathbb{Z} \to \mathbb{Z}/3\mathbb{Z}$$ and show that it is multiplicative with the pre-image of zero in $\mathbb{Z}/3\mathbb{Z}$ being the singleton zero set in $\mathbb{Z}$. An analysis by cases on $\mathbb{Z}/3\mathbb{Z}$ will show that $$0 = \sigma(m \cdot n) = \sigma(m) \cdot \sigma(n) \implies \sigma(m) = 0 \wedge \sigma(n) = 0 \implies m = 0 \wedge n = 0$$.
 
 #### Induction on the structure of $$\mathbb{Z}$$.
 
@@ -64,7 +64,7 @@ Proving the corresponding fact for natural numbers may be easier with help from 
 
 ### Show that the kernel `K` in the cocycle construction is isomorphic to its image in `K x Q`.
 
-In particular, this shows that the sub-group of square elements is isomorphic to $$\mathbb{Z}^3$$.
+In particular, this shows that the sub-group of square elements is isomorphic to $\mathbb{Z}^3$.
 
 ### Deduce that the image of `K` in `K x Q` is torsion-free.
 
