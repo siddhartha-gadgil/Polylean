@@ -1,13 +1,10 @@
 import Polylean.Morphisms
+import Polylean.SMul
 
 /-
 Define group actions. This is done as a typeclass representing the property of being a group action.
 -/
 
-class SMul (α β : Type _) where
-  sMul : α → β → β
-
-infix:100 " • " => SMul.sMul
 
 class Group.Action (G X : Type _) [Group G] extends SMul G X where
   id_action : ∀ x : X, (1 : G) • x = x
