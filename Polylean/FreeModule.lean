@@ -1068,7 +1068,7 @@ def FreeModule.coeffList (x: FreeModule R X)[nx : NormCube X] :
   List (R × X) := 
    (nx.cube (x.normBound)).filterMap fun x₀ => 
       let a := x.coordinates x₀
-      if a =0 then none else (a, x₀)
+      if a =0 then none else some (a, x₀)
 
 
 
