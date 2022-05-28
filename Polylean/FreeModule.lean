@@ -1034,3 +1034,41 @@ theorem norm_succ_eq(norm : X → Nat)(s₁ s₂: FormalSum R X)(eql : s₁ ≈ 
       assumption
       apply eqlCoords.symm
       assumption
+
+class NormCube (α : Type) where
+  norm : α → Nat
+  cube : Nat → List α
+
+instance natCube : NormCube Nat := ⟨id, fun n => (List.range n).reverse⟩
+
+instance intCube : NormCube ℤ where
+  norm := Int.natAbs
+  cube : Nat → List ℤ := fun n => 
+      (List.range (n)).reverse.map (Int.ofNat) ++
+      (List.range (n - 1)).map (Int.negSucc)
+
+instance prodCube {α β : Type} [na: NormCube α] [nb :NormCube β] : 
+  NormCube (α × β) where
+  norm : (α × β) → Nat := 
+    fun ⟨a, b⟩ => max (na.norm a) (nb.norm b) 
+  cube : Nat → List (α × β) :=
+    fun n => 
+      (na.cube n).bind (fun a => 
+        (nb.cube n).map  (fun b => 
+          (a, b)))
+
+def FreeModule.normBound (x: FreeModule R X)[nx : NormCube X] : Nat := by
+  let f : FormalSum R X → Nat := fun s => s.normSucc (nx.norm)
+  apply Quotient.lift f
+  apply norm_succ_eq
+  exact x
+
+-- this should be viewable directly if `R` and `X` are, as in our case
+def FreeModule.coeffList (x: FreeModule R X)[nx : NormCube X] : 
+  List (R × X) := 
+   (nx.cube (x.normBound)).filterMap fun x₀ => 
+      let a := x.coordinates x₀
+      if a =0 then none else (a, x₀)
+
+
+
