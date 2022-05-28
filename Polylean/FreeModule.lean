@@ -1070,5 +1070,8 @@ def FreeModule.coeffList (x: FreeModule R X)[nx : NormCube X] :
       let a := x.coordinates x₀
       if a =0 then none else some (a, x₀)
 
+-- crude repr 
+instance basicRepr [nx : NormCube X][Repr X][Repr R]: Repr (FreeModule R X) := 
+  ⟨fun x _ => reprStr (x.coeffList)⟩
 
 
