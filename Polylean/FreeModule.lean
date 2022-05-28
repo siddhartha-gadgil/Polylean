@@ -939,7 +939,7 @@ def maxNormSuccOnSupp (norm: X → Nat)(crds : X → R)(s: List X) : Nat :=
     
 theorem max_in_support (norm: X → Nat)(crds : X → R)(s: List X) :
   maxNormSuccOnSupp norm crds s > 0 → 
-  ∃ x : X, x ∈ s ∧ maxNormSuccOnSupp norm crds s = norm x + 1 := by
+  ∃ x : X, crds x ≠ 0 ∧ maxNormSuccOnSupp norm crds s = norm x + 1 := by
   intro h
   induction s with
   | nil => 
@@ -949,10 +949,8 @@ theorem max_in_support (norm: X → Nat)(crds : X → R)(s: List X) :
       by 
         simp [maxNormSuccOnSupp, c]
         simp [maxNormSuccOnSupp, c] at h
-        let l := ih h
-        let ⟨x₀, p⟩ := l
-        let p₁ : (x₀ = head) ∨ (x₀ ∈ tail) := Or.inr p.left
-        exact ⟨x₀, And.intro p₁  p.right⟩
+        exact  ih h
+        
     else by    
         simp [maxNormSuccOnSupp, c]
         simp [maxNormSuccOnSupp, c] at h
@@ -961,14 +959,11 @@ theorem max_in_support (norm: X → Nat)(crds : X → R)(s: List X) :
         case inr p =>
             rw [p]
             rw [p] at h
-            let l := ih h
-            let ⟨x₀, p⟩ := l
-            let p₁ : (x₀ = head) ∨ (x₀ ∈ tail) := Or.inr p.left
-            exact ⟨x₀, And.intro p₁  p.right⟩  
+            exact  ih h 
         case inl p =>
             rw [p]
             rw [p] at h
-            exact ⟨head, And.intro (Or.inl rfl) rfl⟩
+            exact ⟨head, And.intro c rfl⟩
 
 theorem supp_below_max(norm: X → Nat)(crds : X → R)(s: List X) :
   (x: X) → x ∈ s →  crds x ≠ 0 → norm x + 1 ≤ maxNormSuccOnSupp norm crds s := by
@@ -1005,4 +1000,37 @@ theorem supp_zero_of_max_zero(norm: X → Nat)(crds : X → R)(s: List X) :
 def FormalSum.normSucc (norm : X → Nat)(s: FormalSum R X) : Nat :=
       maxNormSuccOnSupp norm s.coords (s.support)
 
+theorem normsucc_le(norm : X → Nat)(s₁ s₂: FormalSum R X)(eql : s₁ ≈ s₂):
+    s₁.normSucc norm ≤ s₂.normSucc norm := 
+      if c:s₁.normSucc norm = 0 then 
+      by
+        rw [c]
+        apply Nat.zero_le 
+      else by
+        simp [FormalSum.normSucc]
+        simp [FormalSum.normSucc] at c
+        let c' : maxNormSuccOnSupp norm (coords s₁) (support s₁) > 0 :=
+            by
+            cases Nat.eq_zero_or_pos (maxNormSuccOnSupp norm (coords s₁) (support s₁))
+            contradiction
+            assumption
+        let l := max_in_support norm s₁.coords s₁.support c'
+        let ⟨x₀, p⟩:= l
+        let nonzr' := p.left
+        let l := congrFun eql x₀
+        rw [l] at nonzr'
+        let nonzr : 0 ≠ s₂.coords x₀ := by
+          intro hyp
+          let l' := Eq.symm hyp
+          contradiction
+        let in_supp := nonzero_coord_in_support s₂ x₀ nonzr
+        rw [p.right]
+        simp
+        apply supp_below_max norm s₂.coords s₂.support x₀ in_supp nonzr'
 
+theorem norm_succ_eq(norm : X → Nat)(s₁ s₂: FormalSum R X)(eql : s₁ ≈ s₂):
+    s₁.normSucc norm = s₂.normSucc norm := by
+      apply Nat.le_antisymm <;> apply normsucc_le
+      assumption
+      apply eqlCoords.symm
+      assumption
