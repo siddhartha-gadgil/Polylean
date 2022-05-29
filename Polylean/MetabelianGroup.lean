@@ -1,3 +1,4 @@
+import Polylean.Morphisms
 import Polylean.GroupAction
 
 /-
@@ -108,3 +109,71 @@ instance metabeliangroup : Group (K × Q) :=
   }
 
 end MetabelianGroup
+
+section Exactness
+
+variable (Q K : Type _) [AddCommGroup Q] [AddCommGroup K]
+variable [α : AddCommGroup.ActionByAutomorphisms Q K]
+variable (c : Q → Q → K) [cocycle : Cocycle c]
+
+instance G : Group (K × Q) := MetabelianGroup.metabeliangroup c
+
+def Metabelian.Kernel := subType (λ (g : K × Q) => g.snd = (0 : Q))
+
+def Metabelian.Kernel.inclusion : K → (Metabelian.Kernel Q K)
+  | k => ⟨(k, 0), rfl⟩
+
+def Metabelian.Kernel.projection : (Metabelian.Kernel Q K) → K
+  | ⟨(k, _), _⟩ => k
+
+instance : subGroup (λ (g : K × Q) => g.snd = (0 : Q)) where
+  mul_closure := by
+    intro ⟨ka, qa⟩ ⟨kb, qb⟩; intro hqa hqb
+    show (Mul.mul (ka, qa) (kb, qb)).snd = 0
+    simp [Mul.mul, MetabelianGroup.mul] at *
+    rw [hqa, hqb, add_zero]
+  inv_closure := by
+    intro ⟨ka, qa⟩; intro h
+    simp [Inv.inv, MetabelianGroup.inv] at *
+    apply neg_eq_of_add_eq_zero
+    rw [h, add_zero]
+  id_closure := rfl
+
+instance kernel_group : Group (Metabelian.Kernel Q K) :=
+  subGroup.Group _
+
+instance kernel_inclusion : Group.Homomorphism (subType.val (λ (g : K × Q) => g.snd = (0 : Q))) := inferInstance
+
+theorem Metabelian.Kernel.mul_comm : ∀ k k' : Metabelian.Kernel Q K, k * k' = k' * k := by
+  intro ⟨⟨ka, 0⟩, rfl⟩; intro ⟨⟨kb, 0⟩, rfl⟩
+  apply subType.eq_of_val_eq
+  show Mul.mul (ka, (0 : Q)) (kb, 0) = Mul.mul (kb, 0) (ka, 0)
+  simp [Mul.mul, MetabelianGroup.mul]; rw [AddCommGroup.Action.id_action, AddCommGroup.Action.id_action, add_comm]
+
+instance : AddCommGroup (Metabelian.Kernel Q K) := Group.to_additive (Metabelian.Kernel.mul_comm _ _ _)
+
+instance : AddCommGroup.Homomorphism (Metabelian.Kernel.inclusion Q K) where
+  add_dist := by
+    intro k k'
+    simp [Metabelian.Kernel.inclusion]
+    apply subType.eq_of_val_eq
+    show (k + k', (0 : Q)) = Mul.mul (k, 0) (k', 0)
+    simp [Mul.mul, MetabelianGroup.mul]; rw [AddCommGroup.Action.id_action, cocycle.cocycleId, add_zero]
+
+instance : AddCommGroup.Homomorphism (Metabelian.Kernel.projection Q K) where
+  add_dist := by
+    intro ⟨⟨k, 0⟩, rfl⟩; intro ⟨⟨k', 0⟩, rfl⟩
+    simp [Metabelian.Kernel.projection, MetabelianGroup.mul]; rw [AddCommGroup.Action.id_action, cocycle.cocycleId, add_zero]
+
+instance : AddCommGroup.Isomorphism K (Metabelian.Kernel Q K) :=
+  {
+    map := Metabelian.Kernel.inclusion Q K
+    mapHom := inferInstance
+    inv := Metabelian.Kernel.projection Q K
+    invHom := inferInstance
+    idSrc := by apply funext; intro; simp [Metabelian.Kernel.projection, Metabelian.Kernel.inclusion]
+    idTgt := by apply funext; intro ⟨⟨k, 0⟩, rfl⟩; simp [Metabelian.Kernel.projection, Metabelian.Kernel.inclusion]
+
+  }
+
+end Exactness

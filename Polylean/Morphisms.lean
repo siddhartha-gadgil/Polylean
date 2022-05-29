@@ -38,8 +38,29 @@ instance {G : Type _} [Group G] : IsMulRightCancel G := ⟨@Group.mul_right_canc
   rw [mul_one] at this
   assumption
 
-end Group
+instance Group.to_additive {G : Type _} [Grp : Group G] (mul_comm : ∀ g h : G, g * h = h * g) : AddCommGroup G :=
+  {
+    add := Grp.mul
+    add_assoc := Grp.mul_assoc
+    zero := Grp.one
+    add_zero := Grp.mul_one
+    zero_add := Grp.one_mul
 
+    neg := Grp.inv
+    add_left_neg := Grp.mul_left_inv
+    add_comm := mul_comm
+
+    nsmul_succ' := by intros; rfl
+    nsmul_zero' := by intros; rfl
+
+    sub_eq_add_neg := by intros; rfl
+
+    gsmul_zero' := by intros; rfl
+    gsmul_succ' := by intros; rfl
+    gsmul_neg' := by intros; rfl
+  }
+
+end Group
 
 namespace Group.Homomorphism
 
@@ -49,9 +70,6 @@ variable {ϕ : G → H} [Homϕ : Group.Homomorphism ϕ]
 
 @[simp] theorem mul_distrib {g g' : G} : ϕ (g * g') = ϕ g * ϕ g' := Homomorphism.mul_dist g g'
 
-/- Kernel of a group homomorphism-/
-def kernel (ϕ : G → H) [Group.Homomorphism ϕ] := {g : G // ϕ g = 1}
-
 @[simp] theorem one_image : ϕ 1 = 1 := by
   have : (ϕ 1) * (ϕ 1) = (ϕ 1) * 1 := by rw [← Homomorphism.mul_distrib, mul_one, mul_one]
   exact mul_left_cancel this
@@ -60,75 +78,56 @@ theorem hom_inv {g : G} : (ϕ g)⁻¹ = ϕ g⁻¹ := by
   have : ϕ g * ϕ g⁻¹ = ϕ g * (ϕ g)⁻¹ := by rw [← Homomorphism.mul_distrib]; simp
   exact GrpH.mul_left_cancel (Eq.symm this)
 
-theorem inv_kernel {g : G} : ϕ g = 1 → ϕ g⁻¹ = 1 := by
-  intro h
-  have : ϕ g * ϕ g⁻¹ = 1 := by have := (mul_right_inv (ϕ g)); rw [hom_inv] at this; assumption
-  rw [h, one_mul] at this
-  assumption
-
-theorem Kernel.eq_of_val_eq (ϕ : G → H) [Group.Homomorphism ϕ] : ∀ {g h : kernel ϕ}, Eq g.val h.val → Eq g h
-  | ⟨v, h⟩, ⟨_, _⟩, rfl => rfl
-
-instance : Group (kernel ϕ) :=
-  {
-    mul := λ ⟨g₁, prf₁⟩ ⟨g₂, prf₂⟩ => ⟨g₁ * g₂, by rw [Homϕ.mul_dist g₁ g₂, prf₁, prf₂, mul_one]⟩
-    mul_assoc := λ ⟨a, _⟩ ⟨b, _⟩ ⟨c, _⟩ => by 
-      apply Kernel.eq_of_val_eq
-      apply mul_assoc
-
-    one := ⟨1, one_image⟩
-    mul_one := by intro ⟨a, prf⟩; apply Kernel.eq_of_val_eq; apply mul_one
-    one_mul := by intro ⟨a, prf⟩; apply Kernel.eq_of_val_eq; apply one_mul
-
-    inv := λ ⟨g, prf⟩ => ⟨g⁻¹, inv_kernel prf⟩
-    mul_left_inv := by 
-          intro ⟨a, prf⟩; apply Kernel.eq_of_val_eq; simp [Inv.inv]; 
-          apply mul_left_inv
-
-    npow_zero' := by intros; rfl
-    npow_succ' := by intros; rfl
-
-    div_eq_mul_inv := by intros; rfl
-    gpow_zero' := by intros; rfl
-    gpow_succ' := by intros; rfl
-    gpow_neg' := by intros; rfl
-  }
+theorem hom_pow {g : G} {n : ℕ} : (ϕ g) ^ n = ϕ (g ^ n) := by
+  induction n with
+    | zero => simp
+    | succ m ih => rw [pow_succ, pow_succ, Homϕ.mul_dist, ih]
 
 end Group.Homomorphism
 
-section
 
-variable {G : Type _} [Grp : Group G]
+section subType
 
-def subType (P: G → Prop) := {g : G // P g}
+def subType (P: T → Prop) := {a : T // P a}
 
-theorem Subgroup.eq_of_val_eq (P : G → Prop)  : 
-    ∀ {g h : subType P}, Eq g.val h.val → Eq g h
-  | ⟨v, h⟩, ⟨_, _⟩, rfl => rfl
+@[reducible, simp] def subType.val (P : T → Prop) : subType P → T
+  | ⟨a, _⟩ => a
 
-instance (P : G → Prop)
-  (mul_closure : ∀ {a b : G}, P a → P b → P (a * b))
-  (inv_closure : ∀ {a : G}, P a → P a⁻¹)
-  (id_closure : P 1) :
-  Group {g : G // P g} :=
+theorem subType.eq_of_val_eq (P : T → Prop)  :
+    ∀ {a b : subType P}, Eq a.val b.val → Eq a b
+  | ⟨v, prf⟩, ⟨_, _⟩, rfl => rfl
+
+end subType
+
+section subGroup
+
+variable {G H : Type _} [GrpG : Group G] [GrpH : Group H]
+variable {ϕ : G → H} [Homϕ : Group.Homomorphism ϕ]
+
+class subGroup (P : G → Prop) where
+  mul_closure : ∀ {a b : G}, P a → P b → P (a * b)
+  inv_closure : ∀ {a : G}, P a → P a⁻¹
+  id_closure : P 1
+
+instance subGroup.Group (P : G → Prop) [H : subGroup P] : Group (subType P) :=
    {
-    mul := λ ⟨g₁, prf₁⟩ ⟨g₂, prf₂⟩ => ⟨g₁ * g₂, mul_closure prf₁ prf₂⟩
+    mul := λ ⟨g₁, prf₁⟩ ⟨g₂, prf₂⟩ => ⟨g₁ * g₂, H.mul_closure prf₁ prf₂⟩
     mul_assoc := λ ⟨a, _⟩ ⟨b, _⟩ ⟨c, _⟩ => by
-      apply Subgroup.eq_of_val_eq; apply mul_assoc
+      apply subType.eq_of_val_eq; apply mul_assoc
 
-    one := ⟨1, id_closure⟩
-    mul_one := by intro α 
-                  apply Subgroup.eq_of_val_eq
-                  apply mul_one 
-    one_mul := by intro α 
-                  apply Subgroup.eq_of_val_eq
+    one := ⟨1, H.id_closure⟩
+    mul_one := by intro α
+                  apply subType.eq_of_val_eq
+                  apply mul_one
+    one_mul := by intro α
+                  apply subType.eq_of_val_eq
                   apply one_mul
 
-    inv := λ ⟨g, prf⟩ => ⟨g⁻¹, inv_closure prf⟩
-    mul_left_inv := by 
+    inv := λ ⟨g, prf⟩ => ⟨g⁻¹, H.inv_closure prf⟩
+    mul_left_inv := by
                         intro ⟨a, prf⟩
                         simp [Inv.inv]
-                        apply Subgroup.eq_of_val_eq
+                        apply subType.eq_of_val_eq
                         apply mul_left_inv
 
     npow_zero' := by intros; rfl
@@ -140,7 +139,33 @@ instance (P : G → Prop)
     gpow_neg' := by intros; rfl
   }
 
-end
+/- Kernel of a group homomorphism-/
+def kernel (ϕ : G → H) [Group.Homomorphism ϕ] := subType (λ g : G => ϕ g = 1)
+
+instance : subGroup (λ g : G => ϕ g = 1) where
+  mul_closure := by intro a b ka kb; rw [Homϕ.mul_dist, ka, kb, mul_one]
+  inv_closure := (λ {a} ka =>
+    calc ϕ a⁻¹ = (ϕ a)⁻¹ := Eq.symm Group.Homomorphism.hom_inv
+          _    = (1 : H)⁻¹ := by rw [ka]
+          _    = (1 : H) := one_inv)
+  id_closure := Group.Homomorphism.one_image
+
+instance : Group (kernel ϕ) := subGroup.Group _
+
+/- Image of a group homomorphism-/
+def image (ϕ : G → H) [Group.Homomorphism ϕ] := subType (λ h : H => ∃ g : G, ϕ g = h)
+
+instance : subGroup (λ h : H => ∃ g : G, ϕ g = h) where
+  mul_closure := (λ {α β} ⟨a, im_a⟩ ⟨b, im_b⟩ => ⟨a * b, by rw [Homϕ.mul_dist, im_a, im_b]⟩)
+  inv_closure := (λ {α} ⟨a, im_a⟩ => ⟨a⁻¹, by rw [← im_a, Group.Homomorphism.hom_inv]⟩)
+  id_closure := (⟨1, Group.Homomorphism.one_image⟩)
+
+instance : Group (image ϕ) := subGroup.Group _
+
+instance inclusion (P : G → Prop) [subGroup P] : Group.Homomorphism (subType.val P) where
+  mul_dist := λ ⟨g, pg⟩ ⟨g', pg'⟩ => rfl
+
+end subGroup
 
 section Morphisms
 
@@ -155,7 +180,7 @@ class CommRing.Homomorphism {R S : Type _} [CommRing R] [CommRing S] (ϕ : R →
   extends AddCommGroup.Homomorphism ϕ, Monoid.Homomorphism ϕ
 
 
-instance {A B C : Type _} [AddCommGroup A] [AddCommGroup B] [AddCommGroup C]
+instance hom_comp {A B C : Type _} [AddCommGroup A] [AddCommGroup B] [AddCommGroup C]
          (ϕ : A → B) [AddCommGroup.Homomorphism ϕ] (ψ : B → C) [AddCommGroup.Homomorphism ψ] :
          AddCommGroup.Homomorphism (ψ ∘ ϕ) where
   add_dist := by intros; simp [AddCommGroup.Homomorphism.add_dist]
@@ -224,3 +249,51 @@ instance : AddCommGroup.Homomorphism (id : A → A) where
   add_dist := λ _ _ => rfl
 
 end AddCommGroup.Homomorphism
+
+section AddCommGroup.Isomorphism
+
+/-
+Unlike homomorphisms, the data of the map is not at the type level here since it is usually only relevant whether two groups are isomorphic.
+-/
+
+class AddCommGroup.Isomorphism (A B : Type _) [AddCommGroup A] [AddCommGroup B] where
+  map : A → B
+  [mapHom : AddCommGroup.Homomorphism map]
+  inv : B → A
+  [invHom : AddCommGroup.Homomorphism inv]
+  idSrc : inv ∘ map = id
+  idTgt : map ∘ inv = id
+
+variable (A B C : Type _) [AddCommGroup A] [AddCommGroup B] [AddCommGroup C]
+
+instance refl [AddCommGroup.Isomorphism A A] : AddCommGroup.Isomorphism A A := by assumption
+
+instance symm [iso : AddCommGroup.Isomorphism A B] : AddCommGroup.Isomorphism B A :=
+  {
+    map := iso.inv
+    mapHom := iso.invHom
+    inv := iso.map
+    invHom := iso.mapHom
+    idSrc := iso.idTgt
+    idTgt := iso.idSrc
+  }
+
+instance trans [isoAB : AddCommGroup.Isomorphism A B] [isoBC : AddCommGroup.Isomorphism B C] : AddCommGroup.Isomorphism A C :=
+  {
+    map := isoBC.map ∘ isoAB.map
+    mapHom := @hom_comp _ _ _ _ _ _ isoAB.map isoAB.mapHom isoBC.map isoBC.mapHom
+    inv := isoAB.inv ∘ isoBC.inv
+    invHom := @hom_comp _ _ _ _ _ _ isoBC.inv isoBC.invHom isoAB.inv isoAB.invHom
+    idSrc := by
+      show isoAB.inv ∘ (isoBC.inv ∘ isoBC.map) ∘ isoAB.map = id
+      rw [isoBC.idSrc]
+      show (isoAB.inv ∘ isoAB.map) = id
+      rw [isoAB.idSrc]
+    idTgt := by
+      show isoBC.map ∘ (isoAB.map ∘ isoAB.inv) ∘ isoBC.inv = id
+      rw [isoAB.idTgt]
+      show isoBC.map ∘ isoBC.inv = id
+      rw [isoBC.idTgt]
+  }
+
+end AddCommGroup.Isomorphism
