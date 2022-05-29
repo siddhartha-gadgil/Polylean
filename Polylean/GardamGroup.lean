@@ -135,7 +135,7 @@ instance P_cocycle : Cocycle cocycle :=
   }
 
 
-def P := K × Q
+abbrev P := K × Q
 
 instance PGrp : Group P := MetabelianGroup.metabeliangroup cocycle
 

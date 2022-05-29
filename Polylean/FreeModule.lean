@@ -1041,6 +1041,14 @@ class NormCube (α : Type) where
 
 instance natCube : NormCube Nat := ⟨id, fun n => (List.range n).reverse⟩
 
+instance finCube {k: Nat} : NormCube (Fin (Nat.succ k)) := 
+    let i : Nat → Fin (Nat.succ k) := fun n => ⟨n % (Nat.succ k), by 
+          apply Nat.mod_lt
+          apply Nat.zero_lt_succ
+          ⟩
+    ⟨fun j => j.val, fun n => (List.range (min k n)).reverse.map i⟩
+
+
 instance intCube : NormCube ℤ where
   norm := Int.natAbs
   cube : Nat → List ℤ := fun n => 
@@ -1074,4 +1082,4 @@ def FreeModule.coeffList (x: FreeModule R X)[nx : NormCube X] :
 instance basicRepr [nx : NormCube X][Repr X][Repr R]: Repr (FreeModule R X) := 
   ⟨fun x _ => reprStr (x.coeffList)⟩
 
-
+instance : NormCube (Fin 2) := inferInstance
