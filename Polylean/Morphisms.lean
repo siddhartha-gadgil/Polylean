@@ -62,12 +62,6 @@ instance Group.to_additive {G : Type _} [Grp : Group G] (mul_comm : ∀ g h : G,
 
 end Group
 
-def subType (P: G → Prop) := {g : G // P g}
-
-theorem subType.eq_of_val_eq (P : G → Prop)  :
-    ∀ {g h : subType P}, Eq g.val h.val → Eq g h
-  | ⟨v, h⟩, ⟨_, _⟩, rfl => rfl
-
 namespace Group.Homomorphism
 
 variable {G H : Type _} [GrpG : Group G] [GrpH : Group H]
@@ -75,11 +69,6 @@ variable {ϕ : G → H} [Homϕ : Group.Homomorphism ϕ]
 
 
 @[simp] theorem mul_distrib {g g' : G} : ϕ (g * g') = ϕ g * ϕ g' := Homomorphism.mul_dist g g'
-
-/- Kernel of a group homomorphism-/
-def kernel (ϕ : G → H) [Group.Homomorphism ϕ] := {g : G // ϕ g = 1}
-/- Image of a group homomorphism-/
-def image (ϕ : G → H) [Group.Homomorphism ϕ] := {h : H // ∃ g : G, ϕ g = h}
 
 @[simp] theorem one_image : ϕ 1 = 1 := by
   have : (ϕ 1) * (ϕ 1) = (ϕ 1) * 1 := by rw [← Homomorphism.mul_distrib, mul_one, mul_one]
@@ -89,27 +78,53 @@ theorem hom_inv {g : G} : (ϕ g)⁻¹ = ϕ g⁻¹ := by
   have : ϕ g * ϕ g⁻¹ = ϕ g * (ϕ g)⁻¹ := by rw [← Homomorphism.mul_distrib]; simp
   exact GrpH.mul_left_cancel (Eq.symm this)
 
+theorem hom_pow {g : G} {n : ℕ} : (ϕ g) ^ n = ϕ (g ^ n) := by
+  induction n with
+    | zero => simp
+    | succ m ih => rw [pow_succ, pow_succ, Homϕ.mul_dist, ih]
 
-instance subgroup (P : G → Prop)
-  (mul_closure : ∀ {a b : G}, P a → P b → P (a * b))
-  (inv_closure : ∀ {a : G}, P a → P a⁻¹)
-  (id_closure : P 1) :
-  Group {g : G // P g} :=
+end Group.Homomorphism
+
+
+section subType
+
+def subType (P: T → Prop) := {a : T // P a}
+
+@[reducible, simp] def subType.val (P : T → Prop) : subType P → T
+  | ⟨a, _⟩ => a
+
+theorem subType.eq_of_val_eq (P : T → Prop)  :
+    ∀ {a b : subType P}, Eq a.val b.val → Eq a b
+  | ⟨v, prf⟩, ⟨_, _⟩, rfl => rfl
+
+end subType
+
+section subGroup
+
+variable {G H : Type _} [GrpG : Group G] [GrpH : Group H]
+variable {ϕ : G → H} [Homϕ : Group.Homomorphism ϕ]
+
+class subGroup (P : G → Prop) where
+  mul_closure : ∀ {a b : G}, P a → P b → P (a * b)
+  inv_closure : ∀ {a : G}, P a → P a⁻¹
+  id_closure : P 1
+
+instance subGroup.Group (P : G → Prop) [H : subGroup P] : Group (subType P) :=
    {
-    mul := λ ⟨g₁, prf₁⟩ ⟨g₂, prf₂⟩ => ⟨g₁ * g₂, mul_closure prf₁ prf₂⟩
+    mul := λ ⟨g₁, prf₁⟩ ⟨g₂, prf₂⟩ => ⟨g₁ * g₂, H.mul_closure prf₁ prf₂⟩
     mul_assoc := λ ⟨a, _⟩ ⟨b, _⟩ ⟨c, _⟩ => by
       apply subType.eq_of_val_eq; apply mul_assoc
 
-    one := ⟨1, id_closure⟩
-    mul_one := by intro α 
+    one := ⟨1, H.id_closure⟩
+    mul_one := by intro α
                   apply subType.eq_of_val_eq
-                  apply mul_one 
-    one_mul := by intro α 
+                  apply mul_one
+    one_mul := by intro α
                   apply subType.eq_of_val_eq
                   apply one_mul
 
-    inv := λ ⟨g, prf⟩ => ⟨g⁻¹, inv_closure prf⟩
-    mul_left_inv := by 
+    inv := λ ⟨g, prf⟩ => ⟨g⁻¹, H.inv_closure prf⟩
+    mul_left_inv := by
                         intro ⟨a, prf⟩
                         simp [Inv.inv]
                         apply subType.eq_of_val_eq
@@ -124,23 +139,33 @@ instance subgroup (P : G → Prop)
     gpow_neg' := by intros; rfl
   }
 
-instance : Group (kernel ϕ) :=
-  subgroup (λ g => ϕ g = 1)
-  (by intro a b ka kb; rw [Homϕ.mul_dist, ka, kb, mul_one])
-  (λ {a} ka =>
-    calc ϕ a⁻¹ = (ϕ a)⁻¹ := Eq.symm hom_inv
+/- Kernel of a group homomorphism-/
+def kernel (ϕ : G → H) [Group.Homomorphism ϕ] := subType (λ g : G => ϕ g = 1)
+
+instance : subGroup (λ g : G => ϕ g = 1) where
+  mul_closure := by intro a b ka kb; rw [Homϕ.mul_dist, ka, kb, mul_one]
+  inv_closure := (λ {a} ka =>
+    calc ϕ a⁻¹ = (ϕ a)⁻¹ := Eq.symm Group.Homomorphism.hom_inv
           _    = (1 : H)⁻¹ := by rw [ka]
           _    = (1 : H) := one_inv)
-  (by exact one_image)
+  id_closure := Group.Homomorphism.one_image
 
-instance : Group (image ϕ) :=
-  subgroup _
-  (λ {α β} ⟨a, im_a⟩ ⟨b, im_b⟩ => ⟨a * b, by rw [Homϕ.mul_dist, im_a, im_b]⟩)
-  (λ {α} ⟨a, im_a⟩ => ⟨a⁻¹, by rw [← im_a, hom_inv]⟩)
-  (⟨1, one_image⟩)
+instance : Group (kernel ϕ) := subGroup.Group _
 
-end Group.Homomorphism
+/- Image of a group homomorphism-/
+def image (ϕ : G → H) [Group.Homomorphism ϕ] := subType (λ h : H => ∃ g : G, ϕ g = h)
 
+instance : subGroup (λ h : H => ∃ g : G, ϕ g = h) where
+  mul_closure := (λ {α β} ⟨a, im_a⟩ ⟨b, im_b⟩ => ⟨a * b, by rw [Homϕ.mul_dist, im_a, im_b]⟩)
+  inv_closure := (λ {α} ⟨a, im_a⟩ => ⟨a⁻¹, by rw [← im_a, Group.Homomorphism.hom_inv]⟩)
+  id_closure := (⟨1, Group.Homomorphism.one_image⟩)
+
+instance : Group (image ϕ) := subGroup.Group _
+
+instance inclusion (P : G → Prop) [subGroup P] : Group.Homomorphism (subType.val P) where
+  mul_dist := λ ⟨g, pg⟩ ⟨g', pg'⟩ => rfl
+
+end subGroup
 
 section Morphisms
 

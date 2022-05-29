@@ -13,33 +13,24 @@ Roughly, the steps are as follows (further details can be found in the correspon
 5. Together, this shows that `P` is torsion-free.
 -/
 
-class TorsionFree (G : Type _) [Group G] :=
+class TorsionFree (G : Type _) [Group G] where
   torsion_free : ∀ g : G, ∀ n : ℕ, g ^ n.succ = 1 → g = 1
 
 
 open P
 
-def s : K → Q → K
-  | (p, q, r), (⟨0, _⟩, ⟨0, _⟩) => (p + p, q + q, r + r)
-  | (p, q, r), (⟨0, _⟩, ⟨1, _⟩) => (0, q + q + 1, 0)
-  | (p, q, r), (⟨1, _⟩, ⟨0, _⟩) => (p + p + 1, 0, 0)
-  | (p, q, r), (⟨1, _⟩, ⟨1, _⟩) => (0, 0, r + r + 1)
+def s : P → (Metabelian.Kernel Q K)
+  | ((p, q, r), (⟨0, _⟩, ⟨0, _⟩)) => ⟨((p + p, q + q, r + r), (⟨0, _⟩, ⟨0, _⟩)), rfl⟩
+  | ((p, q, r), (⟨0, _⟩, ⟨1, _⟩)) => ⟨((0, q + q + 1, 0), (⟨0, _⟩, ⟨0, _⟩)), rfl⟩
+  | ((p, q, r), (⟨1, _⟩, ⟨0, _⟩)) => ⟨((p + p + 1, 0, 0), (⟨0, _⟩, ⟨0, _⟩)), rfl⟩
+  | ((p, q, r), (⟨1, _⟩, ⟨1, _⟩)) => ⟨((0, 0, r + r + 1), (⟨0, _⟩, ⟨0, _⟩)), rfl⟩
 
-theorem s_square : ∀ g : P, g ^ 2 = (s g.fst g.snd, (⟨0, by decide⟩, ⟨0, by decide⟩)) := by
+theorem s_square : ∀ g : P, g ^ 2 = (s g).val := by
   intro ((p, q, r), x); revert x
   apply Q.rec <;> rw [← npow_eq_pow] <;>
   simp [s, Monoid.npow, npow_rec, P_mul] <;> simp [action, cocycle, prod, id, neg] <;> simp [K_add]
 
-
-def torsion_free (G : Type _) [Group G] (g : G) := ∀ n : ℕ, g ^ n.succ = 1 → g = 1
-
-/- -- eventually switch to this definition
-class TorsionFree (G : Type _) [Group G] :=
-  torsion_free : ∀ g : G, ∀ n : ℕ, g ^ n.succ = 1 → g = 1
--/
-
--- this is the most difficult part of the argument
-theorem kernel_torsion_free : ∀  k : K, torsion_free P (k, 0) := sorry
+instance kernel_torsion_free : TorsionFree (Metabelian.Kernel Q K) := sorry
 
 section Mod2
 
@@ -142,7 +133,6 @@ theorem zero_of_double_zero (n: Int) : n + n = 0 → n = 0 := by
     simp at hyp''
 
 
-
 theorem square_free : ∀ g : P, g ^ 2 = 1 → g = 1 := by
   intro ⟨(p, q, r), x⟩
   apply Q.rec (λ x => ((p, q, r), x) ^ 2 = ((0, 0, 0), (⟨0, _⟩, ⟨0, _⟩)) → ((p, q, r), x) = ((0, 0, 0), (⟨0, _⟩, ⟨0, _⟩)))
@@ -159,11 +149,17 @@ theorem torsion_implies_square_torsion : ∀ g : P, ∀ n : ℕ, g ^ n = 1 → (
               _      = (1 : P) ^ 2 := by rw [← g_tor]
               _      = (1 : P)     := rfl
 
-theorem P_torsion_free : ∀ g : P, torsion_free P g := by
+instance : Group.Homomorphism (subType.val (λ g : K × Q => g.snd = 0)) := inferInstance
+
+instance P_torsion_free : TorsionFree P where
+  torsion_free := by
     intros g n g_tor
     have square_tor : (g ^ 2) ^ n.succ = 1 := torsion_implies_square_torsion g n.succ g_tor
-    have square_eq : g ^ 2 = (s g.fst g.snd, 0) := s_square g
-    rw [square_eq] at square_tor
-    have square_zero : (s g.fst g.snd, (⟨0, by decide⟩, ⟨0, by decide⟩)) = ((0, 0) : P) := kernel_torsion_free (s g.fst g.snd) n square_tor
+    rw [s_square] at square_tor
+    have s_tor : (s g) ^ n.succ = 1 := by
+      apply subType.eq_of_val_eq
+      -- rw [Group.Homomorphism.hom_pow] at square_tor
+      sorry
+    have square_zero : (s g).val = (0 : Metabelian.Kernel Q K).val := congrArg _ (kernel_torsion_free.torsion_free _ n s_tor)
     rw [← s_square] at square_zero
     exact square_free g square_zero

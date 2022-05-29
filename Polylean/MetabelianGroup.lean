@@ -118,7 +118,7 @@ variable (c : Q → Q → K) [cocycle : Cocycle c]
 
 instance G : Group (K × Q) := MetabelianGroup.metabeliangroup c
 
-def Metabelian.Kernel := {g : (K × Q) // g.snd = (0 : Q)}
+def Metabelian.Kernel := subType (λ (g : K × Q) => g.snd = (0 : Q))
 
 def Metabelian.Kernel.inclusion : K → (Metabelian.Kernel Q K)
   | k => ⟨(k, 0), rfl⟩
@@ -126,19 +126,23 @@ def Metabelian.Kernel.inclusion : K → (Metabelian.Kernel Q K)
 def Metabelian.Kernel.projection : (Metabelian.Kernel Q K) → K
   | ⟨(k, _), _⟩ => k
 
-instance : Group (Metabelian.Kernel Q K) :=
-  Group.Homomorphism.subgroup _
-  (by
+instance : subGroup (λ (g : K × Q) => g.snd = (0 : Q)) where
+  mul_closure := by
     intro ⟨ka, qa⟩ ⟨kb, qb⟩; intro hqa hqb
     show (Mul.mul (ka, qa) (kb, qb)).snd = 0
     simp [Mul.mul, MetabelianGroup.mul] at *
-    rw [hqa, hqb, add_zero])
-  (by
+    rw [hqa, hqb, add_zero]
+  inv_closure := by
     intro ⟨ka, qa⟩; intro h
     simp [Inv.inv, MetabelianGroup.inv] at *
     apply neg_eq_of_add_eq_zero
-    rw [h, add_zero])
-  (rfl)
+    rw [h, add_zero]
+  id_closure := rfl
+
+instance kernel_group : Group (Metabelian.Kernel Q K) :=
+  subGroup.Group _
+
+instance kernel_inclusion : Group.Homomorphism (subType.val (λ (g : K × Q) => g.snd = (0 : Q))) := inferInstance
 
 theorem Metabelian.Kernel.mul_comm : ∀ k k' : Metabelian.Kernel Q K, k * k' = k' * k := by
   intro ⟨⟨ka, 0⟩, rfl⟩; intro ⟨⟨kb, 0⟩, rfl⟩
