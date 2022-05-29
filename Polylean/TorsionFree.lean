@@ -13,6 +13,10 @@ Roughly, the steps are as follows (further details can be found in the correspon
 5. Together, this shows that `P` is torsion-free.
 -/
 
+class TorsionFree (G : Type _) [Group G] :=
+  torsion_free : ∀ g : G, ∀ n : ℕ, g ^ n.succ = 1 → g = 1
+
+
 open P
 
 def s : K → Q → K
