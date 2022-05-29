@@ -38,8 +38,35 @@ instance {G : Type _} [Group G] : IsMulRightCancel G := ⟨@Group.mul_right_canc
   rw [mul_one] at this
   assumption
 
+instance Group.to_additive {G : Type _} [Grp : Group G] (mul_comm : ∀ g h : G, g * h = h * g) : AddCommGroup G :=
+  {
+    add := Grp.mul
+    add_assoc := Grp.mul_assoc
+    zero := Grp.one
+    add_zero := Grp.mul_one
+    zero_add := Grp.one_mul
+
+    neg := Grp.inv
+    add_left_neg := Grp.mul_left_inv
+    add_comm := mul_comm
+
+    nsmul_succ' := by intros; rfl
+    nsmul_zero' := by intros; rfl
+
+    sub_eq_add_neg := by intros; rfl
+
+    gsmul_zero' := by intros; rfl
+    gsmul_succ' := by intros; rfl
+    gsmul_neg' := by intros; rfl
+  }
+
 end Group
 
+def subType (P: G → Prop) := {g : G // P g}
+
+theorem subType.eq_of_val_eq (P : G → Prop)  :
+    ∀ {g h : subType P}, Eq g.val h.val → Eq g h
+  | ⟨v, h⟩, ⟨_, _⟩, rfl => rfl
 
 namespace Group.Homomorphism
 
@@ -62,12 +89,6 @@ theorem hom_inv {g : G} : (ϕ g)⁻¹ = ϕ g⁻¹ := by
   have : ϕ g * ϕ g⁻¹ = ϕ g * (ϕ g)⁻¹ := by rw [← Homomorphism.mul_distrib]; simp
   exact GrpH.mul_left_cancel (Eq.symm this)
 
-
-def subType (P: G → Prop) := {g : G // P g}
-
-theorem subType.eq_of_val_eq (P : G → Prop)  :
-    ∀ {g h : subType P}, Eq g.val h.val → Eq g h
-  | ⟨v, h⟩, ⟨_, _⟩, rfl => rfl
 
 instance subgroup (P : G → Prop)
   (mul_closure : ∀ {a b : G}, P a → P b → P (a * b))
@@ -119,6 +140,7 @@ instance : Group (image ϕ) :=
   (⟨1, one_image⟩)
 
 end Group.Homomorphism
+
 
 section Morphisms
 
