@@ -1,4 +1,5 @@
 import Polylean.GardamGroup
+import Polylean.IntDomain
 
 
 /-
@@ -16,6 +17,41 @@ Roughly, the steps are as follows (further details can be found in the correspon
 class TorsionFree (G : Type _) [Group G] where
   torsion_free : ∀ g : G, ∀ n : ℕ, g ^ n.succ = 1 → g = 1
 
+class TorsionFreeAdditive (A : Type _) [AddCommGroup A] where
+  torsion_free : ∀ a : A, ∀ n : ℕ, SubNegMonoid.gsmul n.succ a = 0 → a = 0
+
+instance : TorsionFreeAdditive ℤ where
+  torsion_free := by
+    intro a n
+    show n.succ * a = 0 → a = 0
+    intro h
+    cases (int_domain _ _) h with
+      | inl hyp =>
+        have : Nat.succ n = (0 : Nat) := by injection hyp; assumption
+        contradiction
+      | inr _ => assumption
+
+instance {A B : Type _} [AddCommGroup A] [AddCommGroup B] [TorsionFreeAdditive A] [TorsionFreeAdditive B] :
+  TorsionFreeAdditive (A × B) where
+  torsion_free := by
+    intro (a, b) n
+    have : ∀ m : ℕ, SubNegMonoid.gsmul m (a, b) = (SubNegMonoid.gsmul m a, SubNegMonoid.gsmul m b) := by
+      intro m
+      induction m with
+        | zero => simp [SubNegMonoid.gsmul_zero']; rfl
+        | succ m ih => rw [← Int.ofNat_eq_cast, SubNegMonoid.gsmul_succ', Int.ofNat_eq_cast, ih, SubNegMonoid.gsmul_succ', SubNegMonoid.gsmul_succ', ← DirectSum.directSum_add]; rfl
+    show (SubNegMonoid.gsmul n.succ (a, b)) = (0, 0) → ((a, b) = (0, 0))
+    rw [this]; simp
+    intro ha hb
+    apply And.intro <;> apply TorsionFreeAdditive.torsion_free <;> assumption
+
+instance iso_torsion_free {A B : Type _} [AddCommGroup A] [AddCommGroup B] [IsoAB : AddCommGroup.Isomorphism A B] [TorsionFreeAdditive A] : TorsionFreeAdditive B where
+  torsion_free := by
+    intro b n h
+    have : SubNegMonoid.gsmul n.succ (IsoAB.inv b) = 0 := by rw [hom_mul, h, @zero_image B A _ _ IsoAB.inv IsoAB.invHom]
+    have : (IsoAB.map ∘ IsoAB.inv) b = IsoAB.map 0 := congrArg IsoAB.map $ TorsionFreeAdditive.torsion_free (IsoAB.inv b) n this
+    rw [IsoAB.idTgt, @zero_image A B _ _ IsoAB.map IsoAB.mapHom] at this
+    assumption
 
 open P
 
@@ -30,7 +66,11 @@ theorem s_square : ∀ g : P, g ^ 2 = (s g).val := by
   apply Q.rec <;> rw [← npow_eq_pow] <;>
   simp [s, Monoid.npow, npow_rec, P_mul] <;> simp [action, cocycle, prod, id, neg] <;> simp [K_add]
 
-instance kernel_torsion_free : TorsionFree (Metabelian.Kernel Q K) := sorry
+instance torsionfreeℤ3 : TorsionFreeAdditive K := inferInstance
+
+instance isoℤ3kernel : AddCommGroup.Isomorphism K (Metabelian.Kernel Q K) := inferInstance
+
+instance kernel_torsion_free : TorsionFreeAdditive (Metabelian.Kernel Q K) := @iso_torsion_free (ℤ × ℤ × ℤ) (Metabelian.Kernel Q K) _ _ isoℤ3kernel torsionfreeℤ3
 
 section Mod2
 
@@ -100,46 +140,18 @@ theorem odd_ne_zero : {a : ℤ} → ¬(a + a + 1 = 0) := by
 
 end Mod2
 
-theorem zero_of_double_zero (n: Int) : n + n = 0 → n = 0 := by
-  cases n
-  case ofNat k => 
-    simp [Int.add]
-    intro hyp
-    have l : Int.ofNat k + Int.ofNat k = Int.ofNat (k + k) := by rfl
-    let hyp' : Int.ofNat k + Int.ofNat k = Int.ofNat 0 := hyp
-    rw [l] at hyp'
-    have l' : k + k = 0 := by 
-      injection hyp'
-      assumption
-    have ll' : k = 0 := by 
-        cases k
-        assumption
-        case succ k' =>
-          have l'' : Nat.succ k' + Nat.succ k' =
-           Nat.succ (Nat.succ k' +  k') := by rfl
-          rw [l''] at l' 
-          simp [Nat.add] at l'
-    show Int.ofNat k = 0
-    rw [ll']
-    rfl
-  case negSucc k =>
-    simp [Int.add] 
-    intro hyp
-    let hyp' : Int.negSucc k + Int.negSucc k = 0 := hyp
-    have lem : Int.negSucc k + Int.negSucc k = 
-      Int.negSucc (Nat.succ (k + k)) := by rfl
-    rw [lem] at hyp'
-    have hyp'' : Int.negSucc (Nat.succ (k + k)) = Int.ofNat 0 := hyp'
-    simp at hyp''
-
 
 theorem square_free : ∀ g : P, g ^ 2 = 1 → g = 1 := by
   intro ⟨(p, q, r), x⟩
   apply Q.rec (λ x => ((p, q, r), x) ^ 2 = ((0, 0, 0), (⟨0, _⟩, ⟨0, _⟩)) → ((p, q, r), x) = ((0, 0, 0), (⟨0, _⟩, ⟨0, _⟩)))
   <;> rw [s_square, s] <;> simp <;> intros <;> (try (apply odd_ne_zero; assumption))
-  exact ⟨by apply zero_of_double_zero ; assumption, 
-         by apply zero_of_double_zero ; assumption,
-         by apply zero_of_double_zero ; assumption⟩
+
+  have zero_of_double_zero : ∀ m : ℤ, m + m = 0 → m = 0 := by
+    intro m; have : m + m = SubNegMonoid.gsmul (Int.ofNat Nat.zero.succ.succ) m := by rw [SubNegMonoid.gsmul_succ', add_left_cancel_iff, SubNegMonoid.gsmul_succ', Int.ofNat_zero, SubNegMonoid.gsmul_zero', add_zero]
+    rw [this]; apply TorsionFreeAdditive.torsion_free
+
+  apply And.intro <;> (try apply And.intro) <;> apply zero_of_double_zero <;> assumption
+
 
 theorem torsion_implies_square_torsion : ∀ g : P, ∀ n : ℕ, g ^ n = 1 → (g ^ 2) ^ n = 1 :=
   λ g n g_tor =>
@@ -149,8 +161,6 @@ theorem torsion_implies_square_torsion : ∀ g : P, ∀ n : ℕ, g ^ n = 1 → (
               _      = (1 : P) ^ 2 := by rw [← g_tor]
               _      = (1 : P)     := rfl
 
-instance : Group.Homomorphism (subType.val (λ g : K × Q => g.snd = 0)) := inferInstance
-
 instance P_torsion_free : TorsionFree P where
   torsion_free := by
     intros g n g_tor
@@ -158,8 +168,12 @@ instance P_torsion_free : TorsionFree P where
     rw [s_square] at square_tor
     have s_tor : (s g) ^ n.succ = 1 := by
       apply subType.eq_of_val_eq
-      -- rw [Group.Homomorphism.hom_pow] at square_tor
-      sorry
+      have subType_hom_pow {G : Type _} [Group G] (P : G → Prop) [subGroup P] (a : subType P) (n : ℕ) : (subType.val P a) ^ n = subType.val P (a ^ n) :=
+        Group.Homomorphism.hom_pow
+      rw [← subType_hom_pow, square_tor]
+    have mul_to_add (a : Metabelian.Kernel Q K) (n : ℕ) : a ^ n = SubNegMonoid.gsmul (Int.ofNat n) a := by
+      induction n with | zero => rfl | succ m ih => rw [pow_succ', SubNegMonoid.gsmul_succ', ih]; rfl
+    rw [mul_to_add] at s_tor
     have square_zero : (s g).val = (0 : Metabelian.Kernel Q K).val := congrArg _ (kernel_torsion_free.torsion_free _ n s_tor)
     rw [← s_square] at square_zero
     exact square_free g square_zero

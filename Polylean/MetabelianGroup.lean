@@ -173,7 +173,6 @@ instance : AddCommGroup.Isomorphism K (Metabelian.Kernel Q K) :=
     invHom := inferInstance
     idSrc := by apply funext; intro; simp [Metabelian.Kernel.projection, Metabelian.Kernel.inclusion]
     idTgt := by apply funext; intro ⟨⟨k, 0⟩, rfl⟩; simp [Metabelian.Kernel.projection, Metabelian.Kernel.inclusion]
-
   }
 
 end Exactness
