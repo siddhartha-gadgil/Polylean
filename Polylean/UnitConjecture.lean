@@ -61,7 +61,8 @@ def lhsMulA  := lhsTerms.map (fun x : RP => x * a)
 #eval (p' * q) ∈ lhsTerms -- true
 #eval (p' * q * a) ∈ lhsMulA -- true
 #eval (q' * a * p) ∈ lhsMulA -- true
-#eval (r' * b * s * a * b) ∈ lhsMulA
+#eval (r' * b * s * a * b) ∈ lhsMulA -- false
+#eval b * a * b * a⁻¹
 
 #eval a * b * a
 #eval a
