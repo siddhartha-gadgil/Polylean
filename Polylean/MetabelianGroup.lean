@@ -10,12 +10,22 @@ Metabelian groups are group extensions `1 → K → G → Q → 1` with both the
 We have to define the cocycle condition and construct a group structure on a structure extending `K × Q`. The main step is to show that the cocyle condition implies associativity.
 -/
 
+
+/-
+A cocycle associated with a certain action of `Q` on `K` via automorphisms is a function from `Q × Q` to `K` satisfying
+a certain requirement known as the "cocycle condition". This allows one to define an associative multiplication operation on the set `K × Q` as shown below.
+The requirement `c 0 0 = (0 : K)` is not strictly necessary and mainly for convenience.
+-/
 class Cocycle {Q K : Type _} [AddCommGroup Q] [AddCommGroup K] [α : AddCommGroup.ActionByAutomorphisms Q K]
   (c : Q → Q → K) where
   cocycleId : c 0 0 = (0 : K)
   cocycleCondition : ∀ q q' q'' : Q, c q q' + c (q + q') q'' = q • c q' q'' + c q (q' + q'')
 
 namespace Cocycle
+
+/-
+A few deductions from the cocycle condition.
+-/
 
 variable {Q K : Type _} [AddCommGroup Q] [AddCommGroup K]
 variable [α : AddCommGroup.ActionByAutomorphisms Q K]
@@ -53,6 +63,10 @@ variable {Q K : Type _} [AddCommGroup Q] [AddCommGroup K]
 variable [α : AddCommGroup.ActionByAutomorphisms Q K]
 variable (c : Q → Q → K) [cocycle : Cocycle c]
 
+/-
+The multiplication operation defined using the cocycle.
+The cocycle condition is crucially used in showing associativity and other properties.
+-/
 def mul : (K × Q) → (K × Q) → (K × Q)
   | (k, q), (k', q') => (k + (q • k') + c q q', q + q')
 
@@ -84,9 +98,10 @@ theorem mul_assoc : ∀ (g g' g'' : K × Q), mul c (mul c g g') g'' =  mul c g (
     · rw [AddCommGroup.ActionByAutomorphisms.add_dist, add_assoc, add_assoc, add_assoc, add_assoc, add_assoc, add_left_cancel_iff,
          AddCommGroup.ActionByAutomorphisms.add_dist, add_assoc, add_left_cancel_iff,
          AddCommGroup.Action.compatibility, ← add_assoc, ← add_assoc, add_comm (c q q') _, add_assoc, add_assoc, add_left_cancel_iff]
-      exact cocycle.cocycleCondition q q' q''
+      exact cocycle.cocycleCondition q q' q'' -- the cocycle condition implies associativity
     · rw [add_assoc]
 
+-- A proof that `K × Q` can be given a group structure using the above multiplication operation
 instance metabeliangroup : Group (K × Q) :=
   {
     mul := mul c,
@@ -112,21 +127,30 @@ end MetabelianGroup
 
 section Exactness
 
+/-
+The Metabelian construction gives a group `M` that is an extension of `Q` by `K`, i.e., one that fits in the short exact sequence
+1 -> K -> M -> Q -> 1
+This section describes the inclusion of `K` into `M` and shows that it is an isomorphism onto the subgroup of elements `(k, 0)` of `M (= K × Q)`.
+This isomorphism is later used in proving that `P` is torsion-free from the fact that `ℤ³` is torsion-free.
+-/
+
 variable (Q K : Type _) [AddCommGroup Q] [AddCommGroup K]
 variable [α : AddCommGroup.ActionByAutomorphisms Q K]
 variable (c : Q → Q → K) [cocycle : Cocycle c]
 
 instance G : Group (K × Q) := MetabelianGroup.metabeliangroup c
 
-def Metabelian.Kernel := subType (λ (g : K × Q) => g.snd = (0 : Q))
+-- this is the subgroup of the metabelian group that occurs as
+-- the image of the inclusion of `K` and the kernel of the projection onto `Q`.
+def Metabelian.Kernel := subType (λ ((k, q) : K × Q) => q = (0 : Q))
 
 def Metabelian.Kernel.inclusion : K → (Metabelian.Kernel Q K)
   | k => ⟨(k, 0), rfl⟩
 
-def Metabelian.Kernel.projection : (Metabelian.Kernel Q K) → K
+def Metabelian.Kernel.K_projection : (Metabelian.Kernel Q K) → K
   | ⟨(k, _), _⟩ => k
 
-instance : subGroup (λ (g : K × Q) => g.snd = (0 : Q)) where
+instance : subGroup (λ ((k, q) : K × Q) => q = (0 : Q)) where
   mul_closure := by
     intro ⟨ka, qa⟩ ⟨kb, qb⟩; intro hqa hqb
     show (Mul.mul (ka, qa) (kb, qb)).snd = 0
@@ -142,7 +166,7 @@ instance : subGroup (λ (g : K × Q) => g.snd = (0 : Q)) where
 instance kernel_group : Group (Metabelian.Kernel Q K) :=
   subGroup.Group _
 
-instance kernel_inclusion : Group.Homomorphism (subType.val (λ (g : K × Q) => g.snd = (0 : Q))) := inferInstance
+instance kernel_inclusion : Group.Homomorphism (subType.val (λ ((k, q) : K × Q) => q = (0 : Q))) := inferInstance
 
 theorem Metabelian.Kernel.mul_comm : ∀ k k' : Metabelian.Kernel Q K, k * k' = k' * k := by
   intro ⟨⟨ka, 0⟩, rfl⟩; intro ⟨⟨kb, 0⟩, rfl⟩
@@ -160,19 +184,19 @@ instance : AddCommGroup.Homomorphism (Metabelian.Kernel.inclusion Q K) where
     show (k + k', (0 : Q)) = Mul.mul (k, 0) (k', 0)
     simp [Mul.mul, MetabelianGroup.mul]; rw [AddCommGroup.Action.id_action, cocycle.cocycleId, add_zero]
 
-instance : AddCommGroup.Homomorphism (Metabelian.Kernel.projection Q K) where
+instance : AddCommGroup.Homomorphism (Metabelian.Kernel.K_projection Q K) where
   add_dist := by
     intro ⟨⟨k, 0⟩, rfl⟩; intro ⟨⟨k', 0⟩, rfl⟩
-    simp [Metabelian.Kernel.projection, MetabelianGroup.mul]; rw [AddCommGroup.Action.id_action, cocycle.cocycleId, add_zero]
+    simp [Metabelian.Kernel.K_projection, MetabelianGroup.mul]; rw [AddCommGroup.Action.id_action, cocycle.cocycleId, add_zero]
 
 instance : AddCommGroup.Isomorphism K (Metabelian.Kernel Q K) :=
   {
     map := Metabelian.Kernel.inclusion Q K
     mapHom := inferInstance
-    inv := Metabelian.Kernel.projection Q K
+    inv := Metabelian.Kernel.K_projection Q K
     invHom := inferInstance
-    idSrc := by apply funext; intro; simp [Metabelian.Kernel.projection, Metabelian.Kernel.inclusion]
-    idTgt := by apply funext; intro ⟨⟨k, 0⟩, rfl⟩; simp [Metabelian.Kernel.projection, Metabelian.Kernel.inclusion]
+    idSrc := by apply funext; intro; simp [Metabelian.Kernel.K_projection, Metabelian.Kernel.inclusion]
+    idTgt := by apply funext; intro ⟨⟨k, 0⟩, rfl⟩; simp [Metabelian.Kernel.K_projection, Metabelian.Kernel.inclusion]
   }
 
 end Exactness

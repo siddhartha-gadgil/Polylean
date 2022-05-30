@@ -10,6 +10,14 @@ It appears that mathlib4 does not yet have homomorphisms. We need:
 As with all structures, there should be a typeclass for _being a morphism_ and theorems that let us access the defining properties of a morphism.
 -/
 
+/-
+This file defines some group theory preliminaries such as
+- Group homomorphisms and additive group homomorphisms
+- Subgroups
+- Kernel and image subgroups
+- Group isomorphisms
+-/
+
 -- @[to_additive]
 class Group.Homomorphism {G H : Type _} [Group G] [Group H] (ϕ : G → H) where
   mul_dist : ∀ g g' : G, ϕ (g * g') = (ϕ g) * (ϕ g')

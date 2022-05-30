@@ -2,6 +2,8 @@ import Polylean.MetabelianGroup
 
 /-
 Define the product of two groups and related concepts.
+
+Product groups are defined as a special case of the Metabelian construction with trivial action and trivial cocycle.
 -/
 
 
@@ -12,6 +14,7 @@ variable {Q K : Type _} [AddCommGroup Q] [AddCommGroup K]
 def trivial_mul : Q → K → K
   | _ => id
 
+-- the trivial action of `Q` on `K`
 instance trivial_action : AddCommGroup.ActionByAutomorphisms Q K :=
   {
     sMul := trivial_mul
@@ -20,6 +23,7 @@ instance trivial_action : AddCommGroup.ActionByAutomorphisms Q K :=
     add_dist := λ b b' => rfl
   }
 
+-- the trivial cocycle
 def trivial_cocycle : Q → Q → K
   | _, _ => 0
 
@@ -44,6 +48,7 @@ namespace DirectSum
 
 variable {A B : Type _} [AddCommGroup A] [AddCommGroup B]
 
+-- Direct sums as an additive version of products
 instance directSum : AddCommGroup (A × B) :=
   Group.to_additive product_comm
 
@@ -59,11 +64,14 @@ section Homomorphisms
 
 variable {A B C D : Type _} [AddCommGroup A] [AddCommGroup B] [AddCommGroup C] [AddCommGroup D]
 
+-- products of homomorphisms
+-- this is used in defining the group action required for constructing the Metabelian group `P`
 def prod (f : A → C) (g : B → D) : A × B → C × D
   | (a, b) => (f a, g b)
 
 infixr:100 " × " => prod
 
+-- showing that the product of homomorphisms is a homomorphism
 instance (ϕ : A → C) [ϕHom : AddCommGroup.Homomorphism ϕ] (ψ : B → D) [ψHom : AddCommGroup.Homomorphism ψ] :
   AddCommGroup.Homomorphism (ϕ × ψ) where
     add_dist := by
