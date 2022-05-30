@@ -18,7 +18,7 @@ abbrev x : P := (P.x, P.e)
 abbrev y : P := (P.y, P.e)
 abbrev z : P := (P.z, P.e)
 abbrev a : P := ((0, 0, 0), P.a)
-abbrev b : P := ((0, 0, 1), P.b)
+abbrev b : P := ((0, 0, 0), P.b)
 abbrev one : RP := 1
 
 #eval (one + x⁻¹) * (one + y) = one + x⁻¹ + y + x⁻¹ * y
