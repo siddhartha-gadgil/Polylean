@@ -5,21 +5,11 @@ import Polylean.GroupRing
 The proof of the theorem `𝔽₂[P]` has non-trivial units.
 -/
 
-class Field (F : Type _) extends CommRing F, Inv F where
-  left_inv : ∀ a : F, a⁻¹ * a = (1 : F)
 
-theorem right_inv {F : Type _} [Field F] : ∀ a : F, a * a⁻¹ = (1 : F) := by
-  intro a
-  have left_inv : a⁻¹ * a = (1 : F) := Field.left_inv a
-  rw [mul_comm] at left_inv
-  assumption
-
-def unit {R : Type _} [Ring R] (u : R) := ∃ v : R, u * v = (1 : R)
+def unit {R : Type _} [Ring R] (u : R) := ∃ v : R, v * u = (1 : R)
 
 def trivial_element {R G : Type _} [CommRing R] [DecidableEq R] [Group G] [DecidableEq G] (x : FreeModule R G) : Prop :=
   ∃ g : G, ¬(FreeModule.coordinates g x = 0) ∧ (∀ h : G, ¬(FreeModule.coordinates h x = 0) → h = g)
-
-def KaplanskyUnitConjecture := ∀ (F G : Type _) [Field F] [DecidableEq F] [Group G] [DecidableEq G], ∀ (g : FreeModule F G), unit g → trivial_element g
 
 abbrev R := Fin 2
 
@@ -51,11 +41,27 @@ def s' : RP := z⁻¹ * (a⁻¹ * s * a)
 
 def α' := p' + (q' * a) + (r' * b) + (s' * a * b)
 
-def unitsProd := α' * α 
+#eval α
+#eval α.coordinates (-z)
+#eval α.coordinates (x * y)
 
-theorem units : unitsProd = 1 := by native_decide
-        -- apply FreeModule.approx_of_beq_support <;> rfl
 
-theorem non_trivial : α ≠ 1 := by native_decide
+theorem is_unit : unit α := ⟨α', by native_decide⟩
 
-theorem Gardam : ¬(KaplanskyUnitConjecture) := by admit
+theorem non_trivial : ¬ (trivial_element α) := by
+    intro contra
+    let ⟨g, p⟩ := contra
+    let eqg := p.right
+    have eq₁ : -z = g := by 
+      apply eqg
+      native_decide
+    have eq₂ : x * y = g := by
+      apply eqg
+      native_decide
+    rw [← eq₂] at eq₁
+    have ineq : -z ≠  x * y := by native_decide
+    contradiction
+
+theorem Gardam : ∃ g : RP, unit g ∧ ¬ (trivial_element g) := 
+  ⟨α, And.intro is_unit non_trivial⟩
+
