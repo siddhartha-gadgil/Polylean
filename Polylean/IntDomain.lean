@@ -1,5 +1,6 @@
 import Mathlib.Algebra.Ring.Basic
 
+/-! Proof that if the product of two integers (or natural numbers) is `0`, one of them is `0`. This is a rather low-level proof, using definitions of `Int` and the operations -/
 open Nat Int
 
 #check Nat.mul
@@ -8,6 +9,7 @@ open Nat Int
 theorem mul_succ_succ (n m: Nat) : (succ n) * (succ m) =
           succ ((succ n) * m + n) := by rfl
 
+/-- if the product of natural numbers is `0`, one of them is `0` -/
 theorem nat_domain (n m: Nat) : n * m = 0 → n = 0 ∨ m = 0 := by
     cases n
     case zero =>
@@ -24,6 +26,7 @@ theorem nat_domain (n m: Nat) : n * m = 0 → n = 0 ∨ m = 0 := by
         intro hyp 
         simp [mul_succ_succ] at hyp
         
+/-! some formulae for expanding multiplication -/
 theorem int_mul_succ_succ (n m: Nat) : 
   (Int.ofNat (succ n)) * (Int.ofNat (succ m)) =
          Int.ofNat (succ ((succ n) * m + n)) := by rfl
@@ -36,6 +39,7 @@ theorem int_mul_negsucc_negsucc (n m: Nat) :
   (Int.negSucc n) * (Int.negSucc m) =
          Int.ofNat (succ ((succ n) * m + n)) := by rfl
 
+/-- if the product of integers is `0`, one of them is `0` -/
 theorem int_domain (n' m': Int) : n' * m' = 0 → n' = 0 ∨ m' = 0 := by
     cases n'
     case ofNat n => 
