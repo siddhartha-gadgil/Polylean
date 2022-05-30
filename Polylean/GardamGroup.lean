@@ -5,7 +5,7 @@ import Polylean.EnumDecide
 import Polylean.FreeAbelianGroup
 
 /-
-We construct the group `P` as a Metabelian group. Helper functions for defining elements in the group etc. should be defined.
+We construct the group `P` (the *Promislow* or *Hantzsche–Wendt* group) as a Metabelian group.
 -/
 
 namespace P
