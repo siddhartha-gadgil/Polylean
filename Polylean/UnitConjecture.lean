@@ -34,10 +34,10 @@ def s : RP  := one + x*z⁻¹ + x⁻¹*z⁻¹ + y*z⁻¹ + y⁻¹*z⁻¹
 
 def α := p + (q * a) + (r * b) + (s * a * b)
  
-def p' : RP := x⁻¹ * (a * p * a⁻¹)
+def p' : RP := x⁻¹ * (a⁻¹  * p * a)
 def q' : RP := -(x⁻¹ * q)
 def r' : RP := -(y⁻¹ * r)
-def s' : RP := z⁻¹ * (a* s * a⁻¹)
+def s' : RP := z⁻¹ * (a⁻¹ * s * a)
 
 def α' := p' + (q' * a) + (r' * b) + (s' * a * b)
 
@@ -48,21 +48,22 @@ def α' := p' + (q' * a) + (r' * b) + (s' * a * b)
 #eval (a * b)⁻¹ * r * (a * b) = x⁻¹  * r -- true
 #eval (a * b)⁻¹ * s * (a * b) = s -- true
 
-#eval b * p * b⁻¹ = x⁻¹ * y * (a * p * a⁻¹) -- true
-#eval b * q * b⁻¹ = y⁻¹  * (a * q * a⁻¹) -- true
-#eval b * r * b⁻¹ = x⁻¹  * (a * r * a⁻¹) -- true
-#eval b * s * b⁻¹ = (a * s * a⁻¹) -- true
+#eval b * p * b⁻¹ = x⁻¹ * y * (a⁻¹  * p * a) -- true
+#eval b * q * b⁻¹ = y⁻¹  * (a⁻¹ * q * a) -- true
+#eval b * r * b⁻¹ = x⁻¹  * (a⁻¹ * r * a) -- true
+#eval b * s * b⁻¹ = (a⁻¹ * s * a) -- true
 
-def lhs₁ : RP := (x⁻¹ * (a *p * a⁻¹) * q) - (x⁻¹ *  q * (a * p * a⁻¹)) - (x⁻¹ * z⁻¹ * y⁻¹ * r * (a * s  * a⁻¹)) + (y⁻¹ * z⁻¹ * (a * s * a⁻¹) * x⁻¹ * r) 
+def lhs₁ : RP := (x⁻¹ * (a⁻¹ * p * a) * q) - (x⁻¹ *  q * (a⁻¹ * p * a)) - (x⁻¹ * z⁻¹ * y⁻¹ * r * (a⁻¹ * s  * a)) + (y⁻¹ * z⁻¹ * (a⁻¹ * s * a) * x⁻¹ * r) 
 #eval lhs₁ -- [] ; correct
-def lhsTerms : List RP :=  [(x⁻¹ * (a *p * a⁻¹) * q), - (x⁻¹ *  q * (a * p * a⁻¹)), - (x⁻¹ * z⁻¹ * y⁻¹ * r * (a * s  * a⁻¹)),  (y⁻¹ * z⁻¹ * (a * s * a⁻¹) * x⁻¹ * r)] 
+def lhsTerms : List RP :=  [(x⁻¹ * (a *p * a⁻¹) * q), - (x⁻¹ *  q * (a⁻¹ * p * a)), - (x⁻¹ * z⁻¹ * y⁻¹ * r * (a⁻¹ * s  * a)),  (y⁻¹ * z⁻¹ * (a⁻¹ * s * a) * x⁻¹ * r)] 
 #eval lhsTerms 
 def lhsMulA  := lhsTerms.map (fun x : RP => x * a)
 #eval (p' * q) ∈ lhsTerms -- true
 #eval (p' * q * a) ∈ lhsMulA -- true
 #eval (q' * a * p) ∈ lhsMulA -- true
 #eval (r' * b * s * a * b) ∈ lhsMulA -- false
-#eval b * a * b * a⁻¹
+#eval b * a * b⁻¹ * a⁻¹
+#eval (r' * b * s * a * b)
 
 #eval a * b * a
 #eval a
