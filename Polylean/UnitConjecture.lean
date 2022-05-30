@@ -19,7 +19,7 @@ def unit {R : Type _} [Ring R] (u : R) := ∃ v : R, u * v = (1 : R)
 def trivial_element {R G : Type _} [CommRing R] [DecidableEq R] [Group G] [DecidableEq G] (x : FreeModule R G) : Prop :=
   ∃ g : G, ¬(FreeModule.coordinates g x = 0) ∧ (∀ h : G, ¬(FreeModule.coordinates h x = 0) → h = g)
 
-def KaplanskyUnitConjecture (F G : Type _) [Field F] [DecidableEq F] [Group G] [DecidableEq G] := ∀ g : FreeModule F G, unit g → trivial_element g
+def KaplanskyUnitConjecture := ∀ (F G : Type _) [Field F] [DecidableEq F] [Group G] [DecidableEq G], ∀ (g : FreeModule F G), unit g → trivial_element g
 
 abbrev R := Fin 2
 
