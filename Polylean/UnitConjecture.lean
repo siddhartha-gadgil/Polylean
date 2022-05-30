@@ -41,43 +41,8 @@ def s' : RP := z⁻¹ * (a⁻¹ * s * a)
 
 def α' := p' + (q' * a) + (r' * b) + (s' * a * b)
 
-#eval α' * α -- not 1
+def unitsProd := α' * α 
 
-#eval (a * b)⁻¹ * p * (a * b) = x⁻¹ * y⁻¹ * p -- true
-#eval (a * b)⁻¹ * q * (a * b) = y * q -- true
-#eval (a * b)⁻¹ * r * (a * b) = x⁻¹  * r -- true
-#eval (a * b)⁻¹ * s * (a * b) = s -- true
+theorem units : unitsProd = 1 := by native_decide
 
-#eval b * p * b⁻¹ = x⁻¹ * y * (a⁻¹  * p * a) -- true
-#eval b * q * b⁻¹ = y⁻¹  * (a⁻¹ * q * a) -- true
-#eval b * r * b⁻¹ = x⁻¹  * (a⁻¹ * r * a) -- true
-#eval b * s * b⁻¹ = (a⁻¹ * s * a) -- true
-
-def lhs₁ : RP := (x⁻¹ * (a⁻¹ * p * a) * q) - (x⁻¹ *  q * (a⁻¹ * p * a)) - (x⁻¹ * z⁻¹ * y⁻¹ * r * (a⁻¹ * s  * a)) + (y⁻¹ * z⁻¹ * (a⁻¹ * s * a) * x⁻¹ * r) 
-#eval lhs₁ -- [] ; correct
-def lhsTerms : List RP :=  [(x⁻¹ * (a *p * a⁻¹) * q), - (x⁻¹ *  q * (a⁻¹ * p * a)), - (x⁻¹ * z⁻¹ * y⁻¹ * r * (a⁻¹ * s  * a)),  (y⁻¹ * z⁻¹ * (a⁻¹ * s * a) * x⁻¹ * r)] 
-#eval lhsTerms 
-def lhsMulA  := lhsTerms.map (fun x : RP => x * a)
-#eval (p' * q) ∈ lhsTerms -- true
-#eval (p' * q * a) ∈ lhsMulA -- true
-#eval (q' * a * p) ∈ lhsMulA -- true
-#eval (r' * b * s * a * b) ∈ lhsMulA -- false
-#eval b * a * b⁻¹ * a⁻¹
-#eval (r' * b * s * a * b)
-
-#eval a * b * a
-#eval a
-#eval a * a
-#eval q
-#eval (y, a⁻¹ * y * a)
-#eval q * a 
-#eval (x * a)
-#eval α
-#eval α'
-
-#eval q
-#eval q'
-#eval x⁻¹
-#eval y
-#eval a⁻¹ * y * a
-
+theorem non_trivial : α ≠ 1 := by native_decide
