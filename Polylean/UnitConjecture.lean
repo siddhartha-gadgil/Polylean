@@ -44,9 +44,8 @@ def poly' := p' + q' * a + r' * b + s' * a * b
 #eval a
 #eval a * a
 #eval q
-#eval q * a -- []; wrong
-#eval q * a = 0 -- false ; correct but contradicts above
-#eval (q * a).normBound
+#eval q * a 
+#eval (x * a)
 #eval poly
 #eval poly'
 #eval poly * poly' 
