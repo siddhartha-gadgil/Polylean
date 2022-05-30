@@ -6,6 +6,8 @@ import Polylean.SMul
 Free module over a ring `R` over a set `X`. It is assumed that both `R` and `X` have decidable equality. This is to obtain decidable equality for the elements of the module, which we do. We choose our definition to allow both such computations and to prove results.
 
 The definition is as a quotient of *Formal Sums*, which are simply lists of pairs `(a,x)` where `a` is a coefficient in `R` and `x` is a term in `X`. We associate to such a formal sum a coordinate function `X → R`. We see that having the same coordinate functions gives an equivalence relation on the formal sums. The free module is then defined as the corresponding quotient of such formal sums.
+
+We also give an alternative description via moves, which is more convenient for universal properties.
 -/
 
 /-!
@@ -805,6 +807,7 @@ theorem nonzero_coeff_has_complement  (x₀ : X)
         exact Eq.trans eqn₁ eqn₂
       exact ⟨ys, eqn, lIneq⟩
 
+/-- if all coordinates are zero, then moves relate to the empty sum -/
 theorem equiv_e_of_zero_coeffs  (s : FormalSum R X)
     (hyp : ∀ x : X, s.coords x = 0) : s ≃ [] :=
   let canc : IsAddLeftCancel R :=
@@ -901,6 +904,7 @@ theorem equiv_e_of_zero_coeffs  (s : FormalSum R X)
   _ R X s h => s.length decreasing_by
   assumption
 
+/-- if coordinates are equal, the sums are related by moves -/
 theorem equiv_of_equal_coeffs  (s₁ s₂ : FormalSum R X)
     (hyp : ∀ x : X, s₁.coords x = s₂.coords x) : s₁ ≃ s₂ :=
   let canc : IsAddLeftCancel R :=
@@ -1004,6 +1008,11 @@ theorem func_eql_of_move_equiv  {β : Sort u}
 
 end FormalSum
 
+/-! 
+VI. Basic `Repr`
+
+A basic `Repr` on Free Modules, mainly for debugging. Some work is needed to be able to define on the quotient. This is done by constructing a norm ball containing all the non-zero coordinates, and then making a list of non-zero coordinates
+-/
 
 theorem fst_le_max (a b : Nat): a ≤ max a b  := by
     simp [max]
@@ -1145,6 +1154,8 @@ class NormCube (α : Type) where
   norm : α → Nat
   cube : Nat → List α
 
+def normCube (α : Type) [nc : NormCube α](k: Nat)  := nc.cube k
+
 instance natCube : NormCube Nat := ⟨id, fun n => (List.range n).reverse⟩
 
 instance finCube {k: Nat} : NormCube (Fin (Nat.succ k)) := 
@@ -1184,10 +1195,8 @@ def FreeModule.coeffList (x: FreeModule R X)[nx : NormCube X] :
       let a := x.coordinates x₀
       if a =0 then none else some (a, x₀)
 
--- crude repr 
+-- basic repr 
 instance basicRepr [nx : NormCube X][Repr X][Repr R]: Repr (FreeModule R X) := 
   ⟨fun x _ => reprStr (x.coeffList)⟩
 
-instance : NormCube (Fin 2) := inferInstance
 
-def normCube (α : Type) [nc : NormCube α](k: Nat)  := nc.cube k
