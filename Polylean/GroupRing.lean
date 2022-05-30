@@ -1,18 +1,19 @@
 import Polylean.FreeModule
 
 /-
-Group ring given a group. The ring structures is constructed using the universal property of R-modules, with uniqueness used to show that it is a ring. This is only an additional structure, i.e., no need to wrap. 
+Group ring given a group. The ring structures is constructed using the (implicit) universal property of R-modules. As a check it is proved to be a Ring.
 -/
 
 variable {R : Type} [Ring R] [DecidableEq R]
 
 variable {G: Type} [Group G] [DecidableEq G]
 
-
+/-- multiplication by a monomial -/
 def FormalSum.mulMonom (b: R)(h: G) : FormalSum R G → FormalSum R G 
 | [] => []
 | (a, g) :: tail => (a * b, g * h) :: (mulMonom b h tail)
 
+/-- multiplication for formal sums -/
 def FormalSum.mul(fst: FormalSum R G) : FormalSum R G → FormalSum R G
 | [] =>    []
 | (b, h) :: ys =>  
@@ -22,6 +23,7 @@ open FormalSum
 
 namespace GroupRing
 
+/-- multiplication by the zero monomial -/
 theorem mul_monom_zero (g x₀: G)(s: FormalSum R G):
   coords (mulMonom 0 g s) x₀ = 0 := by
   induction s with
@@ -31,6 +33,7 @@ theorem mul_monom_zero (g x₀: G)(s: FormalSum R G):
     simp [mulMonom, coords, monom_coords_at_zero]
     assumption
 
+/-- distributivity of multiplication by a monomial -/
 theorem mul_monom_dist(b : R)(h x₀ : G)(s₁ s₂: FormalSum R G):
   coords (mulMonom b h (s₁  ++ s₂)) x₀ = coords (mulMonom b h s₁) x₀ + coords (mulMonom b h s₂) x₀ := by
     induction s₁ with
@@ -41,6 +44,7 @@ theorem mul_monom_dist(b : R)(h x₀ : G)(s₁ s₂: FormalSum R G):
       rw [ih]
       simp [add_assoc]
 
+/-- right distributivity -/
 theorem mul_dist(x₀ : G)(s₁ s₂ s₃: FormalSum R G):
   coords (mul s₁ (s₂  ++ s₃)) x₀ = coords (mul s₁ s₂) x₀ + coords (mul s₁ s₃) x₀ := by
     induction s₂ with
@@ -53,6 +57,7 @@ theorem mul_dist(x₀ : G)(s₁ s₂ s₃: FormalSum R G):
       rw [ih]
       simp [add_assoc]
 
+/-- associativity with two terms monomials -/
 theorem mul_monom_monom_assoc(a b : R)(h x₀ : G)(s : FormalSum R G):
   coords (mulMonom b h (mulMonom a x s)) x₀ = 
     coords (mulMonom (a * b) (x * h) s) x₀  := by 
@@ -64,6 +69,7 @@ theorem mul_monom_monom_assoc(a b : R)(h x₀ : G)(s : FormalSum R G):
       simp [mulMonom, coords, mul_assoc]
       rw [ih]
 
+/-- associativity with one term a monomial -/
 theorem mul_monom_assoc(b : R)(h x₀ : G)(s₁ s₂: FormalSum R G):
   coords (mulMonom b h (mul s₁ s₂)) x₀ = 
     coords (mul s₁ (mulMonom b h s₂)) x₀  := by
@@ -80,6 +86,7 @@ theorem mul_monom_assoc(b : R)(h x₀ : G)(s₁ s₂: FormalSum R G):
       simp [add_assoc, mulMonom]
       rw [mul_monom_monom_assoc]
 
+/-- left distributivity for multiplication by a monomial -/
 theorem mul_monom_add(b₁ b₂ : R)(h x₀ : G)(s: FormalSum R G):
   coords (mulMonom (b₁ + b₂) h s) x₀ = coords (mulMonom b₁ h s) x₀ + coords (mulMonom b₂ h s) x₀ := by
   induction s with
@@ -108,6 +115,7 @@ theorem mul_monom_add(b₁ b₂ : R)(h x₀ : G)(s: FormalSum R G):
       skip 
       rw [← add_assoc]
 
+/-- multiplication equivalent when adding term with `0` coefficient -/
 theorem mul_zero_cons (s t : FormalSum R G)(g: G): 
     mul s ((0, h) :: t) ≈  mul s t := by
     induction s
@@ -177,6 +185,7 @@ def mulAux : FormalSum R G → FreeModule R G → FreeModule R G := by
     rw [lc] 
 
 open ElementaryMove
+/-- invariance under moves of multiplication by monomials -/
 theorem mul_monom_invariant (b : R)(h x₀ : G)(s₁ s₂ : FormalSum R G)
     (rel : ElementaryMove R G s₁ s₂) : 
       coords (mulMonom b h s₁) x₀ = 
@@ -200,6 +209,7 @@ theorem mul_monom_invariant (b : R)(h x₀ : G)(s₁ s₂ : FormalSum R G)
         rw [← add_assoc]      
 
 
+/-- invariance under moves for the first argument for multipilication -/
 theorem first_arg_invariant (s₁ s₂ t : FormalSum R G) 
   (rel : ElementaryMove R G s₁ s₂) :
     FormalSum.mul s₁ t ≈  FormalSum.mul s₂ t := by 
@@ -289,6 +299,7 @@ theorem first_arg_invariant (s₁ s₂ t : FormalSum R G)
           congr
           rw [add_comm]    
         
+/-- multiplication for free modules -/
 def mul : FreeModule R G → FreeModule R G → FreeModule R G := by
   let f  := fun (s : FormalSum R G) => 
     fun  (t : FreeModule R G) => mulAux  s t 
@@ -315,7 +326,7 @@ instance groupRingMul : Mul (FreeModule R G) :=
 instance : One (FreeModule R G) := 
   ⟨⟦[(1, 1)]⟧⟩
 
-
+/-- The group ring is a ring -/
 instance : Ring (FreeModule R G) :=
   {
     zero := ⟦ []⟧
@@ -336,13 +347,13 @@ instance : Ring (FreeModule R G) :=
 
     add_left_neg := by 
         intro x
-        let l := FreeModule.coeff_distrib (-1 : R) (1 : R) x
+        let l := FreeModule.coeffs_distrib (-1 : R) (1 : R) x
         simp at l
         have lc : (-1 : R) + 1 = 0 := by 
             apply add_left_neg
         rw [lc] at l
-        rw [FreeModule.unit_coeff] at l
-        rw [FreeModule.zero_coeff] at l
+        rw [FreeModule.unit_coeffs] at l
+        rw [FreeModule.zero_coeffs] at l
         exact l
 
     add_comm := FreeModule.addn_comm
@@ -529,8 +540,5 @@ instance : Ring (FreeModule R G) :=
       simp
       simp [NonUnitalNonAssocSemiring.natCast]            
   }
-
-
-
   
 end GroupRing
