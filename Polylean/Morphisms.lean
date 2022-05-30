@@ -217,6 +217,12 @@ theorem neg_push : ∀ a : A, ϕ (-a) = -ϕ a := by
   have : ϕ a + ϕ (-a) = ϕ a + - ϕ a := by rw [← add_dist, add_right_neg, add_right_neg, zero_image ϕ]
   exact add_left_cancel this
 
+theorem hom_mul : ∀ a : A, ∀ n : ℕ, SubNegMonoid.gsmul n (ϕ a) = ϕ (SubNegMonoid.gsmul n a) := by
+  intro a n
+  induction n with
+    | zero => simp; rw [SubNegMonoid.gsmul_zero', SubNegMonoid.gsmul_zero']; exact Eq.symm (zero_image _)
+    | succ m ih => rw [← Int.cast_ofNat, Int.cast_id, SubNegMonoid.gsmul_succ', SubNegMonoid.gsmul_succ', abg.add_dist, add_left_cancel_iff]; simp [ih]
+
 theorem nsmul_hom : ∀ n : ℕ, ∀ a b : A, nsmul_rec n (a + b) = nsmul_rec n a + nsmul_rec n b := by
   intros n a b
   cases n
@@ -265,6 +271,10 @@ class AddCommGroup.Isomorphism (A B : Type _) [AddCommGroup A] [AddCommGroup B] 
   idTgt : map ∘ inv = id
 
 variable (A B C : Type _) [AddCommGroup A] [AddCommGroup B] [AddCommGroup C]
+
+instance [IsoAB : AddCommGroup.Isomorphism A B] : AddCommGroup.Homomorphism (IsoAB.map) := IsoAB.mapHom
+
+instance [IsoAB : AddCommGroup.Isomorphism A B] : AddCommGroup.Homomorphism (IsoAB.inv) := IsoAB.invHom
 
 instance refl [AddCommGroup.Isomorphism A A] : AddCommGroup.Isomorphism A A := by assumption
 
