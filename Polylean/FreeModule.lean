@@ -1046,7 +1046,7 @@ instance finCube {k: Nat} : NormCube (Fin (Nat.succ k)) :=
           apply Nat.mod_lt
           apply Nat.zero_lt_succ
           ⟩
-    ⟨fun j => j.val, fun n => (List.range (min k n)).reverse.map i⟩
+    ⟨fun j => j.val, fun n => (List.range (min (k + 1) n)).reverse.map i⟩
 
 
 instance intCube : NormCube ℤ where
@@ -1083,3 +1083,5 @@ instance basicRepr [nx : NormCube X][Repr X][Repr R]: Repr (FreeModule R X) :=
   ⟨fun x _ => reprStr (x.coeffList)⟩
 
 instance : NormCube (Fin 2) := inferInstance
+
+def normCube (α : Type) [nc : NormCube α](k: Nat)  := nc.cube k
