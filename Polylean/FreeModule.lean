@@ -153,6 +153,21 @@ def decideEqualOnSupport  (l : List X) (f g : X → R) :
       have contra' := contra.right
       contradiction
 
+def beqOnSupport  (l : List X) (f g : X → R) :Bool :=
+  l.all <| fun x => decide (f x = g x)
+
+theorem eql_on_support_of_true {l : List X} {f g : X → R} :
+    beqOnSupport l f g = true → equalOnSupport l f g := by
+  intro hyp
+  induction l with
+  | nil =>
+    simp [equalOnSupport]
+  | cons h t step =>
+    simp [equalOnSupport]
+    simp [beqOnSupport, List.all] at hyp
+    let p₂ := step hyp.right
+    exact And.intro hyp.left p₂
+
 instance {X : Type} [DecidableEq X] {R : Type} [DecidableEq R] {l : List X} {f g : X → R} :
     Decidable (equalOnSupport l f g) :=
   decideEqualOnSupport l f g
@@ -198,6 +213,34 @@ abbrev FreeModule (R X : Type) [Ring R] [DecidableEq R][DecidableEq X] :=
 notation "⟦" a "⟧" => Quotient.mk' a
 
 namespace FreeModule
+
+theorem approx_of_beq_support(s₁ s₂ : FormalSum R X)
+    (c₁ : beqOnSupport s₁.support s₁.coords s₂.coords)
+    (c₂ : beqOnSupport s₂.support s₁.coords s₂.coords) :
+       ⟦s₁⟧ = ⟦s₂⟧ := 
+        by
+        let ch₁ := eql_on_support_of_true c₁
+        let ch₂ := eql_on_support_of_true c₂
+        apply Quotient.sound
+        apply funext
+        intro x
+        exact
+          if h₁ : (0 = s₁.coords x) then
+            if h₂ : (0 = s₂.coords x) then by
+              rw [← h₁, h₂]
+            else by
+              have lem : x ∈ s₂.support := by
+                apply nonzero_coord_in_support
+                assumption
+              let lem' := mem_of_equal_on_support s₂.support s₁.coords s₂.coords x lem ch₂
+              exact lem'
+          else by
+            have lem : x ∈ s₁.support := by
+              apply nonzero_coord_in_support
+              assumption
+            let lem' := mem_of_equal_on_support s₁.support s₁.coords s₂.coords x lem ch₁
+            exact lem'
+
 
 def decideEqualQuotient  (s₁ s₂ : FormalSum R X) :
     Decidable (⟦s₁⟧ = ⟦s₂⟧) :=

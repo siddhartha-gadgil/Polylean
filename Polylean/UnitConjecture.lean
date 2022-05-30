@@ -44,5 +44,6 @@ def α' := p' + (q' * a) + (r' * b) + (s' * a * b)
 def unitsProd := α' * α 
 
 theorem units : unitsProd = 1 := by native_decide
+        -- apply FreeModule.approx_of_beq_support <;> rfl
 
 theorem non_trivial : α ≠ 1 := by native_decide
