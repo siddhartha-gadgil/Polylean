@@ -1,5 +1,5 @@
 import Std 
-import Polylean.LengthBound
+import Polylean.ConjInvLength.LengthBound
 open Std
 
 initialize normCache : IO.Ref (HashMap Word Nat) ← IO.mkRef (HashMap.empty)

@@ -1,9 +1,9 @@
 import Polylean
-import Polylean.LengthBound
-import Polylean.Length
-import Polylean.ProvedBound
-import Polylean.MemoLength
-import Polylean.LengthNode
+import Polylean.ConjInvLength.LengthBound
+import Polylean.ConjInvLength.Length
+import Polylean.ConjInvLength.ProvedBound
+import Polylean.ConjInvLength.MemoLength
+import Polylean.ConjInvLength.LengthNode
 open Letter
 
 def main(args: List String) : IO Unit := do

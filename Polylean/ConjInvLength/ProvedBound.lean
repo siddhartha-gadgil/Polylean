@@ -1,4 +1,4 @@
-import Polylean.LengthBound
+import Polylean.ConjInvLength.LengthBound
 open Letter
 
 structure ProvedSplit (l: Letter)(w : Word) where

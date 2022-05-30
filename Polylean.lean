@@ -1,7 +1,7 @@
-import Polylean.Length
-import Polylean.LengthNode
-import Polylean.LengthBound
-import Polylean.MemoLength
-import Polylean.ProvedBound
+import Polylean.ConjInvLength.Length
+import Polylean.ConjInvLength.LengthNode
+import Polylean.ConjInvLength.LengthBound
+import Polylean.ConjInvLength.MemoLength
+import Polylean.ConjInvLength.ProvedBound
 
 def hello := "world"
