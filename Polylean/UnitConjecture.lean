@@ -64,7 +64,7 @@ theorem non_trivial : ¬ (trivial_element α) := by
     have ineq : -z ≠  x * y := by native_decide
     contradiction
 
-/-- the existence of a non-trivial unit in `P` -/
+/-- the existence of a non-trivial unit in `𝔽₂[P]` -/
 theorem Gardam : ∃ g : RP, unit g ∧ ¬ (trivial_element g) := 
   ⟨α, And.intro is_unit non_trivial⟩
 
