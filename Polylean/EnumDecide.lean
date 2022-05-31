@@ -1,3 +1,7 @@
+/-
+Automatically decide statements of the form `∀ x : X, P x` on a finite type `X` by enumeration.
+-/
+
 namespace EnumDecide
 
 def decideBelow (p:Nat → Prop)[DecidablePred p](bound: Nat):
