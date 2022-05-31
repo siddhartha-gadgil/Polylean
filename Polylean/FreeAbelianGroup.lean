@@ -5,8 +5,11 @@ import Polylean.ProductGroups
 import Polylean.EnumDecide
 open SubNegMonoid
 
--- currently mainly experiments
+/-
+The section `Zhom` consists of results related to the scalar integer multiplication homomorphism of additive groups.
 
+The later part contains the theory of free Abelian groups, with `ℤ` as an example, as well as a proof that the product of free Abelian groups is free.
+-/
 
 section Zhom
 
@@ -458,7 +461,3 @@ instance free : FreeAbelianGroup (ℤ × ℤ × ℤ) (Unit ⊕ Unit ⊕ Unit) :=
         inferInstance
 
 end Z3
-
-#check Int.sign
-
-#check Int.add
