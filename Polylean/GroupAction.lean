@@ -10,35 +10,39 @@ class Group.Action (G X : Type _) [Group G] extends SMul G X where
   id_action : ∀ x : X, (1 : G) • x = x
   compatibility : ∀ g g' : G, ∀ x : X, (g * g') • x = g • (g' • x)
 
+attribute [simp] Group.Action.id_action
+attribute [simp] Group.Action.compatibility
+
 class AddCommGroup.Action (A X : Type _) [AddCommGroup A] extends SMul A X where
   id_action : ∀ {x : X}, (0 : A) • x = x
   compatibility : ∀ {a a' : A}, ∀ {x : X}, (a + a') • x = a • (a' • x)
 
-class AddCommGroup.ActionByAutomorphisms (A B : Type _) [AddCommGroup A] [AddCommGroup B] extends AddCommGroup.Action A B where
-  add_dist : ∀ {a : A}, ∀ b b' : B, a • (b + b') = a • b + a • b'
+attribute [simp] AddCommGroup.Action.id_action
+attribute [simp] AddCommGroup.Action.compatibility
 
--- an alternative definition for actions of a group by automorphisms
 class AutAction (A B : Type _) [AddCommGroup A] [AddCommGroup B] (α : A → B → B) where
   [aut_action : ∀ a : A, AddCommGroup.Homomorphism (α a)]
   id_action : α 0 = id
   compatibility : ∀ a a' : A, α (a + a') = α a ∘ α a'
 
-instance (A B : Type _) [AddCommGroup A] [AddCommGroup B] (α : A → B → B) [AA : AutAction A B α] : AddCommGroup.Action A B where
+
+namespace AutAction
+
+variable (A B : Type _) [AddCommGroup A] [AddCommGroup B] (α : A → B → B) [AA : AutAction A B α]
+
+attribute [simp] id_action
+attribute [simp] compatibility
+
+instance : AddCommGroup.Action A B where
     id_action := λ {x : B} => congrFun AA.id_action x
     compatibility := λ {a a' : A} {x : B} => congrFun (AA.compatibility a a') x
 
-instance actionaut (A B : Type _) [AddCommGroup A] [AddCommGroup B] (α : A → B → B) [AA : AutAction A B α] : AddCommGroup.ActionByAutomorphisms A B where
-    add_dist := λ {a} => (AA.aut_action a).add_dist
+instance (a : A) : AddCommGroup.Homomorphism (α a) := aut_action a
 
-theorem AddCommGroup.ActionByAutomorphisms.act_zero {A B : Type _} [AddCommGroup A] [AddCommGroup B] [AddCommGroup.ActionByAutomorphisms A B] :
-  ∀ {a : A}, a • (0 : B) = (0 : B) := by
-    intro a
-    have : a • (0 : B) + a • (0 : B) = a • (0 : B) + 0 := by rw [← add_dist, add_zero, add_zero]
-    exact add_left_cancel this
+@[simp] theorem act_zero : ∀ {a : A}, a • (0 : B) = (0 : B) := by intro; simp [SMul.sMul]
 
-theorem AddCommGroup.ActionByAutomorphisms.neg_push {A B : Type _} [AddCommGroup A] [AddCommGroup B] [AddCommGroup.ActionByAutomorphisms A B] :
-  ∀ {a : A}, ∀ {b : B}, a • (-b) = - (a • b) := by
-    intro a b
-    have : a • b + a • (- b) = (a • b) + - (a • b) := by
-      rw [← AddCommGroup.ActionByAutomorphisms.add_dist, add_right_neg, act_zero, add_right_neg]
-    exact add_left_cancel this
+@[simp] theorem add_dist : ∀ {a : A}, ∀ {b b' : B}, a • (b + b') = a • b + a • b' := by intro; simp [SMul.sMul]
+
+@[simp] theorem neg_push : ∀ {a : A}, ∀ {b : B}, a • (-b) = - (a • b) := by intros; simp [SMul.sMul]
+
+end AutAction

@@ -233,13 +233,10 @@ variable {A : Type _} [SubNegMonoid A] (a : A)
 
 end SubNegMonoid
 
-section AddCommGroup.Homomorphism
+namespace AddCommGroup.Homomorphism
 
-variable {A B : Type _} [α : AddCommGroup A] [β : AddCommGroup B]
-variable (ϕ : A → B) [abg : AddCommGroup.Homomorphism ϕ]
-
--- alternative to `add_distrib`
-@[simp] theorem add_dist : ∀ a a' : A, ϕ (a + a') = ϕ a + ϕ a' := abg.add_dist
+variable {A B : Type _} [AddCommGroup A] [AddCommGroup B]
+variable (ϕ : A → B) [AddCommGroup.Homomorphism ϕ]
 
 @[simp] theorem zero_image : ϕ (0 : A) = (0 : B) := by
   have : ϕ 0 + ϕ 0 = ϕ 0 + 0 := by rw [← add_dist]; simp
@@ -252,6 +249,13 @@ variable (ϕ : A → B) [abg : AddCommGroup.Homomorphism ϕ]
 
 attribute [simp] add_left_cancel_iff
 attribute [simp] add_right_cancel_iff
+
+end AddCommGroup.Homomorphism
+
+section mul_hom
+
+variable {A B : Type _} [AddCommGroup A] [AddCommGroup B]
+variable (ϕ : A → B) [AddCommGroup.Homomorphism ϕ]
 
 theorem hom_mul : ∀ a : A, ∀ n : ℕ, SubNegMonoid.gsmul n (ϕ a) = ϕ (SubNegMonoid.gsmul n a) := by
   intro a n
@@ -293,7 +297,7 @@ instance : AddCommGroup.Homomorphism (neg : A → A) where
 instance : AddCommGroup.Homomorphism (id : A → A) where
   add_dist := λ _ _ => rfl
 
-end AddCommGroup.Homomorphism
+end mul_hom
 
 section AddCommGroup.Isomorphism
 
