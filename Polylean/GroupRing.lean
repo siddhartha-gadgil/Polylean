@@ -24,8 +24,7 @@ open FormalSum
 namespace GroupRing
 
 /-- multiplication by the zero monomial -/
-theorem mul_monom_zero (g x₀: G)(s: FormalSum R G):
-  coords (mulMonom 0 g s) x₀ = 0 := by
+theorem mul_monom_zero (g x₀: G)(s: FormalSum R G): coords (mulMonom 0 g s) x₀ = 0 := by
   induction s with
   | nil =>  
     simp [mulMonom, coords]
@@ -34,8 +33,7 @@ theorem mul_monom_zero (g x₀: G)(s: FormalSum R G):
     assumption
 
 /-- distributivity of multiplication by a monomial -/
-theorem mul_monom_dist(b : R)(h x₀ : G)(s₁ s₂: FormalSum R G):
-  coords (mulMonom b h (s₁  ++ s₂)) x₀ = coords (mulMonom b h s₁) x₀ + coords (mulMonom b h s₂) x₀ := by
+theorem mul_monom_dist(b : R)(h x₀ : G)(s₁ s₂: FormalSum R G): coords (mulMonom b h (s₁  ++ s₂)) x₀ = coords (mulMonom b h s₁) x₀ + coords (mulMonom b h s₂) x₀ := by
     induction s₁ with
     | nil => 
       simp [mulMonom, coords]
@@ -45,8 +43,7 @@ theorem mul_monom_dist(b : R)(h x₀ : G)(s₁ s₂: FormalSum R G):
       simp [add_assoc]
 
 /-- right distributivity -/
-theorem mul_dist(x₀ : G)(s₁ s₂ s₃: FormalSum R G):
-  coords (mul s₁ (s₂  ++ s₃)) x₀ = coords (mul s₁ s₂) x₀ + coords (mul s₁ s₃) x₀ := by
+theorem mul_dist(x₀ : G)(s₁ s₂ s₃: FormalSum R G): coords (mul s₁ (s₂  ++ s₃)) x₀ = coords (mul s₁ s₂) x₀ + coords (mul s₁ s₃) x₀ := by
     induction s₂ with
     | nil => 
       simp [mulMonom, coords]
@@ -58,8 +55,7 @@ theorem mul_dist(x₀ : G)(s₁ s₂ s₃: FormalSum R G):
       simp [add_assoc]
 
 /-- associativity with two terms monomials -/
-theorem mul_monom_monom_assoc(a b : R)(h x₀ : G)(s : FormalSum R G):
-  coords (mulMonom b h (mulMonom a x s)) x₀ = 
+theorem mul_monom_monom_assoc(a b : R)(h x₀ : G)(s : FormalSum R G): coords (mulMonom b h (mulMonom a x s)) x₀ = 
     coords (mulMonom (a * b) (x * h) s) x₀  := by 
     induction s with
     | nil => 
@@ -70,8 +66,7 @@ theorem mul_monom_monom_assoc(a b : R)(h x₀ : G)(s : FormalSum R G):
       rw [ih]
 
 /-- associativity with one term a monomial -/
-theorem mul_monom_assoc(b : R)(h x₀ : G)(s₁ s₂: FormalSum R G):
-  coords (mulMonom b h (mul s₁ s₂)) x₀ = 
+theorem mul_monom_assoc(b : R)(h x₀ : G)(s₁ s₂: FormalSum R G): coords (mulMonom b h (mul s₁ s₂)) x₀ = 
     coords (mul s₁ (mulMonom b h s₂)) x₀  := by
     induction s₂ with
     | nil => 
@@ -87,8 +82,7 @@ theorem mul_monom_assoc(b : R)(h x₀ : G)(s₁ s₂: FormalSum R G):
       rw [mul_monom_monom_assoc]
 
 /-- left distributivity for multiplication by a monomial -/
-theorem mul_monom_add(b₁ b₂ : R)(h x₀ : G)(s: FormalSum R G):
-  coords (mulMonom (b₁ + b₂) h s) x₀ = coords (mulMonom b₁ h s) x₀ + coords (mulMonom b₂ h s) x₀ := by
+theorem mul_monom_add(b₁ b₂ : R)(h x₀ : G)(s: FormalSum R G): coords (mulMonom (b₁ + b₂) h s) x₀ = coords (mulMonom b₁ h s) x₀ + coords (mulMonom b₂ h s) x₀ := by
   induction s with
   | nil => 
   simp [mulMonom, coords]
@@ -116,8 +110,7 @@ theorem mul_monom_add(b₁ b₂ : R)(h x₀ : G)(s: FormalSum R G):
       rw [← add_assoc]
 
 /-- multiplication equivalent when adding term with `0` coefficient -/
-theorem mul_zero_cons (s t : FormalSum R G)(g: G): 
-    mul s ((0, h) :: t) ≈  mul s t := by
+theorem mul_zero_cons (s t : FormalSum R G)(g: G):  mul s ((0, h) :: t) ≈  mul s t := by
     induction s
     case nil =>
       simp [mul, mulMonom]
@@ -186,10 +179,7 @@ def mulAux : FormalSum R G → FreeModule R G → FreeModule R G := by
 
 open ElementaryMove
 /-- invariance under moves of multiplication by monomials -/
-theorem mul_monom_invariant (b : R)(h x₀ : G)(s₁ s₂ : FormalSum R G)
-    (rel : ElementaryMove R G s₁ s₂) : 
-      coords (mulMonom b h s₁) x₀ = 
-      coords (mulMonom b h s₂) x₀ := by
+theorem mul_monom_invariant (b : R)(h x₀ : G)(s₁ s₂ : FormalSum R G) (rel : ElementaryMove R G s₁ s₂) : coords (mulMonom b h s₁) x₀ = coords (mulMonom b h s₂) x₀ := by
       induction rel with
       | zeroCoeff tail g a hyp => 
         rw [hyp]
@@ -210,9 +200,7 @@ theorem mul_monom_invariant (b : R)(h x₀ : G)(s₁ s₂ : FormalSum R G)
 
 
 /-- invariance under moves for the first argument for multipilication -/
-theorem first_arg_invariant (s₁ s₂ t : FormalSum R G) 
-  (rel : ElementaryMove R G s₁ s₂) :
-    FormalSum.mul s₁ t ≈  FormalSum.mul s₂ t := by 
+theorem first_arg_invariant (s₁ s₂ t : FormalSum R G) (rel : ElementaryMove R G s₁ s₂) : FormalSum.mul s₁ t ≈  FormalSum.mul s₂ t := by 
     cases t
     case nil => 
       simp [mul]

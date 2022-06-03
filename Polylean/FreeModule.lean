@@ -10,14 +10,15 @@ The definition is as a quotient of *Formal Sums*, which are simply lists of pair
 We also give an alternative description via moves, which is more convenient for universal properties.
 -/
 
-/-!
-I. Formal sums and coordinate functions
--/
-
-
 variable {R : Type} [Ring R] [DecidableEq R]
 
 variable {X : Type} [DecidableEq X]
+
+
+/-!
+I. Formal sums and coordinate functions
+-/
+section FormalSumCoords
 
 abbrev FormalSum (R X : Type) [Ring R] [DecidableEq R][DecidableEq X] :=
   List (R × X)
@@ -177,9 +178,12 @@ theorem eql_on_support_of_true {l : List X} {f g : X → R} : beqOnSupport l f g
 instance {X : Type} [DecidableEq X] {R : Type} [DecidableEq R] {l : List X} {f g : X → R} : Decidable (equalOnSupport l f g) :=
   decideEqualOnSupport l f g
 
+end FormalSumCoords
 /-!
 II. Quotient Free Module
 -/
+section QuotientFreeModule
+
 
 /-- relation by equal coordinates-/
 def eqlCoords (R X : Type) [Ring R] [DecidableEq R][DecidableEq X](s₁ s₂ : FormalSum R X) : Prop :=
@@ -226,9 +230,12 @@ abbrev FreeModule (R X : Type) [Ring R] [DecidableEq R][DecidableEq X] :=
 
 notation "⟦" a "⟧" => Quotient.mk' a
 
+end QuotientFreeModule
+
 /-!
 III. Decidable equality on quotient free modules
 -/
+section DecidableEqQuotFreeModule
 namespace FreeModule
 
 /-- boolean equality on support gives equal quotients -/
@@ -369,8 +376,11 @@ def coordinates (x₀ : X) : FreeModule R X →  R := by
   exact congrFun l x₀ 
 
 end FreeModule
+end DecidableEqQuotFreeModule
 
 /-! IV. Module structure -/
+section ModuleStruture
+open FormalSum
 namespace FormalSum
 /-- scalar multiplication on formal sums-/
 def scmul  : R → FormalSum R X → FormalSum R X
@@ -633,9 +643,11 @@ instance : AddCommGroup (FreeModule R X) :=
 
 end FreeModule
 
+end ModuleStruture
 
 /-! V. Equivalent definition of the relation via moves-/
-
+section 
+open FormalSum
 /-- Elementary moves for formal sums -/
 inductive ElementaryMove (R X : Type) [Ring R] [DecidableEq R][DecidableEq X] : FormalSum R X → FormalSum R X → Prop where
   | zeroCoeff (tail : FormalSum R X) (x : X) (a : R) (h : a = 0) : ElementaryMove R X ((a, x) :: tail) tail
@@ -966,6 +978,7 @@ theorem func_eql_of_move_equiv  {β : Sort u} (f : FormalSum R X → β) : (∀ 
   simp [fct, pullback]
 
 end FormalSum
+end
 
 /-! 
 VI. Basic `Repr`
@@ -1071,6 +1084,7 @@ theorem supp_zero_of_max_zero(norm: X → Nat)(crds : X → R)(s: List X) : maxN
 def FormalSum.normSucc (norm : X → Nat)(s: FormalSum R X) : Nat :=
       maxNormSuccOnSupp norm s.coords (s.support)
 
+open FormalSum
 theorem normsucc_le(norm : X → Nat)(s₁ s₂: FormalSum R X)(eql : s₁ ≈ s₂): s₁.normSucc norm ≤ s₂.normSucc norm := 
       if c:s₁.normSucc norm = 0 then 
       by
