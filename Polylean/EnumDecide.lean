@@ -133,7 +133,6 @@ instance {α : Type}[dfa: DecideForall α]{p : α → Prop}[DecidablePred p]:
   Decidable (∀ x : α, p x) := 
   dfa.decideForall p
 
-#check ex_of_PSigma
 
 example : ∀ x : Fin 3, x + 0 = x := by decide
 
