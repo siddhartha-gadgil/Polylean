@@ -15,10 +15,8 @@ variable {R : Type} [Ring R] [DecidableEq R]
 variable {X : Type} [DecidableEq X]
 
 
-/-!
-I. Formal sums and coordinate functions
--/
 section FormalSumCoords
+/-! I. Formal sums and coordinate functions -/
 
 abbrev FormalSum (R X : Type) [Ring R] [DecidableEq R][DecidableEq X] :=
   List (R × X)
@@ -179,11 +177,9 @@ instance {X : Type} [DecidableEq X] {R : Type} [DecidableEq R] {l : List X} {f g
   decideEqualOnSupport l f g
 
 end FormalSumCoords
-/-!
-II. Quotient Free Module
--/
-section QuotientFreeModule
 
+section QuotientFreeModule
+/-! II. Quotient Free Module -/
 
 /-- relation by equal coordinates-/
 def eqlCoords (R X : Type) [Ring R] [DecidableEq R][DecidableEq X](s₁ s₂ : FormalSum R X) : Prop :=
@@ -232,10 +228,8 @@ notation "⟦" a "⟧" => Quotient.mk' a
 
 end QuotientFreeModule
 
-/-!
-III. Decidable equality on quotient free modules
--/
 section DecidableEqQuotFreeModule
+/-! III. Decidable equality on quotient free modules -/
 namespace FreeModule
 
 /-- boolean equality on support gives equal quotients -/
@@ -378,8 +372,9 @@ def coordinates (x₀ : X) : FreeModule R X →  R := by
 end FreeModule
 end DecidableEqQuotFreeModule
 
-/-! IV. Module structure -/
 section ModuleStruture
+/-! IV. Module structure -/
+
 open FormalSum
 namespace FormalSum
 /-- scalar multiplication on formal sums-/
@@ -645,8 +640,9 @@ end FreeModule
 
 end ModuleStruture
 
+section ElementaryMoves
 /-! V. Equivalent definition of the relation via moves-/
-section 
+
 open FormalSum
 /-- Elementary moves for formal sums -/
 inductive ElementaryMove (R X : Type) [Ring R] [DecidableEq R][DecidableEq X] : FormalSum R X → FormalSum R X → Prop where
@@ -978,14 +974,15 @@ theorem func_eql_of_move_equiv  {β : Sort u} (f : FormalSum R X → β) : (∀ 
   simp [fct, pullback]
 
 end FormalSum
-end
+end ElementaryMoves
+
+section NormRepr
 
 /-! 
 VI. Basic `Repr`
 
-A basic `Repr` on Free Modules, mainly for debugging. Some work is needed to be able to define on the quotient. This is done by constructing a norm ball containing all the non-zero coordinates, and then making a list of non-zero coordinates
+A basic `Repr` on Free Modules, mainly for debugging. This is implemented by constructing a norm ball containing all the non-zero coordinates, and then making a list of non-zero coordinates
 -/
-section NormRepr
 
 theorem fst_le_max (a b : Nat): a ≤ max a b  := by
     simp [max]

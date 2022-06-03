@@ -126,9 +126,7 @@ class DecideForall (α : Type) where
 instance {k: Nat} : DecideForall (Fin k) := 
   ⟨by apply decideFin⟩
 
-instance {α : Type}[dfa: DecideForall α]{p : α → Prop}[DecidablePred p]: 
-  Decidable (∀ x : α, p x) := 
-  dfa.decideForall p
+instance {α : Type}[dfa: DecideForall α]{p : α → Prop}[DecidablePred p]: Decidable (∀ x : α, p x) := dfa.decideForall p
 
 
 example : ∀ x : Fin 3, x + 0 = x := by decide
