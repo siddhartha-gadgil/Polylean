@@ -15,7 +15,7 @@ section Zhom
 
 variable {A : Type} [abg : AddCommGroup A]
 
-def zhom (a: A) : ℤ → A := 
+abbrev zhom (a: A) : ℤ → A :=
   fun n => abg.gsmul n a
 
 theorem gsmul_succ (n: ℤ) (x : A) : gsmul (n+1) x = x + gsmul n x  := by 
@@ -49,7 +49,6 @@ theorem gsmul_succ (n: ℤ) (x : A) : gsmul (n+1) x = x + gsmul n x  := by
         let l₁ := abg.gsmul_succ' (l + 1) x
         simp at l₁
         rw [l₁]
-        simp
         let y := gsmul (l + 1) x
         show -y = x + -(x + y)
         apply Eq.symm
@@ -77,8 +76,6 @@ theorem isHom₁ (x : A) (n : ℤ) (m: Nat) :
     induction m with
     | zero =>
       simp [zhom]
-      rw [abg.gsmul_zero']
-      simp     
     | succ k ih =>
       simp [zhom]
       simp [zhom] at ih
@@ -122,7 +119,6 @@ theorem isHom₂ (x : A) (n m : Nat) :
     let l₂ := isHom₁ x (n  + 1) (m + 1)
     simp [zhom] at l₂
     rw [l₂]
-    simp
     let a := gsmul (n + 1) x
     let b := gsmul (m + 1) x
     show -(a + b) = -b + -a
@@ -183,9 +179,7 @@ theorem unique_morphism_nat (f g : ℤ → A)[AddCommGroup.Homomorphism f]
             let lf := add_dist f (Nat.succ k) 1
             rw [lf]
             let lg := add_dist g (Nat.succ k) 1
-            rw [lg]
-            rw [hyp]
-            simp [add_right_cancel]
+            rw [lg, hyp, add_right_cancel_iff]
             assumption
 
 theorem unique_morphism (f g : ℤ → A)[AddCommGroup.Homomorphism f]
@@ -391,25 +385,18 @@ instance prodFree : FreeAbelianGroup (A × B) (X_A ⊕ X_B)  :=
         simp [ι]
         have fA_extends := congrFun (FAb_A.induced_extends (f ∘ Sum.inl)) x_A
         simp at fA_extends
-        rw [fA_extends]
-        have : FreeAbelianGroup.inducedMap G (f ∘ Sum.inr) (0 : B) = (0 : G) := by
-              rw [zero_image (FAb_B.inducedMap G (f ∘ Sum.inr))]
-        rw [this, add_zero]
+        assumption
       · rename_i x_B
         simp [ι]
         have fB_extends := congrFun (FAb_B.induced_extends (f ∘ Sum.inr)) x_B
         simp at fB_extends
-        rw [fB_extends]
-        have : FreeAbelianGroup.inducedMap G (f ∘ Sum.inl) (0 : A) = (0 : G) := by
-          rw [zero_image (FAb_A.inducedMap G (f ∘ Sum.inl))]
-        rw [this, zero_add]
+        assumption
     induced_hom := by
       intro G GrpG f
       apply AddCommGroup.Homomorphism.mk
       intro (a, b)
       intro (a', b')
       simp [inducedMap, DirectSum.directSum_mul]
-      rw [add_dist (FAb_A.inducedMap G (f ∘ Sum.inl)), add_dist (FAb_B.inducedMap G (f ∘ Sum.inr))]
       rw [add_assoc, add_assoc, add_left_cancel_iff, ← add_assoc, ← add_assoc, add_right_cancel_iff, add_comm]
     unique_extension := by
       intro G GrpG f g Homf Homg

@@ -56,7 +56,7 @@ theorem directSum_mul {a a' : A} {b b' : B} : MetabelianGroup.mul trivial_cocycl
     simp [MetabelianGroup.mul, trivial_cocycle]
     rfl
 
-theorem directSum_add (a a' : A) (b b' : B) : directSum.add (a, b) (a', b') = (a + a', b + b') := directSum_mul
+@[simp] theorem directSum_add (a a' : A) (b b' : B) : (a, b) + (a', b') = (a + a', b + b') := directSum_mul
 
 end DirectSum
 
@@ -78,8 +78,6 @@ instance (ϕ : A → C) [ϕHom : AddCommGroup.Homomorphism ϕ] (ψ : B → D) [�
                 intro (a, b)
                 intro (a', b')
                 simp [trivial_cocycle, MetabelianGroup.mul, prod]
-                have : b • a' = a' := rfl
-                rw [this, ϕHom.add_dist, ψHom.add_dist, ← DirectSum.directSum_add]
                 rfl
 
 abbrev ι₁ [Zero A] [Zero B] : A → A × B := λ a => (a, 0)
@@ -91,15 +89,13 @@ instance proj₁ {G : Type _} [AddCommGroup G] (ϕ : A × B → G) [Homϕ : AddC
     intro a a'
     simp [ι₁]
     rw [← Homϕ.add_dist]
-    have : (a, (0 : B)) + (a', (0 : B)) = (a + a', (0 + 0 : B)) := DirectSum.directSum_add a a' 0 0
-    rw [this, add_zero]
+    simp
 
 instance proj₂ {G : Type _} [AddCommGroup G] (ϕ : A × B → G) [Homϕ : AddCommGroup.Homomorphism ϕ] : AddCommGroup.Homomorphism (ϕ ∘ ι₂) where
   add_dist := by
     intro b b'
     simp [ι₂]
     rw [← Homϕ.add_dist]
-    have : ((0 : A), b) + ((0 : A), b') = ((0 + 0 : A), b + b') := DirectSum.directSum_add 0 0 b b'
-    rw [this, add_zero]
+    simp
 
 end Homomorphisms

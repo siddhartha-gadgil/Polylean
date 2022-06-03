@@ -31,13 +31,15 @@ variable {Q K : Type _} [AddCommGroup Q] [AddCommGroup K]
 variable [α : AddCommGroup.ActionByAutomorphisms Q K]
 variable (c : Q → Q → K) [cocycle : Cocycle c]
 
-theorem leftId : ∀ {q : Q}, c 0 q = (0 : K) := by
+attribute [simp] cocycleId
+
+@[simp] theorem leftId : ∀ {q : Q}, c 0 q = (0 : K) := by
   intro q
   have := Eq.symm $ cocycle.cocycleCondition 0 0 q
   rw [zero_add, zero_add, add_right_cancel_iff, cocycle.cocycleId, AddCommGroup.Action.id_action] at this
   assumption
 
-theorem rightId : ∀ {q : Q}, c q 0 = (0 : K) := by
+@[simp] theorem rightId : ∀ {q : Q}, c q 0 = (0 : K) := by
   intro q
   have := cocycle.cocycleCondition q 0 0
   rw [add_zero, add_zero, add_right_cancel_iff, cocycle.cocycleId, AddCommGroup.ActionByAutomorphisms.act_zero] at this
@@ -76,10 +78,10 @@ def inv : K × Q → K × Q
   | (k, q) => (- ((-q) • (k  + c q (-q))), -q)
 
 theorem left_id : ∀ (g : K × Q), mul c e g = g
-  | (k, q) => by simp [e, mul]; rw [cocycle.leftId, AddCommGroup.Action.id_action, add_zero]
+  | (k, q) => by simp [e, mul]; rw [AddCommGroup.Action.id_action]
 
 theorem right_id : ∀ (g : K × Q), mul c g e = g
-  | (k, q) => by simp [e, mul]; rw [cocycle.rightId, AddCommGroup.ActionByAutomorphisms.act_zero, add_zero, add_zero]
+  | (k, q) => by simp [e, mul]; rw [AddCommGroup.ActionByAutomorphisms.act_zero, add_zero]
 
 theorem left_inv : ∀ (g : K × Q), mul c (inv c g) g = e
   | (k , q) => by
@@ -182,12 +184,12 @@ instance : AddCommGroup.Homomorphism (Metabelian.Kernel.inclusion Q K) where
     simp [Metabelian.Kernel.inclusion]
     apply subType.eq_of_val_eq
     show (k + k', (0 : Q)) = Mul.mul (k, 0) (k', 0)
-    simp [Mul.mul, MetabelianGroup.mul]; rw [AddCommGroup.Action.id_action, cocycle.cocycleId, add_zero]
+    simp [Mul.mul, MetabelianGroup.mul]; rw [AddCommGroup.Action.id_action]
 
 instance : AddCommGroup.Homomorphism (Metabelian.Kernel.K_projection Q K) where
   add_dist := by
     intro ⟨⟨k, 0⟩, rfl⟩; intro ⟨⟨k', 0⟩, rfl⟩
-    simp [Metabelian.Kernel.K_projection, MetabelianGroup.mul]; rw [AddCommGroup.Action.id_action, cocycle.cocycleId, add_zero]
+    simp [Metabelian.Kernel.K_projection, MetabelianGroup.mul]; rw [AddCommGroup.Action.id_action]
 
 instance : AddCommGroup.Isomorphism K (Metabelian.Kernel Q K) :=
   {

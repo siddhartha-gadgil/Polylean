@@ -33,13 +33,6 @@ abbrev a  : Q := (⟨1, by decide⟩, ⟨0, by decide⟩)
 abbrev b  : Q := (⟨0, by decide⟩, ⟨1, by decide⟩)
 abbrev ab : Q := (⟨1, by decide⟩, ⟨1, by decide⟩)
 
--- perhaps an unnecessary theorem
-theorem K_add (p q r p' q' r' : ℤ) : (p, q, r) + (p', q', r') = (p + p', q + q', r + r') := by
-  show Add.add (p, q, r) (p', q', r') = _
-  simp [DirectSum.directSum_add]
-  show Add.add (q, r) (q', r') = _
-  simp [DirectSum.directSum_add]
-
 section Demo
 
 abbrev X := Unit ⊕ Unit ⊕ Unit
@@ -151,11 +144,10 @@ instance PGrp : Group P := MetabelianGroup.metabeliangroup cocycle
 instance : DecidableEq P := inferInstanceAs (DecidableEq (K × Q))
 
 -- a handy theorem for describing the group multiplication
-theorem P_mul : ∀ k k' : K, ∀ q q' : Q, (k, q) * (k', q') = (k + action q k' + cocycle q q', q + q') :=
+@[simp] theorem P_mul : ∀ k k' : K, ∀ q q' : Q, (k, q) * (k', q') = (k + action q k' + cocycle q q', q + q') :=
   λ k k' q q' => by
     show PGrp.mul (k, q) (k', q') = _
     simp [Mul.mul, MetabelianGroup.mul]
-    have : q • k' = action q k' := rfl
-    rw [this]
+    rfl
 
 end P

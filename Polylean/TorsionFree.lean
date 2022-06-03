@@ -71,7 +71,7 @@ def s : P → (Metabelian.Kernel Q K)
 theorem s_square : ∀ g : P, g ^ 2 = (s g).val := by
   intro ((p, q, r), x); revert x
   apply Q.rec <;> rw [← npow_eq_pow] <;>
-  simp [s, Monoid.npow, npow_rec, P_mul] <;> simp [action, cocycle, prod, id, neg] <;> simp [K_add]
+  simp [s, Monoid.npow, npow_rec, P_mul] <;> simp [action, cocycle, prod, id, neg]
 
 -- ℤ³ is torsion-free
 instance torsionfreeℤ3 : TorsionFreeAdditive K := inferInstance
@@ -80,7 +80,8 @@ instance torsionfreeℤ3 : TorsionFreeAdditive K := inferInstance
 instance isoℤ3kernel : AddCommGroup.Isomorphism K (Metabelian.Kernel Q K) := inferInstance
 
 -- the kernel is torsion-free, as a corollary
-instance kernel_torsion_free : TorsionFreeAdditive (Metabelian.Kernel Q K) := @iso_torsion_free (ℤ × ℤ × ℤ) (Metabelian.Kernel Q K) _ _ isoℤ3kernel torsionfreeℤ3
+instance kernel_torsion_free : TorsionFreeAdditive (Metabelian.Kernel Q K) := inferInstance
+-- @iso_torsion_free (ℤ × ℤ × ℤ) (Metabelian.Kernel Q K) _ _ isoℤ3kernel torsionfreeℤ3
 
 section Mod2
 
@@ -142,16 +143,10 @@ instance : AddCommGroup.Homomorphism (Int.mod2) where
 
 -- a proof that an odd integer must be non-zero
 theorem odd_ne_zero : {a : ℤ} → ¬(a + a + 1 = 0) := by
-  intro a
-  intro h
+  intro a h
   have hyp := congrArg Int.mod2 h
-  rw [Int.mod2_add_dist, Int.mod2_add_dist] at hyp
-  have : (Int.mod2 a + Int.mod2 a) = (0 : Fin 2) :=
-    match (Int.mod2 a) with
-      | ⟨0, _⟩ => rfl
-      | ⟨1, _⟩ => rfl
-  rw [this, AddMonoid.zero_add] at hyp
-  contradiction
+  have : ∀ x : Fin 2, x + x = (0 : Fin 2) := fun | ⟨0, _⟩ => rfl | ⟨1, _⟩ => rfl
+  simp [this] at hyp
 
 end Mod2
 
