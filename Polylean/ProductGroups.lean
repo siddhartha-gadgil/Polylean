@@ -59,6 +59,7 @@ theorem mul {a a' : A} {b b' : B} : MetabelianGroup.mul trivial_action trivial_c
 
 end DirectSum
 
+
 section Homomorphisms
 
 variable {A B C D : Type _} [AddCommGroup A] [AddCommGroup B] [AddCommGroup C] [AddCommGroup D]

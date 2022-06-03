@@ -14,6 +14,8 @@ Roughly, the steps are as follows (further details can be found in the correspon
 5. Together, this shows that `P` is torsion-free.
 -/
 
+section TorsionFree
+
 -- the definition of a torsion-free group
 class TorsionFree (G : Type _) [Group G] where
   torsion_free : ∀ g : G, ∀ n : ℕ, g ^ n.succ = 1 → g = 1
@@ -58,7 +60,11 @@ instance iso_torsion_free {A B : Type _} [AddCommGroup A] [AddCommGroup B] [IsoA
     rw [IsoAB.idTgt] at this; simp at this
     assumption
 
+end TorsionFree
+
+
 open P
+
 
 -- the function taking an element of `P` to its square, which lies in the kernel `K`
 def s : P → (Metabelian.Kernel Q K)
@@ -72,7 +78,9 @@ theorem s_square : ∀ g : P, g ^ 2 = (s g).val := by
   intro ((p, q, r), x); revert x
   have square_mul {G : Type} [Group G] (g : G) : g ^ 2 = g * g := by
     show g ^ (Nat.succ 1) = g * g; rw [pow_succ, pow_one]
-  apply Q.rec <;> simp [s, square_mul, Pmul] <;> simp [action, cocycle, prod, id, neg]
+  apply Q.rec <;> simp [s, square_mul] <;> simp [action, cocycle, prod, id, neg]
+
+
 
 -- ℤ³ is torsion-free
 instance torsionfreeℤ3 : TorsionFreeAdditive K := inferInstance
@@ -84,8 +92,10 @@ instance isoℤ3kernel : AddCommGroup.Isomorphism K (Metabelian.Kernel Q K) := i
 instance kernel_torsion_free : TorsionFreeAdditive (Metabelian.Kernel Q K) := inferInstance
 -- @iso_torsion_free (ℤ × ℤ × ℤ) (Metabelian.Kernel Q K) _ _ isoℤ3kernel torsionfreeℤ3
 
+
+
 -- a proof that an odd integer must be non-zero
-theorem odd_ne_zero : {a : ℤ} → ¬(a + a + 1 = 0) := by
+lemma odd_ne_zero : {a : ℤ} → ¬(a + a + 1 = 0) := by
   intro a h
   have hyp := congrArg Int.mod2 h
   have : ∀ x : Fin 2, x + x = (0 : Fin 2) := fun | ⟨0, _⟩ => rfl | ⟨1, _⟩ => rfl
@@ -103,6 +113,8 @@ theorem square_free : ∀ g : P, g ^ 2 = 1 → g = 1 := by
 
   apply And.intro <;> (try apply And.intro) <;> apply zero_of_double_zero <;> assumption
 
+
+
 -- if `g` is a torsion element, so is `g ^ 2`
 theorem torsion_implies_square_torsion : ∀ g : P, ∀ n : ℕ, g ^ n = 1 → (g ^ 2) ^ n = 1 :=
   λ g n g_tor =>
@@ -111,6 +123,8 @@ theorem torsion_implies_square_torsion : ∀ g : P, ∀ n : ℕ, g ^ n = 1 → (
               _      = (g ^ n) ^ 2 := by rw [pow_mul]
               _      = (1 : P) ^ 2 := by rw [← g_tor]
               _      = (1 : P)     := rfl
+
+
 
 -- `P` is torsion-free
 instance P_torsion_free : TorsionFree P where

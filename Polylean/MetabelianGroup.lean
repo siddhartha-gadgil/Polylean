@@ -41,7 +41,8 @@ attribute [simp] Cocycle.cocycleId
   intro q
   have := Eq.symm $ ccl.cocycleCondition 0 0 q
   simp at this
-  rw [this, ccl.cocycleId]
+  rw [cocycleZero α c] at this; simp at this
+  assumption
 
 @[simp] theorem rightId : ∀ {q : Q}, c q 0 = (0 : K) := by
   intro q
