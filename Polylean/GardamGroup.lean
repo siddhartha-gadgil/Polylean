@@ -106,4 +106,11 @@ instance PGrp : Group P := MetabelianGroup.metabeliangroup action cocycle
 
 instance : DecidableEq P := inferInstanceAs (DecidableEq (K × Q))
 
+-- a handy theorem for describing the group multiplication
+@[simp] theorem Pmul : ∀ k k' : K, ∀ q q' : Q, (k, q) * (k', q') = (k + action q k' + cocycle q q', q + q') :=
+  λ k k' q q' => by
+    show PGrp.mul (k, q) (k', q') = _
+    simp [Mul.mul, MetabelianGroup.mul]
+    rfl
+
 end P

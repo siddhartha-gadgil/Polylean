@@ -1,5 +1,6 @@
 import Mathlib.Algebra.Group.Defs
 import Mathlib.Algebra.Ring.Basic
+import Polylean.SMul
 
 /-!
 It appears that mathlib4 does not yet have homomorphisms. We need:
@@ -228,8 +229,8 @@ attribute [simp] Int.cast_id
 
 variable {A : Type _} [SubNegMonoid A] (a : A)
 
-@[simp] theorem SubNegMonoid.gsmul_succ'_ (n : ℕ) : SubNegMonoid.gsmul n.succ a = a + SubNegMonoid.gsmul n a := by
-  rw [← Int.cast_ofNat, ← Int.cast_ofNat]; exact SubNegMonoid.gsmul_succ' _ _
+@[simp] theorem SubNegMonoid.gsmul_succ'_ (n : ℕ) : SubNegMonoid.gsmul (↑(n) + 1) a = a + SubNegMonoid.gsmul (↑ n) a := by
+  rw [← Int.cast_ofNat, Int.cast_id, ← Int.ofNat_succ]; exact SubNegMonoid.gsmul_succ' _ _
 
 end SubNegMonoid
 
@@ -257,15 +258,18 @@ section mul_hom
 variable {A B : Type _} [AddCommGroup A] [AddCommGroup B]
 variable (ϕ : A → B) [AddCommGroup.Homomorphism ϕ]
 
-theorem hom_mul : ∀ a : A, ∀ n : ℕ, SubNegMonoid.gsmul n (ϕ a) = ϕ (SubNegMonoid.gsmul n a) := by
+instance : SMul ℕ A where
+  sMul := SubNegMonoid.gsmul ∘ Int.ofNat
+
+@[simp] theorem hom_mul : ∀ a : A, ∀ n : ℕ, n • (ϕ a) = ϕ (n • a) := by
   intro a n
   induction n with
-    | zero => simp
+    | zero => simp [SMul.sMul]
     | succ m ih =>
-      repeat (rw [SubNegMonoid.gsmul_succ'_])
+      simp [SMul.sMul] at *
       simp [ih]
 
-theorem nsmul_hom : ∀ n : ℕ, ∀ a b : A, nsmul_rec n (a + b) = nsmul_rec n a + nsmul_rec n b := by
+@[simp] theorem nsmul_hom : ∀ n : ℕ, ∀ a b : A, nsmul_rec n (a + b) = nsmul_rec n a + nsmul_rec n b := by
   intros n a b
   cases n
   · simp [nsmul_rec]
@@ -273,12 +277,12 @@ theorem nsmul_hom : ∀ n : ℕ, ∀ a b : A, nsmul_rec n (a + b) = nsmul_rec n 
     rw [add_assoc, add_assoc, add_left_cancel_iff, ← add_assoc, add_comm (nsmul_rec _ a) _, add_assoc, add_left_cancel_iff]
     apply nsmul_hom
 
-theorem gsmul_hom : ∀ n : ℤ, ∀ a b : A, gsmul_rec n (a + b) = gsmul_rec n a + gsmul_rec n b := by
+@[simp] theorem gsmul_hom : ∀ n : ℤ, ∀ a b : A, gsmul_rec n (a + b) = gsmul_rec n a + gsmul_rec n b := by
   intros n a b
   cases n
-  · simp [gsmul_rec]; exact nsmul_hom _ a b
+  · simp [gsmul_rec]
   · simp [gsmul_rec]; apply neg_eq_of_add_eq_zero
-    rw [nsmul_hom _ a b, add_assoc, add_comm (nsmul_rec _ b) _, ← add_assoc, ← add_assoc]; simp
+    rw [add_assoc, add_comm (nsmul_rec _ b) _, ← add_assoc, ← add_assoc]; simp
 
 instance {n : ℤ} : AddCommGroup.Homomorphism (gsmul_rec n : A → A) where
   add_dist := gsmul_hom n
@@ -312,6 +316,9 @@ class AddCommGroup.Isomorphism (A B : Type _) [AddCommGroup A] [AddCommGroup B] 
   [invHom : AddCommGroup.Homomorphism inv]
   idSrc : inv ∘ map = id
   idTgt : map ∘ inv = id
+
+attribute [simp] AddCommGroup.Isomorphism.idSrc
+attribute [simp] AddCommGroup.Isomorphism.idTgt
 
 variable (A B C : Type _) [AddCommGroup A] [AddCommGroup B] [AddCommGroup C]
 

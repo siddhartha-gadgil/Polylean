@@ -22,7 +22,7 @@ class TorsionFree (G : Type _) [Group G] where
 
 -- the same definition for additive groups
 class TorsionFreeAdditive (A : Type _) [AddCommGroup A] where
-  torsion_free : ∀ a : A, ∀ n : ℕ, SubNegMonoid.gsmul n.succ a = 0 → a = 0
+  torsion_free : ∀ a : A, ∀ n : ℕ, n.succ • a = 0 → a = 0
 
 -- ℤ is torsion-free, since it is an integral domain
 instance : TorsionFreeAdditive ℤ where
@@ -41,21 +41,21 @@ instance {A B : Type _} [AddCommGroup A] [AddCommGroup B] [TorsionFreeAdditive A
   TorsionFreeAdditive (A × B) where
   torsion_free := by
     intro (a, b) n
-    have : ∀ m : ℕ, SubNegMonoid.gsmul m (a, b) = (SubNegMonoid.gsmul m a, SubNegMonoid.gsmul m b) := by
+    have scal_mul_pair : ∀ m : ℕ, m • (a, b) = (m • a, m • b) := by
       intro m
       induction m with
-        | zero => simp [SubNegMonoid.gsmul_zero']; rfl
-        | succ m ih => rw [← Int.ofNat_eq_cast, SubNegMonoid.gsmul_succ', Int.ofNat_eq_cast, ih, SubNegMonoid.gsmul_succ', SubNegMonoid.gsmul_succ', ← DirectSum.add]; rfl
-    show (SubNegMonoid.gsmul n.succ (a, b)) = (0, 0) → ((a, b) = (0, 0))
-    rw [this]; simp
-    intro ha hb
-    apply And.intro <;> apply TorsionFreeAdditive.torsion_free <;> assumption
+        | zero => simp [SMul.sMul, SubNegMonoid.gsmul_zero']; rfl
+        | succ m ih => simp [SMul.sMul] at *; simp [ih]
+    show (n.succ • (a, b)) = (0, 0) → ((a, b) = (0, 0))
+    have prod_eq {α β : Type _} (a c : α) (b d : β) : (a, b) = (c, d) ↔ (a = c) ∧ (b = d) := by simp
+    rw [scal_mul_pair, prod_eq, prod_eq]
+    intro ⟨_, _⟩; apply And.intro <;> apply TorsionFreeAdditive.torsion_free <;> assumption
 
 -- a group isomorphic to a torsion-free group is torsion-free
 instance iso_torsion_free {A B : Type _} [AddCommGroup A] [AddCommGroup B] [IsoAB : AddCommGroup.Isomorphism A B] [TorsionFreeAdditive A] : TorsionFreeAdditive B where
   torsion_free := by
     intro b n h
-    have : SubNegMonoid.gsmul n.succ (IsoAB.inv b) = 0 := by rw [hom_mul]; simp at h; simp [h]
+    have : n.succ • (IsoAB.inv b) = 0 := by simp [h]
     have : (IsoAB.map ∘ IsoAB.inv) b = IsoAB.map 0 := congrArg IsoAB.map $ TorsionFreeAdditive.torsion_free (IsoAB.inv b) n this
     rw [IsoAB.idTgt] at this; simp at this
     assumption
@@ -78,9 +78,7 @@ theorem s_square : ∀ g : P, g ^ 2 = (s g).val := by
   intro ((p, q, r), x); revert x
   have square_mul {G : Type} [Group G] (g : G) : g ^ 2 = g * g := by
     show g ^ (Nat.succ 1) = g * g; rw [pow_succ, pow_one]
-  apply Q.rec <;> simp [s, square_mul] <;> simp [action, cocycle, prod, id, neg]
-
-
+  apply Q.rec <;> simp [s, square_mul, Pmul] <;> simp [action, cocycle, prod, id, neg]
 
 -- ℤ³ is torsion-free
 instance torsionfreeℤ3 : TorsionFreeAdditive K := inferInstance
@@ -140,8 +138,8 @@ instance P_torsion_free : TorsionFree P where
         Group.Homomorphism.hom_pow
       rw [← subType_hom_pow, square_tor]
     -- converting from multiplicative to additive notation
-    have mul_to_add (a : Metabelian.Kernel Q K) (n : ℕ) : a ^ n = SubNegMonoid.gsmul (Int.ofNat n) a := by
-      induction n with | zero => rfl | succ m ih => rw [pow_succ', SubNegMonoid.gsmul_succ', ih]; rfl
+    have mul_to_add (a : Metabelian.Kernel Q K) (n : ℕ) : a ^ n = n • a := by
+      induction n with | zero => rfl | succ m ih => simp [SMul.sMul] at *; simp [pow_succ', ih]; rfl
     rw [mul_to_add] at s_tor
     -- since `s g` lies in the kernel and the kernel is torsion-free, `s g = 0`
     have square_zero : (s g).val = (0 : Metabelian.Kernel Q K).val := congrArg _ (kernel_torsion_free.torsion_free _ n s_tor)

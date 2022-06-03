@@ -39,7 +39,7 @@ theorem gsmul_succ (n: ℤ) (x : A) : gsmul (n+1) x = x + gsmul n x  := by
         rw [l]
         rw [l₀]
         simp
-      | succ l ih => 
+      | succ l ih =>
         have l₀ : -[1+ Nat.succ l] + 1 = -[1+ l] := by rfl
         rw [l₀]
         rw [abg.gsmul_neg']
@@ -48,27 +48,8 @@ theorem gsmul_succ (n: ℤ) (x : A) : gsmul (n+1) x = x + gsmul n x  := by
 
         let l₁ := abg.gsmul_succ' (l + 1) x
         simp at l₁
-        rw [l₁]
-        let y := gsmul (l + 1) x
-        show -y = x + -(x + y)
-        apply Eq.symm
-        conv =>
-          lhs
-          arg 2
-          rw [add_comm]
-        let l₁ : y + (x + -(y + x)) = y + -y := 
-            by
-              conv =>
-                rhs
-                rw [add_comm]
-              rw [neg_add_self]
-              rw [← add_assoc]
-              let l₃ := add_comm (y + x) (- (y + x))
-              rw [l₃]
-              rw [neg_add_self]
-        let l₂ := add_left_cancel l₁
-        assumption      
-
+        rw [l₁, ← add_assoc, neg_hom, ← add_assoc, neg_hom, ← add_assoc x _ _]
+        simp
 
 theorem isHom₁ (x : A) (n : ℤ) (m: Nat) : 
       zhom x (n + m) = zhom x n + zhom x m :=
@@ -81,9 +62,6 @@ theorem isHom₁ (x : A) (n : ℤ) (m: Nat) :
       simp [zhom] at ih
       rw [← add_assoc]
       simp
-      let l₁ := abg.gsmul_succ' k x
-      simp at l₁
-      rw [l₁]
       simp
       let l₂ := gsmul_succ (n + k) x
       simp at l₂
@@ -119,22 +97,11 @@ theorem isHom₂ (x : A) (n m : Nat) :
     let l₂ := isHom₁ x (n  + 1) (m + 1)
     simp [zhom] at l₂
     rw [l₂]
-    let a := gsmul (n + 1) x
-    let b := gsmul (m + 1) x
-    show -(a + b) = -b + -a
-    have lab : (-(a + b) + a) + b = (-b + -a + a) + b := by 
-          conv =>
-            lhs
-            rw [add_assoc]
-          rw [neg_add_self]
-          let la := add_assoc (-b) (-a) (a + b)
-          rw [← add_assoc] at la
-          rw [la]
-          simp      
-    let lab₁ := add_right_cancel lab 
-    let lab₂ := add_right_cancel lab₁
-    assumption
-
+    simp [neg_hom]
+    rw [add_assoc, add_assoc]
+    simp
+    rw [add_comm, add_comm (-gsmul _ x) _, add_assoc, add_assoc]
+    simp [add_comm]
 
 theorem zhom_is_hom (x: A) (n m : ℤ) :
   zhom x (n + m) = zhom x n + zhom x m := by
