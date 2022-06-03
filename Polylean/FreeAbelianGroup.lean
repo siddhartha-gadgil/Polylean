@@ -176,21 +176,14 @@ theorem unique_morphism_nat (f g : ℤ → A)[AddCommGroup.Homomorphism f]
           | zero =>
             simp [hyp]            
           | succ k ih => 
-            let lf := add_dist f (Nat.succ k) 1
-            rw [lf]
-            let lg := add_dist g (Nat.succ k) 1
-            rw [lg, hyp, add_right_cancel_iff]
+            simp [hyp] at *
             assumption
 
 theorem unique_morphism (f g : ℤ → A)[AddCommGroup.Homomorphism f]
         [AddCommGroup.Homomorphism g]: f 1 = g 1  → f = g := by
           intro hyp
-          have fzero : f (Int.ofNat Nat.zero) = 0 := 
-            by
-                apply zero_image f
-          have gzero : g (Int.ofNat Nat.zero) = 0 := 
-            by
-                apply zero_image g
+          have fzero : f (Int.ofNat Nat.zero) = 0 :=  by simp
+          have gzero : g (Int.ofNat Nat.zero) = 0 := by simp
           apply funext
           intro n
           cases n
@@ -202,13 +195,9 @@ theorem unique_morphism (f g : ℤ → A)[AddCommGroup.Homomorphism f]
               apply unique_morphism_nat f g hyp
           case negSucc k =>
             have fn : f (Int.negSucc k)  = -f (k + 1) := by
-              let l := neg_push f (k + 1) 
-              rw [← l]
-              rfl
+              simp [Int.negSucc_ofNat_eq]
             have gn : g (Int.negSucc k)  = -g (k + 1) := by
-              let l := neg_push g (k + 1) 
-              rw [← l]
-              rfl
+              simp [Int.negSucc_ofNat_eq]
             rw [fn, gn]
             let l := unique_morphism_nat f g hyp k
             rw [l]           
@@ -382,17 +371,14 @@ instance prodFree : FreeAbelianGroup (A × B) (X_A ⊕ X_B)  :=
       apply AddCommGroup.Homomorphism.mk
       intro (a, b)
       intro (a', b')
-      simp [inducedMap, DirectSum.directSum_mul]
+      simp [inducedMap, DirectSum.mul]
       rw [add_assoc, add_assoc, add_left_cancel_iff, ← add_assoc, ← add_assoc, add_right_cancel_iff, add_comm]
     unique_extension := by
       intro G GrpG f g Homf Homg
       intro h
       apply funext
       intro (a, b)
-      have coordsplit : (a, b) = (a, 0) + (0, b) := by
-        have := DirectSum.directSum_add a 0 0 b
-        rw [zero_add, add_zero] at this
-        exact Eq.symm this
+      have coordsplit : (a, b) = (a, 0) + (0, b) := by simp
       rw [coordsplit, Homf.add_dist, Homg.add_dist]
       have A_unique : f ∘ ι₁ = g ∘ ι₁ := by
         apply FAb_A.unique_extension (f ∘ ι₁) (g ∘ ι₁)

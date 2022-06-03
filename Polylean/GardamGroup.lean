@@ -106,7 +106,6 @@ instance : AutAction Q K action :=
     compatibility := by decide
   }
 
-instance P_action : AddCommGroup.ActionByAutomorphisms Q K := @actionaut _ _ _ _ action inferInstance
 
 -- the cocycle in the construction
 def cocycle : Q → Q → K
@@ -129,7 +128,7 @@ def cocycle : Q → Q → K
 
 -- confirm that the above function indeed satisfies the cocycle condition
 -- this is done fully automatically by previously defined decision procedures
-instance P_cocycle : Cocycle cocycle :=
+instance P_cocycle : Cocycle action cocycle :=
   {
     cocycleId := rfl
     cocycleCondition := by decide
@@ -139,7 +138,7 @@ instance P_cocycle : Cocycle cocycle :=
 
 abbrev P := K × Q
 
-instance PGrp : Group P := MetabelianGroup.metabeliangroup cocycle
+instance PGrp : Group P := MetabelianGroup.metabeliangroup action cocycle
 
 instance : DecidableEq P := inferInstanceAs (DecidableEq (K × Q))
 

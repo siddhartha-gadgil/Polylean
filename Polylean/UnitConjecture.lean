@@ -47,10 +47,10 @@ def s' : RP := z⁻¹ * (a⁻¹ * s * a)
 def α' := p' + (q' * a) + (r' * b) + (s' * a * b)
 
 /-- `α` is a unit -/
-theorem is_unit : unit α := ⟨α', by native_decide⟩
+theorem α_is_unit : unit α := ⟨α', by native_decide⟩
 
 /-- `α` is  non-trivial -/
-theorem non_trivial : ¬ (trivial_element α) := by
+theorem α_non_trivial : ¬ (trivial_element α) := by
     intro contra
     let ⟨g, p⟩ := contra
     let eqg := p.right
@@ -66,5 +66,4 @@ theorem non_trivial : ¬ (trivial_element α) := by
 
 /-- the existence of a non-trivial unit in `𝔽₂[P]` -/
 theorem Gardam : ∃ g : RP, unit g ∧ ¬ (trivial_element g) := 
-  ⟨α, And.intro is_unit non_trivial⟩
-
+  ⟨α, And.intro α_is_unit α_non_trivial⟩
