@@ -50,8 +50,7 @@ def decideBelow (p:Nat → Prop)[DecidablePred p](bound: Nat):
           exact contra n bd'
         contradiction
 
-def decideBelowFin {m: Nat}(p:Fin m → Prop)[DecidablePred p](bound: Nat):
-  Decidable (∀ n : Fin m, n < bound → p n) := 
+def decideBelowFin {m: Nat}(p:Fin m → Prop)[DecidablePred p](bound: Nat): Decidable (∀ n : Fin m, n < bound → p n) := 
     match bound with
     | 0 => by
       apply Decidable.isTrue
@@ -162,8 +161,7 @@ instance {α β : Type}[dfa : DecideForall α][dfb : DecideForall β] :
   DecideForall (α × β) := 
   ⟨by apply decideProd⟩
 
-def decideUnit (p: Unit → Prop)[DecidablePred p] :
-  Decidable (∀ x : Unit, p x) := 
+def decideUnit (p: Unit → Prop)[DecidablePred p] : Decidable (∀ x : Unit, p x) := 
    if c : p (()) then by 
       apply Decidable.isTrue
       intro x
@@ -179,9 +177,7 @@ def decideUnit (p: Unit → Prop)[DecidablePred p] :
 instance : DecideForall Unit := 
   ⟨by apply decideUnit⟩
 
-def decideSum {α β : Type}[dfa : DecideForall α][dfb : DecideForall β]
-  (p:α ⊕ β → Prop)[DecidablePred p] :
-  Decidable (∀ x :α ⊕ β, p x) := 
+def decideSum {α β : Type}[dfa : DecideForall α][dfb : DecideForall β](p:α ⊕ β → Prop)[DecidablePred p] : Decidable (∀ x :α ⊕ β, p x) := 
     if c: ∀x: α, p (Sum.inl x) then 
        if c': ∀y: β , p (Sum.inr y) then 
        by
