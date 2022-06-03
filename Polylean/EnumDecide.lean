@@ -4,8 +4,7 @@ Automatically decide statements of the form `∀ x : X, P x` on a finite type `X
 
 namespace EnumDecide
 
-def decideBelow (p:Nat → Prop)[DecidablePred p](bound: Nat):
-  Decidable (∀ n : Nat, n < bound → p n) := 
+def decideBelow (p:Nat → Prop)[DecidablePred p](bound: Nat): Decidable (∀ n : Nat, n < bound → p n) := 
     match bound with
     | 0 => by
       apply Decidable.isTrue
@@ -106,8 +105,7 @@ def decideBelowFin {m: Nat}(p:Fin m → Prop)[DecidablePred p](bound: Nat): Deci
           exact contra n bd'
         contradiction
 
-def decideFin {m: Nat}(p:Fin m → Prop)[DecidablePred p]:
-  Decidable (∀ n : Fin m, p n) := 
+def decideFin {m: Nat}(p:Fin m → Prop)[DecidablePred p]: Decidable (∀ n : Fin m, p n) := 
   match decideBelowFin p m with 
   | Decidable.isTrue hyp => 
     by
@@ -140,9 +138,7 @@ example : ∀ x y : Fin 3, x + y = y + x := by decide
 theorem Zmod3.assoc {n: Nat} :
   ∀ x y z : Fin 2, (x + y) + z = x + (y + z) := by decide
 
-def decideProd {α β : Type}[dfa : DecideForall α][dfb : DecideForall β]
-  (p:α × β → Prop)[DecidablePred p] :
-  Decidable (∀ xy :α × β, p xy) := 
+def decideProd {α β : Type}[dfa : DecideForall α][dfb : DecideForall β] (p:α × β → Prop)[DecidablePred p] : Decidable (∀ xy :α × β, p xy) := 
     if c: (∀ x: α, ∀ y : β, p (x, y)) 
     then
       by
@@ -203,8 +199,7 @@ instance {α β : Type}[dfa : DecideForall α][dfb : DecideForall β] :
   DecideForall (α ⊕ β) := 
   ⟨by apply decideSum⟩
 
-instance funEnum {α β : Type}[dfa : DecideForall α][dfb : DecidableEq β] :
-    DecidableEq (α → β) := fun f g => 
+instance funEnum {α β : Type}[dfa : DecideForall α][dfb : DecidableEq β] : DecidableEq (α → β) := fun f g => 
       if c:∀ x:α, f x = g x then
         by
         apply Decidable.isTrue

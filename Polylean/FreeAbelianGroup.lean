@@ -228,10 +228,7 @@ class FreeAbelianGroup(F: Type)[AddCommGroup F]
     (f g : F → A)[AddCommGroup.Homomorphism f][AddCommGroup.Homomorphism g] :
        f ∘ i = g ∘ i  → f = g 
 
-theorem unique_extension{F: Type}[AddCommGroup F]
-  {X: Type}[fgp : FreeAbelianGroup F X]{A: Type}[AddCommGroup A] 
-    (f g : F → A)[AddCommGroup.Homomorphism f][AddCommGroup.Homomorphism g] :
-       f ∘ fgp.i = g ∘ fgp.i  → f = g := fgp.unique_extension f g
+theorem unique_extension{F: Type}[AddCommGroup F] {X: Type}[fgp : FreeAbelianGroup F X]{A: Type}[AddCommGroup A] (f g : F → A)[AddCommGroup.Homomorphism f][AddCommGroup.Homomorphism g] : f ∘ fgp.i = g ∘ fgp.i  → f = g := fgp.unique_extension f g
 
 @[inline] def fromBasis {F: Type}[AddCommGroup F]
   {X: Type}[fag : FreeAbelianGroup F X]{A: Type}[AddCommGroup A]
@@ -308,11 +305,7 @@ def egHom₀  : AddCommGroup.Homomorphism (egAction 0) := inferInstance
 
 -- decidability
 
-def decideHomsEqual{F: Type}[AddCommGroup F]
-  (X: Type)[fgp : FreeAbelianGroup F X]
-  {A: Type}[AddCommGroup A][DecidableEq A][DecideForall X]
-    (f g : F → A)[AddCommGroup.Homomorphism f][AddCommGroup.Homomorphism g] :
-      Decidable (f = g) := 
+def decideHomsEqual{F: Type}[AddCommGroup F] (X: Type)[fgp : FreeAbelianGroup F X] {A: Type}[AddCommGroup A][DecidableEq A][DecideForall X] (f g : F → A)[AddCommGroup.Homomorphism f][AddCommGroup.Homomorphism g] : Decidable (f = g) := 
         if c : ∀ x : X, f (fgp.i x) = g (fgp.i x) then 
         by
           apply Decidable.isTrue
