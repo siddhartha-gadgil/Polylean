@@ -1,6 +1,7 @@
 import Polylean.GardamGroup
 import Polylean.GroupRing
 
+
 /-
 The proof of the theorem `𝔽₂[P]` has non-trivial units. Together with the main result of `TorsionFree` -- that `P` is torsion-free, this completes the formal proof of Gardam's theorem that Kaplansky's Unit Conjecture is false.
 -/
@@ -26,7 +27,7 @@ instance ringElem: Coe P (RP) where
 
 end preliminaries
 
-
+namespace Gardam
 section constants
 
 abbrev x : P := (P.x, P.e)
@@ -36,15 +37,15 @@ abbrev a : P := ((0, 0, 0), P.a)
 abbrev b : P := ((0, 0, 0), P.b)
 abbrev one : RP := 1
 
+
 /-! The components of the non-trivial unit `α` -/
 def p : RP := one +  x +  y +  x*y +  z⁻¹ + x*z⁻¹ + y*z⁻¹ + x*y*z⁻¹
 def q : RP := (x⁻¹*y⁻¹ : RP) + x + y⁻¹*z + z
 def r: RP := one + x + y⁻¹*z + x*y*z
 def s : RP  := one + x*z⁻¹ + x⁻¹*z⁻¹ + y*z⁻¹ + y⁻¹*z⁻¹
 
-
 /-- the non-trivial unit `α` -/
-def Gardam.α := p + (q * a) + (r * b) + (s * a * b)
+def α := p + (q * a) + (r * b) + (s * a * b)
  
 /-! The components of the inverse `α'` of the non-trivial unit `α` -/
 def p' : RP := x⁻¹ * (a⁻¹  * p * a)
@@ -58,9 +59,8 @@ end constants
 section verification
 
 /-- the inverse `α'` of the non-trivial unit `α` -/
-def Gardam.α' := p' + (q' * a) + (r' * b) + (s' * a * b)
+def α' := p' + (q' * a) + (r' * b) + (s' * a * b)
 
-open Gardam
 
 /-- `α` is a unit -/
 theorem α_is_unit : unit α := ⟨α', by native_decide⟩
@@ -85,3 +85,5 @@ theorem Gardam : ∃ g : RP, unit g ∧ ¬ (trivial_element g) :=
   ⟨α, And.intro α_is_unit α_non_trivial⟩
 
 end verification
+
+end Gardam
