@@ -1,3 +1,4 @@
+import Mathlib.Algebra.Group.Defs
 inductive Letter where
   | α : Letter
   | β : Letter 
@@ -19,7 +20,8 @@ def Letter.inv : Letter → Letter
   | α! => α 
   | β! => β 
 
-postfix:max "⁻¹" => Letter.inv
+@[inline] instance letInv : Inv Letter := ⟨Letter.inv⟩
+
 
 open Letter
 
@@ -48,6 +50,8 @@ def splits (l : Letter) : (w : Word) → List {p : Word × Word // p.1.length + 
 def length : Word → Nat
   | [] => 0
   | x :: ys =>
+    have lb : (List.length ys) < List.length (x :: ys) := by
+      simp [List.length_cons, Nat.le_refl]
     let base := 1 + (length ys)
     let derived := (splits x⁻¹ ys).map fun ⟨(fst, snd), h⟩ =>
       have h : fst.length + snd.length < ys.length + 1 := Nat.lt_trans h (Nat.lt_succ_self _)
@@ -56,6 +60,7 @@ def length : Word → Nat
       length fst + length snd
     derived.foldl min base -- minimum of base and elements of derived
 termination_by _ l => l.length
+decreasing_by assumption
 
 #eval length ([α, α, β, α!, β!])
 

@@ -24,6 +24,8 @@ class Group.Homomorphism {G H : Type _} [Group G] [Group H] (ϕ : G → H) where
   mul_dist : ∀ g g' : G, ϕ (g * g') = (ϕ g) * (ϕ g')
 
 
+#check Inv
+
 section Group
 
 @[simp] theorem Group.mul_left_cancel {G : Type _} [Group G] {a b c : G} : a * b = a * c → b = c := by

@@ -5,6 +5,7 @@ import Polylean.GroupRing
 The proof of the theorem `𝔽₂[P]` has non-trivial units. Together with the main result of `TorsionFree` -- that `P` is torsion-free, this completes the formal proof of Gardam's theorem that Kaplansky's Unit Conjecture is false.
 -/
 
+
 section preliminaries
 
 /-- definition of a unit -/
@@ -41,8 +42,9 @@ def q : RP := (x⁻¹*y⁻¹ : RP) + x + y⁻¹*z + z
 def r: RP := one + x + y⁻¹*z + x*y*z
 def s : RP  := one + x*z⁻¹ + x⁻¹*z⁻¹ + y*z⁻¹ + y⁻¹*z⁻¹
 
+
 /-- the non-trivial unit `α` -/
-def α := p + (q * a) + (r * b) + (s * a * b)
+def Gardam.α := p + (q * a) + (r * b) + (s * a * b)
  
 /-! The components of the inverse `α'` of the non-trivial unit `α` -/
 def p' : RP := x⁻¹ * (a⁻¹  * p * a)
@@ -56,7 +58,9 @@ end constants
 section verification
 
 /-- the inverse `α'` of the non-trivial unit `α` -/
-def α' := p' + (q' * a) + (r' * b) + (s' * a * b)
+def Gardam.α' := p' + (q' * a) + (r' * b) + (s' * a * b)
+
+open Gardam
 
 /-- `α` is a unit -/
 theorem α_is_unit : unit α := ⟨α', by native_decide⟩

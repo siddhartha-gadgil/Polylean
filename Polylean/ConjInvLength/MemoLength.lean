@@ -13,6 +13,8 @@ def memoLength : Word → IO Nat := fun w => do
     match w with  
     | [] => return 0
     | x :: ys => do
+      have lb : (List.length ys) < List.length (x :: ys) := by
+        simp [List.length_cons, Nat.le_refl]
       let base := 1 + (← memoLength ys)
       let derived ←  (splits x⁻¹ ys).mapM fun ⟨(fst, snd), h⟩ => do
         have h : fst.length + snd.length < ys.length + 1 := Nat.lt_trans h (Nat.lt_succ_self _)
@@ -23,6 +25,7 @@ def memoLength : Word → IO Nat := fun w => do
       normCache.set <| (← normCache.get).insert w res
       return res
 termination_by _ l => l.length
+decreasing_by assumption 
 
 #check Array.eraseIdx'
 
