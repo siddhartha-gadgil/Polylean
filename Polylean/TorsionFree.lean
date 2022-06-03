@@ -70,8 +70,9 @@ def s : P → (Metabelian.Kernel Q K)
 -- proof that the above function satsifies the property of taking an element to its square
 theorem s_square : ∀ g : P, g ^ 2 = (s g).val := by
   intro ((p, q, r), x); revert x
-  apply Q.rec <;> rw [← npow_eq_pow] <;>
-  simp [s, Monoid.npow, npow_rec, P_mul] <;> simp [action, cocycle, prod, id, neg]
+  have square_mul {G : Type} [Group G] (g : G) : g ^ 2 = g * g := by
+    show g ^ (Nat.succ 1) = g * g; rw [pow_succ, pow_one]
+  apply Q.rec <;> simp [s, square_mul, Pmul] <;> simp [action, cocycle, prod, id, neg]
 
 -- ℤ³ is torsion-free
 instance torsionfreeℤ3 : TorsionFreeAdditive K := inferInstance

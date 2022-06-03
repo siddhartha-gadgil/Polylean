@@ -33,43 +33,6 @@ abbrev a  : Q := (⟨1, by decide⟩, ⟨0, by decide⟩)
 abbrev b  : Q := (⟨0, by decide⟩, ⟨1, by decide⟩)
 abbrev ab : Q := (⟨1, by decide⟩, ⟨1, by decide⟩)
 
-section Demo
-
-abbrev X := Unit ⊕ Unit ⊕ Unit
-
-def egActionBasis' : Fin 2 → Unit → ℤ 
-| ⟨0, _⟩ => fun _ => 1
-| ⟨1, _⟩ => fun _ => -1
-
-def actionBasis' : Q → X → K
-| (⟨0, _⟩, ⟨0, _⟩)  => Z3.onX ((1, 0, 0), (0, 1, 0), (0, 0, 1))
-| (⟨0, _⟩, ⟨1, _⟩)  => Z3.onX ((-1, 0, 0), (0, 1, 0), (0, 0, -1))
-| (⟨1, _⟩, ⟨0, _⟩)  => Z3.onX ((1, 0, 0), (0, -1, 0), (0, 0, -1))
-| (⟨1, _⟩, ⟨1, _⟩)  => Z3.onX ((-1, 0, 0), (0, -1, 0), (0, 0, 1))
-
-abbrev action' := fromBasisFamily K Q actionBasis' -- shows basis is inferred
-
-open EnumDecide
-
-instance infer_comp_action' (x y : Q) : AddCommGroup.Homomorphism ((action' x) ∘ (action' y)) := inferInstance
-
-theorem isAction: ∀ (x y: Q), (action' x) ∘ (action' y) = action' (x + y) := by decide
-
-abbrev egAction' := fromBasisFamily ℤ (Fin 2)  (egActionBasis')
-
-theorem egIsAction: ∀ (x y: Fin 2), 
-  (egAction' x) ∘ (egAction' y) = egAction' (x + y) := by decide -- works!
-
-end Demo
-
-/-
-def action : Q → K → K
-  | (⟨0, _⟩, ⟨0, _⟩)  , (p, q, r) => (p, q, r)
-  | (⟨0, _⟩, ⟨1, _⟩)  , (p, q, r) => (-p, q, -r)
-  | (⟨1, _⟩, ⟨0, _⟩)  , (p, q, r) => (p, -q, -r)
-  | (⟨1, _⟩, ⟨1, _⟩)  , (p, q, r) => (-p, -q, r)
--/
-
 -- the action of `Q` on `K` by automorphisms
 -- `id` and `neg` are the identity and negation homomorphisms
 def action : Q → K → K
@@ -143,7 +106,7 @@ instance PGrp : Group P := MetabelianGroup.metabeliangroup action cocycle
 instance : DecidableEq P := inferInstanceAs (DecidableEq (K × Q))
 
 -- a handy theorem for describing the group multiplication
-@[simp] theorem P_mul : ∀ k k' : K, ∀ q q' : Q, (k, q) * (k', q') = (k + action q k' + cocycle q q', q + q') :=
+@[simp] theorem Pmul : ∀ k k' : K, ∀ q q' : Q, (k, q) * (k', q') = (k + action q k' + cocycle q q', q + q') :=
   λ k k' q q' => by
     show PGrp.mul (k, q) (k', q') = _
     simp [Mul.mul, MetabelianGroup.mul]
