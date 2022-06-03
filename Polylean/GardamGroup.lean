@@ -100,27 +100,20 @@ def Q.rec (P : Q → Sort _) :
         | (⟨1, _⟩, ⟨0, _⟩) => p10
         | (⟨1, _⟩, ⟨1, _⟩) => p11
 
-instance (q : Q) : AddCommGroup.Homomorphism (action q) := by
-  revert q; apply Q.rec <;> simp [action] <;> exact inferInstance
 
-instance (q q' : Q) : AddCommGroup.Homomorphism (action q ∘ action q') := inferInstance
+instance (q : Q) : AddCommGroup.Homomorphism (action q) := by
+  revert q; apply Q.rec <;> rw [action] <;> exact inferInstance
 
 -- confirm that the above action is an action by automorphisms
--- this is done automatically to a large extent with the machinery of decidable equality of homomorphisms on free groups
--- the tactics here are mainly used for unravelling the definitions
-instance : AutAction Q K :=
+-- this is done automatically with the machinery of decidable equality of homomorphisms on free groups
+instance : AutAction Q K action :=
   {
-    sMul := action
-    aut_action := by apply Q.rec <;> simp [SMul.sMul, action] <;> exact inferInstance
-    id_action := by
-      have : (0 : Q) = (⟨0, by decide⟩, ⟨0, by decide⟩) := rfl
-      simp [SMul.sMul, this, action]
-    compatibility := by
-      intro q
-      apply Q.rec <;> revert q <;> apply Q.rec <;> simp [SMul.sMul]
+    aut_action := inferInstance
+    id_action := rfl
+    compatibility := by decide
   }
 
-instance P_action : AddCommGroup.ActionByAutomorphisms Q K := @actionaut _ _ _ _ inferInstance
+instance P_action : AddCommGroup.ActionByAutomorphisms Q K := @actionaut _ _ _ _ action inferInstance
 
 -- the cocycle in the construction
 def cocycle : Q → Q → K
