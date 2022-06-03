@@ -217,8 +217,7 @@ theorem unique_morphism (f g : ℤ → A)[AddCommGroup.Homomorphism f]
 
 end Zhom
 
-class FreeAbelianGroup(F: Type)[AddCommGroup F]
-  (X: Type) where
+class FreeAbelianGroup(F: Type)[AddCommGroup F] (X: Type) where
   i: X → F
   inducedMap : (A: Type) →  [AddCommGroup A] →  (X → A) → (F → A)
   induced_extends{A: Type}[AddCommGroup A] : ∀ f : X → A, (inducedMap A f) ∘ i = f
@@ -230,9 +229,7 @@ class FreeAbelianGroup(F: Type)[AddCommGroup F]
 
 theorem unique_extension{F: Type}[AddCommGroup F] {X: Type}[fgp : FreeAbelianGroup F X]{A: Type}[AddCommGroup A] (f g : F → A)[AddCommGroup.Homomorphism f][AddCommGroup.Homomorphism g] : f ∘ fgp.i = g ∘ fgp.i  → f = g := fgp.unique_extension f g
 
-@[inline] def fromBasis {F: Type}[AddCommGroup F]
-  {X: Type}[fag : FreeAbelianGroup F X]{A: Type}[AddCommGroup A]
-  (f: X → A) : F → A := by
+@[inline] def fromBasis {F: Type}[AddCommGroup F]{X: Type}[fag : FreeAbelianGroup F X]{A: Type}[AddCommGroup A] (f: X → A) : F → A := by
     apply fag.inducedMap
     exact f
 
@@ -242,9 +239,7 @@ instance fromBasisHom {F: Type}[AddCommGroup F]
     (@fromBasis F _ X  fag A _ f) := by
     apply fag.induced_hom
 
-@[inline] def fromBasisFamily (F: Type)[AddCommGroup F]
-  {X: Type}[fag : FreeAbelianGroup F X]{A: Type}[AddCommGroup A](D: Type)
-  (f: D → X → A) : D →  F → A := by
+@[inline] def fromBasisFamily (F: Type)[AddCommGroup F]{X: Type}[fag : FreeAbelianGroup F X]{A: Type}[AddCommGroup A](D: Type)(f: D → X → A) : D →  F → A := by
     intro p
     apply fag.inducedMap
     exact f p
@@ -299,8 +294,6 @@ abbrev egAction : Fin 2 → ℤ → ℤ
 | ⟨1, _⟩ => fromBasis (fun _ : Unit => -1)
 
 def egHom₀  : AddCommGroup.Homomorphism (egAction 0) := inferInstance
-
--- def egHom (x: Fin 2)  : AddCommGroup.Homomorphism (egAction x) := inferInstance -- fails
 
 
 -- decidability
