@@ -28,8 +28,6 @@ def monomCoeff (R X : Type) [Ring R] [DecidableEq R][DecidableEq X](x₀ : X) (n
   | true => nx.1
   | false => 0
 
-#check monomCoeff
-
 /-- homomorphism property for coordinates for a formal sum with one term. -/
 theorem monom_coords_hom  (x₀ x : X) (a b : R) : monomCoeff R X x₀ (a + b, x) = monomCoeff R X x₀ (a, x) + monomCoeff R X x₀ (b, x) := by
   repeat
