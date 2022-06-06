@@ -29,7 +29,7 @@ def trivial_cocycle : Q → Q → K
 instance : @Cocycle Q K _ _ trivial_cocycle :=
   {
     α := trivial_action
-    action := inferInstance
+    autaction := inferInstance
     cocycleId := rfl
     cocycleCondition := λ _ _ _ => rfl
   }

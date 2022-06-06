@@ -94,7 +94,7 @@ def cocycle : Q → Q → K
 instance P_cocycle : Cocycle cocycle :=
   {
     α := action
-    action := inferInstance
+    autaction := inferInstance
     cocycleId := rfl
     cocycleCondition := by decide
   }

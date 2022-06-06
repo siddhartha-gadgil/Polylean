@@ -18,7 +18,7 @@ The requirement `c 0 0 = (0 : K)` is not strictly necessary and mainly for conve
 -/
 class Cocycle {Q K : Type _} [AddCommGroup Q] [AddCommGroup K] (c : Q → Q → K) where
   α : Q → K → K
-  [action : AutAction Q K α]
+  [autaction : AutAction Q K α]
   cocycleId : c 0 0 = (0 : K)
   cocycleCondition : ∀ q q' q'' : Q, c q q' + c (q + q') q'' = q • c q' q'' + c q (q' + q'')
 
@@ -33,7 +33,7 @@ variable (c : Q → Q → K) [ccl : Cocycle c]
 
 attribute [simp] Cocycle.cocycleId
 
-instance : AutAction Q K ccl.α := ccl.action
+instance : AutAction Q K ccl.α := ccl.autaction
 
 @[simp] theorem leftId : ∀ {q : Q}, c 0 q = (0 : K) := by
   intro q
