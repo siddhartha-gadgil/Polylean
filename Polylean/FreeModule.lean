@@ -2,7 +2,7 @@ import Mathlib.Algebra.Ring.Basic
 import Mathlib.Algebra.Group.Defs
 import Polylean.SMul
 
-/-
+/-!
 Free module over a ring `R` over a set `X`. It is assumed that both `R` and `X` have decidable equality. This is to obtain decidable equality for the elements of the module, which we do. We choose our definition to allow both such computations and to prove results.
 
 The definition is as a quotient of *Formal Sums*, which are simply lists of pairs `(a,x)` where `a` is a coefficient in `R` and `x` is a term in `X`. We associate to such a formal sum a coordinate function `X → R`. We see that having the same coordinate functions gives an equivalence relation on the formal sums. The free module is then defined as the corresponding quotient of such formal sums.
@@ -14,9 +14,13 @@ variable {R : Type} [Ring R] [DecidableEq R]
 
 variable {X : Type} [DecidableEq X]
 
-
+/-! I. Formal sums and coordinate functions 
+  * define formal sums as List (R × X)
+  * define coordinate functions X → R for formal sums
+  * define (weak) support, relate non-zero coordinates and decide equality 
+-/
 section FormalSumCoords
-/-! I. Formal sums and coordinate functions -/
+
 
 abbrev FormalSum (R X : Type) [Ring R] [DecidableEq R][DecidableEq X] :=
   List (R × X)
@@ -154,21 +158,7 @@ def decideEqualOnSupport  (l : List X) (f g : X → R) : Decidable (equalOnSuppo
       have contra' := contra.right
       contradiction
 
-/-- boolean equality on support -/
-def beqOnSupport  (l : List X) (f g : X → R) :Bool :=
-  l.all <| fun x => decide (f x = g x)
 
-/-- equality on support from boolean equality -/
-theorem eql_on_support_of_true {l : List X} {f g : X → R} : beqOnSupport l f g = true → equalOnSupport l f g := by
-  intro hyp
-  induction l with
-  | nil =>
-    simp [equalOnSupport]
-  | cons h t step =>
-    simp [equalOnSupport]
-    simp [beqOnSupport, List.all] at hyp
-    let p₂ := step hyp.right
-    exact And.intro hyp.left p₂
 
 /-- decidability of equality on support -/
 instance {X : Type} [DecidableEq X] {R : Type} [DecidableEq R] {l : List X} {f g : X → R} : Decidable (equalOnSupport l f g) :=
@@ -176,8 +166,11 @@ instance {X : Type} [DecidableEq X] {R : Type} [DecidableEq R] {l : List X} {f g
 
 end FormalSumCoords
 
+/-! II. Quotient Free Module 
+  * define relation by having equal coordinates
+  * show this is an equivalence relation and take quotient -/
 section QuotientFreeModule
-/-! II. Quotient Free Module -/
+
 
 /-- relation by equal coordinates-/
 def eqlCoords (R X : Type) [Ring R] [DecidableEq R][DecidableEq X](s₁ s₂ : FormalSum R X) : Prop :=
@@ -226,34 +219,11 @@ notation "⟦" a "⟧" => Quotient.mk' a
 
 end QuotientFreeModule
 
+/-! III. Decidable equality on quotient free modules
+  * need to relate to Boolean equality to lift to quotient -/
 section DecidableEqQuotFreeModule
-/-! III. Decidable equality on quotient free modules -/
-namespace FreeModule
 
-/-- boolean equality on support gives equal quotients -/
-theorem eqlquot_of_beq_support(s₁ s₂ : FormalSum R X)(c₁ : beqOnSupport s₁.support s₁.coords s₂.coords)(c₂ : beqOnSupport s₂.support s₁.coords s₂.coords) : ⟦s₁⟧ = ⟦s₂⟧ := 
-        by
-        let ch₁ := eql_on_support_of_true c₁
-        let ch₂ := eql_on_support_of_true c₂
-        apply Quotient.sound
-        apply funext
-        intro x
-        exact
-          if h₁ : (0 = s₁.coords x) then
-            if h₂ : (0 = s₂.coords x) then by
-              rw [← h₁, h₂]
-            else by
-              have lem : x ∈ s₂.support := by
-                apply nonzero_coord_in_support
-                assumption
-              let lem' := mem_of_equal_on_support s₂.support s₁.coords s₂.coords x lem ch₂
-              exact lem'
-          else by
-            have lem : x ∈ s₁.support := by
-              apply nonzero_coord_in_support
-              assumption
-            let lem' := mem_of_equal_on_support s₁.support s₁.coords s₂.coords x lem ch₁
-            exact lem'
+namespace FreeModule
 
 /-- decidable equality for quotient elements in the free module -/
 def decideEqualQuotient  (s₁ s₂ : FormalSum R X) : Decidable (⟦s₁⟧ = ⟦s₂⟧) :=
@@ -296,6 +266,48 @@ def decideEqualQuotient  (s₁ s₂ : FormalSum R X) : Decidable (⟦s₁⟧ = �
 instance  {s₁ s₂ : FormalSum R X} :
     Decidable (⟦s₁⟧ = ⟦s₂⟧) :=
   decideEqualQuotient s₁ s₂
+
+/-- boolean equality on support -/
+def beqOnSupport  (l : List X) (f g : X → R) :Bool :=
+  l.all <| fun x => decide (f x = g x)
+
+/-- equality on support from boolean equality -/
+theorem eql_on_support_of_true {l : List X} {f g : X → R} : beqOnSupport l f g = true → equalOnSupport l f g := by
+  intro hyp
+  induction l with
+  | nil =>
+    simp [equalOnSupport]
+  | cons h t step =>
+    simp [equalOnSupport]
+    simp [beqOnSupport, List.all] at hyp
+    let p₂ := step hyp.right
+    exact And.intro hyp.left p₂
+
+/-- boolean equality on support gives equal quotients -/
+theorem eqlquot_of_beq_support(s₁ s₂ : FormalSum R X)(c₁ : beqOnSupport s₁.support s₁.coords s₂.coords)(c₂ : beqOnSupport s₂.support s₁.coords s₂.coords) : ⟦s₁⟧ = ⟦s₂⟧ := 
+        by
+        let ch₁ := eql_on_support_of_true c₁
+        let ch₂ := eql_on_support_of_true c₂
+        apply Quotient.sound
+        apply funext
+        intro x
+        exact
+          if h₁ : (0 = s₁.coords x) then
+            if h₂ : (0 = s₂.coords x) then by
+              rw [← h₁, h₂]
+            else by
+              have lem : x ∈ s₂.support := by
+                apply nonzero_coord_in_support
+                assumption
+              let lem' := mem_of_equal_on_support s₂.support s₁.coords s₂.coords x lem ch₂
+              exact lem'
+          else by
+            have lem : x ∈ s₁.support := by
+              apply nonzero_coord_in_support
+              assumption
+            let lem' := mem_of_equal_on_support s₁.support s₁.coords s₂.coords x lem ch₁
+            exact lem'
+
 
 /--
 boolean equality for the quotient via lifting
@@ -370,8 +382,9 @@ def coordinates (x₀ : X) : FreeModule R X →  R := by
 end FreeModule
 end DecidableEqQuotFreeModule
 
+/-! IV. Module structure  -/
 section ModuleStruture
-/-! IV. Module structure -/
+
 
 open FormalSum
 namespace FormalSum
@@ -638,8 +651,13 @@ end FreeModule
 
 end ModuleStruture
 
+/-! V. Equivalent definition of the relation via moves 
+  * define elementary moves on formal sums 
+  * show coordinates equal if and only if related by elementary moves
+  * hence can define map on Free Module when invariant under elementary moves 
+  -/
+
 section ElementaryMoves
-/-! V. Equivalent definition of the relation via moves-/
 
 open FormalSum
 /-- Elementary moves for formal sums -/

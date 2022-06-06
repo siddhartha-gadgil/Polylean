@@ -128,14 +128,16 @@ instance {k: Nat} : DecideForall (Fin k) :=
 
 instance {α : Type}[dfa: DecideForall α]{p : α → Prop}[DecidablePred p]: Decidable (∀ x : α, p x) := dfa.decideForall p
 
-
+section Examples
 example : ∀ x : Fin 3, x + 0 = x := by decide
 
 example : ∀ x y : Fin 3, x + y = y + x := by decide
 
 theorem Zmod3.assoc {n: Nat} :
   ∀ x y z : Fin 2, (x + y) + z = x + (y + z) := by decide
+end Examples
 
+section CompositeEnumeration
 def decideProd {α β : Type}[dfa : DecideForall α][dfb : DecideForall β] (p:α × β → Prop)[DecidablePred p] : Decidable (∀ xy :α × β, p xy) := 
     if c: (∀ x: α, ∀ y : β, p (x, y)) 
     then
@@ -215,3 +217,4 @@ instance funEnum {α β : Type}[dfa : DecideForall α][dfb : DecidableEq β] : D
 
 example : ∀ xy : (Fin 3) × (Fin 2), 
       xy.1.val + xy.2.val  = xy.2.val + xy.1.val := by decide
+end CompositeEnumeration

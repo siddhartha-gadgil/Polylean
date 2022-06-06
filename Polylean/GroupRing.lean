@@ -8,6 +8,9 @@ variable {R : Type} [Ring R] [DecidableEq R]
 
 variable {G: Type} [Group G] [DecidableEq G]
 
+/-! Multiplying formal sums -/
+section FormalSumMul
+
 /-- multiplication by a monomial -/
 def FormalSum.mulMonom (b: R)(h: G) : FormalSum R G → FormalSum R G 
 | [] => []
@@ -18,11 +21,13 @@ def FormalSum.mul(fst: FormalSum R G) : FormalSum R G → FormalSum R G
 | [] =>    []
 | (b, h) :: ys =>  
   (FormalSum.mulMonom  b h fst) ++ (mul fst ys)
+end FormalSumMul
 
-open FormalSum
-
+/-! Group Ring
+-/
 namespace GroupRing
 
+open FormalSum
 /-- multiplication by the zero monomial -/
 theorem mul_monom_zero (g x₀: G)(s: FormalSum R G): coords (mulMonom 0 g s) x₀ = 0 := by
   induction s with
