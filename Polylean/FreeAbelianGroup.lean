@@ -5,7 +5,7 @@ import Polylean.ProductGroups
 import Polylean.EnumDecide
 open SubNegMonoid
 
-/-
+/-!
 The section `Zhom` consists of results related to the scalar integer multiplication homomorphism of additive groups.
 
 The later part contains the theory of free Abelian groups, with `ℤ` as an example, as well as a proof that the product of free Abelian groups is free.
@@ -183,6 +183,8 @@ class FreeAbelianGroup(F: Type)[AddCommGroup F] (X: Type) where
     (f g : F → A)[AddCommGroup.Homomorphism f][AddCommGroup.Homomorphism g] :
        f ∘ i = g ∘ i  → f = g 
 
+section Homomorphisms
+
 theorem unique_extension{F: Type}[AddCommGroup F] {X: Type}[fgp : FreeAbelianGroup F X]{A: Type}[AddCommGroup A] (f g : F → A)[AddCommGroup.Homomorphism f][AddCommGroup.Homomorphism g] : f ∘ fgp.i = g ∘ fgp.i  → f = g := fgp.unique_extension f g
 
 @[inline] def fromBasis {F: Type}[AddCommGroup F]{X: Type}[fag : FreeAbelianGroup F X]{A: Type}[AddCommGroup A] (f: X → A) : F → A := by
@@ -216,7 +218,9 @@ instance fromBasisHom' {F: Type}[AddCommGroup F]
     (fag.inducedMap A f) := by
     apply fag.induced_hom
 
+end Homomorphisms
 
+section ZasFree
 def unitBasis : Unit → ℤ  := fun _ => 1
 
 instance intFree : FreeAbelianGroup ℤ Unit  where
@@ -237,23 +241,11 @@ instance intFree : FreeAbelianGroup ℤ Unit  where
     let at1 := congrFun hyp ()
     simp [unitBasis] at at1
     apply unique_morphism f g at1
+end ZasFree
 
 open EnumDecide
 
--- example
-abbrev double : ℤ → ℤ := fromBasis (fun _ : Unit => 2)
-
-def dblHom : AddCommGroup.Homomorphism (double ) := inferInstance
-
-abbrev egAction : Fin 2 → ℤ → ℤ 
-| ⟨0, _⟩ => fromBasis (fun _ : Unit => 1)
-| ⟨1, _⟩ => fromBasis (fun _ : Unit => -1)
-
-def egHom₀  : AddCommGroup.Homomorphism (egAction 0) := inferInstance
-
-
--- decidability
-
+section DecideHomsEqual
 def decideHomsEqual{F: Type}[AddCommGroup F] (X: Type)[fgp : FreeAbelianGroup F X] {A: Type}[AddCommGroup A][DecidableEq A][DecideForall X] (f g : F → A)[AddCommGroup.Homomorphism f][AddCommGroup.Homomorphism g] : Decidable (f = g) := 
         if c : ∀ x : X, f (fgp.i x) = g (fgp.i x) then 
         by
@@ -276,6 +268,19 @@ instance decHomsEqual{F: Type}[AddCommGroup F]
     (f g : F → A)[AddCommGroup.Homomorphism f][AddCommGroup.Homomorphism g] :
       Decidable (f = g) := by apply decideHomsEqual X 
 
+end DecideHomsEqual
+
+section Examples
+abbrev double : ℤ → ℤ := fromBasis (fun _ : Unit => 2)
+
+def dblHom : AddCommGroup.Homomorphism (double ) := inferInstance
+
+abbrev egAction : Fin 2 → ℤ → ℤ 
+| ⟨0, _⟩ => fromBasis (fun _ : Unit => 1)
+| ⟨1, _⟩ => fromBasis (fun _ : Unit => -1)
+
+def egHom₀  : AddCommGroup.Homomorphism (egAction 0) := inferInstance
+
 -- proof of being an action
 
 def egActionBasis' : Fin 2 → Unit → ℤ 
@@ -294,6 +299,7 @@ def egHom'' (x y: Fin 2)  :
 theorem egIsAction: ∀ (x y: Fin 2), 
   (egAction' x) ∘ (egAction' y) = egAction' (x + y) := by decide -- works!
 
+end Examples
 section Product
 
 variable {A B : Type _} [AddCommGroup A] [AddCommGroup B]
