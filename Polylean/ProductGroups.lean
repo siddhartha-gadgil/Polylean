@@ -26,13 +26,15 @@ instance : AutAction Q K trivial_action :=
 def trivial_cocycle : Q → Q → K
   | _, _ => 0
 
-instance : @Cocycle Q K _ _ trivial_action _ trivial_cocycle :=
+instance : @Cocycle Q K _ _ trivial_cocycle :=
   {
+    α := trivial_action
+    autaction := inferInstance
     cocycleId := rfl
     cocycleCondition := λ _ _ _ => rfl
   }
 
-theorem product_comm : ∀ g h : K × Q, MetabelianGroup.mul trivial_action trivial_cocycle g h = MetabelianGroup.mul trivial_action trivial_cocycle h g := by
+theorem product_comm : ∀ g h : K × Q, MetabelianGroup.mul trivial_cocycle g h = MetabelianGroup.mul trivial_cocycle h g := by
   intro (k, q)
   intro (k', q')
   simp [MetabelianGroup.mul, trivial_cocycle]
@@ -51,7 +53,7 @@ variable {A B : Type _} [AddCommGroup A] [AddCommGroup B]
 instance directSum : AddCommGroup (A × B) :=
   Group.to_additive product_comm
 
-theorem mul {a a' : A} {b b' : B} : MetabelianGroup.mul trivial_action trivial_cocycle (a, b) (a', b') = (a + a', b + b') := by
+theorem mul {a a' : A} {b b' : B} : MetabelianGroup.mul trivial_cocycle (a, b) (a', b') = (a + a', b + b') := by
     simp [MetabelianGroup.mul, trivial_cocycle]
     rfl
 

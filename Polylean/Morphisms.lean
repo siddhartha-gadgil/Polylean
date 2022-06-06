@@ -24,11 +24,12 @@ class Group.Homomorphism {G H : Type _} [Group G] [Group H] (ϕ : G → H) where
   mul_dist : ∀ g g' : G, ϕ (g * g') = (ϕ g) * (ϕ g')
 
 
-#check Inv
-
 section Group
 
-@[simp] theorem Group.mul_left_cancel {G : Type _} [Group G] {a b c : G} : a * b = a * c → b = c := by
+universe u
+variable {G : Type u} [Group G] {a b c : G}
+
+@[simp] theorem Group.mul_left_cancel : a * b = a * c → b = c := by
   intro h
   have : b = a⁻¹ * (a * b) := by simp
   simp [h] at this
@@ -36,7 +37,7 @@ section Group
 
 instance {G : Type _} [Group G] : IsMulLeftCancel G := ⟨@Group.mul_left_cancel G _⟩
 
-@[simp] theorem Group.mul_right_cancel {G : Type _} [Group G] {a b c : G} : b * a = c * a → b = c := by
+@[simp] theorem Group.mul_right_cancel : b * a = c * a → b = c := by
   intro h
   have : b = (b * a) * a⁻¹ := by simp
   simp [h] at this
@@ -48,6 +49,20 @@ instance {G : Type _} [Group G] : IsMulRightCancel G := ⟨@Group.mul_right_canc
   have : (1 : G)⁻¹ * 1 = 1 := mul_left_inv 1
   rw [mul_one] at this
   assumption
+
+@[simp] theorem mul_left_eq_cancel : a * b = a ↔ b = 1 := by
+  apply Iff.intro
+  · intro h
+    rw [← mul_right_inj a, h, mul_one]
+  · intro h
+    rw [h, mul_one]
+
+@[simp] theorem mul_right_eq_cancel : b * a = a ↔ b = 1 := by
+  apply Iff.intro
+  · intro h
+    rw [← mul_left_inj a, h, one_mul]
+  · intro h
+    rw [h, one_mul]
 
 instance Group.to_additive {G : Type _} [Grp : Group G] (mul_comm : ∀ g h : G, g * h = h * g) : AddCommGroup G :=
   {
@@ -72,6 +87,22 @@ instance Group.to_additive {G : Type _} [Grp : Group G] (mul_comm : ∀ g h : G,
   }
 
 end Group
+
+section AddCommGroup
+
+variable {A : Type _} [AddCommGroup A] {a b c : A}
+
+@[simp] theorem add_left_eq_cancel : a + b = a ↔ b = 0 := by
+  apply Iff.intro
+  · intro h
+    rw [← add_right_inj a, h, add_zero]
+  · intro h
+    rw [h, add_zero]
+
+@[simp] theorem add_right_eq_cancel : b + a = a ↔ b = 0 := by
+  rw [add_comm]; simp
+
+end AddCommGroup
 
 namespace Group.Homomorphism
 
