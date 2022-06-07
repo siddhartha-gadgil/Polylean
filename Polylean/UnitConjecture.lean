@@ -16,29 +16,37 @@ def unit {R : Type _} [Ring R] (u : R) := ∃ v : R, v * u = (1 : R)
 def trivial_element {R G : Type _} [CommRing R] [DecidableEq R] [Group G] [DecidableEq G] (x : FreeModule R G) : Prop :=
   ∃ g : G, ¬(FreeModule.coordinates g x = 0) ∧ (∀ h : G, ¬(FreeModule.coordinates h x = 0) → h = g)
 
-abbrev R := Fin 2
-
 abbrev P := P.P
 
-abbrev RP := FreeModule R P
-
-instance ringElem: Coe P (RP) where
+instance ringElem {G : Type _} [Group G] [DecidableEq G] {R : Type _} [Ring R] [DecidableEq R] : Coe G (FreeModule R G) where
     coe g :=  ⟦[(1, g)]⟧
+
+-- action of the group on the group ring by conjugation
+instance {G : Type _} [Group G] [DecidableEq G] {R : Type _} [Ring R] [DecidableEq R] : SMul G (FreeModule R G) where
+  sMul g x := g⁻¹ * x * g
 
 end preliminaries
 
-namespace Gardam
-section constants
+section groupelements
 
 abbrev x : P := (P.x, P.e)
 abbrev y : P := (P.y, P.e)
 abbrev z : P := (P.z, P.e)
 abbrev a : P := ((0, 0, 0), P.a)
 abbrev b : P := ((0, 0, 0), P.b)
-abbrev one : RP := 1
 
+end groupelements
+
+namespace Gardam
+
+section constants
+
+abbrev R := Fin 2
+
+abbrev RP := FreeModule R P
 
 /-! The components of the non-trivial unit `α` -/
+abbrev one : RP := 1
 def p : RP := one +  x +  y +  x*y +  z⁻¹ + x*z⁻¹ + y*z⁻¹ + x*y*z⁻¹
 def q : RP := (x⁻¹*y⁻¹ : RP) + x + y⁻¹*z + z
 def r: RP := one + x + y⁻¹*z + x*y*z
@@ -48,10 +56,10 @@ def s : RP  := one + x*z⁻¹ + x⁻¹*z⁻¹ + y*z⁻¹ + y⁻¹*z⁻¹
 def α := p + (q * a) + (r * b) + (s * a * b)
  
 /-! The components of the inverse `α'` of the non-trivial unit `α` -/
-def p' : RP := x⁻¹ * (a⁻¹  * p * a)
+def p' : RP := x⁻¹ * (a • p)
 def q' : RP := -(x⁻¹ * q)
 def r' : RP := -(y⁻¹ * r)
-def s' : RP := z⁻¹ * (a⁻¹ * s * a)
+def s' : RP := z⁻¹ * (a • s)
 
 end constants
 
@@ -87,3 +95,28 @@ theorem Gardam : ∃ g : RP, unit g ∧ ¬ (trivial_element g) :=
 end verification
 
 end Gardam
+
+namespace Murray
+
+abbrev R := Fin 3
+
+abbrev RP := FreeModule R P
+
+def one : RP := 1
+def p : RP  := (one + x) * (one + y) * (z⁻¹ - z)
+def q : RP := ((one + x) * (x⁻¹ + y⁻¹) * (one - z⁻¹)) + ((one + y⁻¹) * (z - z⁻¹))
+def r : RP := ((one + y⁻¹) * (x + y) * (z - one)) + ((one + x) * (z - z⁻¹))
+def s : RP := -one * z + ((one + x + x⁻¹ + y + y⁻¹) * (z⁻¹- one))
+
+def p' := x⁻¹ * (a • p)
+def q' := -(x⁻¹ * q)
+def r' := -(y⁻¹ * r)
+def s' := z⁻¹ * (a • s)
+
+def α : RP := p + (q * a) + (r * b) + (s * a * b)
+def α' : RP := p' + (q' * a) + (r' * b) + (s' * a * b)
+
+-- works
+theorem α_is_unit : unit α := ⟨α', by native_decide⟩
+
+end Murray
