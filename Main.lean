@@ -1,4 +1,5 @@
 import Polylean
+import Polylean.UnitConjecture
 import Polylean.ConjInvLength.LengthBound
 import Polylean.ConjInvLength.Length
 import Polylean.ConjInvLength.ProvedBound
@@ -6,6 +7,7 @@ import Polylean.ConjInvLength.MemoLength
 import Polylean.ConjInvLength.LengthNode
 open Letter
 
+/-
 def main(args: List String) : IO Unit := do
   for k in [1, 2, 6] do
     let w := #[α, β, α!, β!]^k ++ #[α]
@@ -34,3 +36,10 @@ def main(args: List String) : IO Unit := do
       let l ← lengthNodes w
       IO.println s!"  using l({w}) ≤ {l}"
     IO.println ""
+-/
+
+open Murray in
+def main : IO Unit := do
+  let x := α * α'
+  IO.println s!"{x}"
+  return ()

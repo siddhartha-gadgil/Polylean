@@ -67,7 +67,7 @@ open P
 
 
 -- the function taking an element of `P` to its square, which lies in the kernel `K`
-def s : P → (Metabelian.Kernel Q K)
+def s : P → κ
   | ((p, q, r), (⟨0, _⟩, ⟨0, _⟩)) => ⟨((p + p, q + q, r + r), (⟨0, _⟩, ⟨0, _⟩)), rfl⟩
   | ((p, q, r), (⟨0, _⟩, ⟨1, _⟩)) => ⟨((0, q + q + 1, 0), (⟨0, _⟩, ⟨0, _⟩)), rfl⟩
   | ((p, q, r), (⟨1, _⟩, ⟨0, _⟩)) => ⟨((p + p + 1, 0, 0), (⟨0, _⟩, ⟨0, _⟩)), rfl⟩
@@ -80,15 +80,9 @@ theorem s_square : ∀ g : P, g ^ 2 = (s g).val := by
     show g ^ (Nat.succ 1) = g * g; rw [pow_succ, pow_one]
   apply Q.rec <;> simp [s, square_mul, Pmul] <;> simp [action, cocycle, prod, id, neg]
 
--- ℤ³ is torsion-free
-instance torsionfreeℤ3 : TorsionFreeAdditive K := inferInstance
-
--- The kernel subgroup of `P` is isomorphic to `ℤ³`
-instance isoℤ3kernel : AddCommGroup.Isomorphism K (Metabelian.Kernel Q K) := inferInstance
 
 -- the kernel is torsion-free, as a corollary
-instance kernel_torsion_free : TorsionFreeAdditive (Metabelian.Kernel Q K) := inferInstance
--- @iso_torsion_free (ℤ × ℤ × ℤ) (Metabelian.Kernel Q K) _ _ isoℤ3kernel torsionfreeℤ3
+instance kernel_torsion_free : TorsionFreeAdditive κ := inferInstance
 
 
 
@@ -138,11 +132,11 @@ instance P_torsion_free : TorsionFree P where
         Group.Homomorphism.hom_pow
       rw [← subType_hom_pow, square_tor]
     -- converting from multiplicative to additive notation
-    have mul_to_add (a : Metabelian.Kernel Q K) (n : ℕ) : a ^ n = n • a := by
+    have mul_to_add (a : κ) (n : ℕ) : a ^ n = n • a := by
       induction n with | zero => rfl | succ m ih => simp [SMul.sMul] at *; simp [pow_succ', ih]; rfl
     rw [mul_to_add] at s_tor
     -- since `s g` lies in the kernel and the kernel is torsion-free, `s g = 0`
-    have square_zero : (s g).val = (0 : Metabelian.Kernel Q K).val := congrArg _ (kernel_torsion_free.torsion_free _ n s_tor)
+    have square_zero : (s g).val = (0 : κ).val := congrArg _ (kernel_torsion_free.torsion_free _ n s_tor)
     rw [← s_square] at square_zero
     -- this means `g ^ 2 = e`, and also `g = e` because `P` has no order 2 elements
     exact square_free g square_zero

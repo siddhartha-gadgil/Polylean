@@ -9,6 +9,8 @@ The proof of the theorem `𝔽₂[P]` has non-trivial units. Together with the m
 
 section preliminaries
 
+abbrev P := P.P
+
 /-- definition of a unit -/
 def unit {R : Type _} [Ring R] (u : R) := ∃ v : R, v * u = (1 : R)
 
@@ -16,7 +18,6 @@ def unit {R : Type _} [Ring R] (u : R) := ∃ v : R, v * u = (1 : R)
 def trivial_element {R G : Type _} [CommRing R] [DecidableEq R] [Group G] [DecidableEq G] (x : FreeModule R G) : Prop :=
   ∃ g : G, ¬(FreeModule.coordinates g x = 0) ∧ (∀ h : G, ¬(FreeModule.coordinates h x = 0) → h = g)
 
-abbrev P := P.P
 
 instance ringElem {G : Type _} [Group G] [DecidableEq G] {R : Type _} [Ring R] [DecidableEq R] : Coe G (FreeModule R G) where
     coe g :=  ⟦[(1, g)]⟧
@@ -96,7 +97,7 @@ end verification
 
 end Gardam
 
-namespace Murray
+namespace MurrayChar3
 
 abbrev R := Fin 3
 
@@ -116,7 +117,42 @@ def s' := z⁻¹ * (a • s)
 def α : RP := p + (q * a) + (r * b) + (s * a * b)
 def α' : RP := p' + (q' * a) + (r' * b) + (s' * a * b)
 
--- works
 theorem α_is_unit : unit α := ⟨α', by native_decide⟩
+
+end MurrayChar3
+
+namespace Murray
+
+abbrev d : Nat := 5
+abbrev t : Int := 2
+abbrev w : Int := -3
+
+abbrev R := Fin d
+
+instance : CommRing R := inferInstance
+
+abbrev RP := FreeModule R P
+
+instance : Ring RP := inferInstance
+
+notation a " ^^ " n => gpow_rec n a
+
+def h : RP := npow_rec (d - 2) (1 - (z ^^ (1 - 2*t)))
+def p : RP := ((1 + x) * (1 + y) * h * z ^^ t) + ((1 + x) * (1 + y) * h *  z ^^ (1 - 2 *t))
+def q : RP := (z ^^ w) * ((1 + x) * (x⁻¹ + y⁻¹) + (1 + y⁻¹) * (1 + z ^^ (2*t - 1))) * h
+def r : RP := (z ^^ w) * ((1 + y⁻¹) * (x + y) * (z ^^ t) + ((1 + x) * z ^^ t) + ((1 + x) * (z ^^ (1 - t)))) * h
+def s : RP := (z ^^ (2*t - 1)) + ((4 + x + x⁻¹ + y + y⁻¹) * h)
+
+def p' := x⁻¹ * (a • p)
+def q' := -(x⁻¹ * q)
+def r' := -(y⁻¹ * r)
+def s' := z⁻¹ * (a • s)
+
+def α : RP := p + (q * a) + (r * b) + (s * a * b)
+def α' : RP := p' + (q' * a) + (r' * b) + (s' * a * b)
+
+#eval α * α' = 1
+
+-- theorem α_is_unit : unit α := ⟨α', by native_decide⟩
 
 end Murray
