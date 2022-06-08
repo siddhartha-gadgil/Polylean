@@ -36,3 +36,30 @@ elab "splitmul#" s:term : term => do
 def prodFn(n m: Nat) := splitmul# (n * (m + 2)) 
 
 #print prodFn
+
+inductive MulTree (α : Type u)[HMul α α α][Repr α] where
+  | leaf : α → MulTree α 
+  | node : MulTree α  → MulTree α  → MulTree α 
+
+def MulTree.fold {α : Type u}[HMul α α α][Repr α]  (t : MulTree α ) : α :=
+  match t with
+  | MulTree.leaf a => a
+  | MulTree.node l r =>  (fold l) * (fold r)
+  
+partial def treeM (e : Expr) : MetaM Expr := do
+  match ← mul? e with
+  | none  => mkAppM ``MulTree.leaf #[e]
+  | some (a, b) => do
+    let l ← treeM a
+    let r ← treeM b
+    mkAppM ``MulTree.node #[l, r]
+
+elab "tree#" s:term : term => do 
+  let e ← Term.elabTerm s none
+  treeM e
+
+def egTree(n m: Nat)  := tree# ((n * m) * (m + 2))
+
+#print egTree
+
+#eval MulTree.fold <| egTree 2 3
