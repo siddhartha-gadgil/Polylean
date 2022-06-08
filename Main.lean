@@ -6,6 +6,10 @@ import Polylean.ConjInvLength.ProvedBound
 import Polylean.ConjInvLength.MemoLength
 import Polylean.ConjInvLength.LengthNode
 
+set_option maxHeartbeats 10000000
+set_option maxRecDepth 1000
+set_option compiler.extract_closed false
+
 /-
 open Letter in
 def main(args: List String) : IO Unit := do
@@ -40,6 +44,7 @@ def main(args: List String) : IO Unit := do
 
 open Murray in
 def main : IO Unit := do
+  IO.println "Checking product"
   let x : Bool := α * α' == (1 : RP)
   IO.println s!"{x}"
   return ()
