@@ -63,3 +63,7 @@ def egTree(n m: Nat)  := tree# ((n * m) * (m + 2))
 #print egTree
 
 #eval MulTree.fold <| egTree 2 3
+
+def egTreeInv(n m: Nat) := (egTree n m).fold
+
+example (n m: Nat) : egTreeInv n m = (n * m) * (m + 2) := rfl
