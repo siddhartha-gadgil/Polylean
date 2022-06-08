@@ -5,9 +5,9 @@ import Polylean.ConjInvLength.Length
 import Polylean.ConjInvLength.ProvedBound
 import Polylean.ConjInvLength.MemoLength
 import Polylean.ConjInvLength.LengthNode
-open Letter
 
 /-
+open Letter in
 def main(args: List String) : IO Unit := do
   for k in [1, 2, 6] do
     let w := #[α, β, α!, β!]^k ++ #[α]
@@ -40,6 +40,6 @@ def main(args: List String) : IO Unit := do
 
 open Murray in
 def main : IO Unit := do
-  let x := α * α'
+  let x : Bool := α * α' == (1 : RP)
   IO.println s!"{x}"
   return ()

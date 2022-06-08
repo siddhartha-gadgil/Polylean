@@ -151,8 +151,6 @@ def s' := z⁻¹ * (a • s)
 def α : RP := p + (q * a) + (r * b) + (s * a * b)
 def α' : RP := p' + (q' * a) + (r' * b) + (s' * a * b)
 
-#eval α * α' = 1
-
 -- theorem α_is_unit : unit α := ⟨α', by native_decide⟩
 
 end Murray
