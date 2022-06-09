@@ -104,9 +104,11 @@ def Group.reduce {G : Type _} [Group G] [DecidableEq G] [Repr G] : (mt : MulTree
   | node l r =>
     if h:(l.right * r.left = (1 : G)) then
       match l, r with
-        | leaf lf, leaf rf => ⟨leaf (1 : G), by simp [left, right] at h; simp [MulTree.fold]; exact h⟩
-        | node ll lr, r => ⟨node ll (node lr r), by simp [MulTree.fold]; rw [mul_assoc]⟩
-        | l, node rl rr => ⟨node (node l rl) rr, by simp [MulTree.fold]; rw [mul_assoc]⟩
+        | leaf lf, leaf rf => ⟨leaf (1 : G), h⟩
+        | node ll lr, r => ⟨node ll (node lr r), by apply mul_assoc⟩
+        | l, node rl rr => ⟨node (node l rl) rr, by apply Eq.symm; apply mul_assoc⟩
     else
       match reduce l, reduce r with
-        | ⟨l_, eql⟩, ⟨r_, eqr⟩ => ⟨node l_ r_, by simp [MulTree.fold]; rw [eql, eqr]⟩
+        | ⟨l_, eql⟩, ⟨r_, eqr⟩ => ⟨node l_ r_, by
+                                  repeat (rw [MulTree.fold])
+                                  rw [eql, eqr]⟩
