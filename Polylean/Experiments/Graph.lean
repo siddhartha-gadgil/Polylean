@@ -12,7 +12,7 @@ structure Graph(V: Type) (E: Type) where
   barInv : bar ∘ bar = id
   barNoFP : ∀ e: E, bar e ≠ e
 
-def term{V: Type}{E: Type}(graph: Graph V E): E → V :=
+@[inline] def term{V: Type}{E: Type}(graph: Graph V E): E → V :=
   fun e => graph.init (graph.bar e)
 
 example : Graph Unit Bool:= 
