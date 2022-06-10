@@ -10,10 +10,10 @@ def induced_map {A : Type _} [AddCommGroup A] (x y z : A) : ℤ × ℤ × ℤ �
  let f : Unit ⊕ Unit ⊕ Unit → A := (fun | Sum.inl _ => x | Sum.inr (Sum.inl _) => y | Sum.inr (Sum.inr _) => z)
  FreeAbelianGroup.inducedMap A f
 
-theorem induced_ext {A : Type _} [AddCommGroup A] (x y z : A) :  ((induced_map x y z) (1, 0, 0) = x ∧ (induced_map x y z) (0, 1, 0) = y ∧ (induced_map x y z) (0, 0, 1) = z) :=
+theorem induced_ext {A : Type _} [AddCommGroup A] (x y z : A) (ϕ : ℤ × ℤ × ℤ → A) (h : ϕ = induced_map x y z) :  (ϕ (1, 0, 0) = x ∧ ϕ (0, 1, 0) = y ∧ ϕ (0, 0, 1) = z) :=
   let f : Unit ⊕ Unit ⊕ Unit → A := (fun | Sum.inl _ => x | Sum.inr (Sum.inl _) => y | Sum.inr (Sum.inr _) => z)
   let f_extends := ℤ3Free.induced_extends f
-  ⟨congrFun f_extends (Sum.inl ()), congrFun f_extends (Sum.inr (Sum.inl ())), congrFun f_extends (Sum.inr (Sum.inr ()))⟩
+  ⟨h ▸ congrFun f_extends (Sum.inl ()), h ▸ congrFun f_extends (Sum.inr (Sum.inl ())), h ▸ congrFun f_extends (Sum.inr (Sum.inr ()))⟩
 
 instance ind_hom {A : Type _} [AddCommGroup A] {x y z : A} : AddCommGroup.Homomorphism (induced_map x y z) := ℤ3Free.induced_hom A _
 
@@ -24,12 +24,7 @@ example : (∀ (A : Type _) [AddCommGroup A], ∀ x y z : A, x + y + z + (-x + -
   · intro h
     intro A _ x y z
     let ϕ := induced_map x y z
-    let ⟨hx, hy, hz⟩ := induced_ext x y z
-    have : induced_map x y z = ϕ := rfl
-    rw [this] at hx hy hz
+    let ⟨hx, hy, hz⟩ := induced_ext x y z ϕ rfl
     have eqn := congrArg ϕ h
-    have inst : AddCommGroup.Homomorphism ϕ := inferInstance
-    have hom_push : ϕ (e₁ + e₂ + e₃ + (-e₁ + -e₃)) = (ϕ e₁ + ϕ e₂ + ϕ e₃ + (-ϕ e₁ + - ϕ e₃)) := by
-      simp only [inst.add_dist, inst.neg_push]
-    simp only [hx, hy, hz] at hom_push
-    rw [← hom_push, this, eqn, hy]
+    simp only [AddCommGroup.Homomorphism.add_dist, AddCommGroup.Homomorphism.neg_push, hx, hy, hz] at eqn
+    assumption
