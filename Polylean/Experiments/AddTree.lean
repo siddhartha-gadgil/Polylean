@@ -110,3 +110,31 @@ partial def treeM (e : Expr) : MetaM Expr := do
   | some a => mkAppM ``AddTree.negLeaf #[e]
   | none  =>
     mkAppM ``AddTree.leaf #[e]
+
+def IndexAddTree.foldMap {α : Type u}[AddCommGroup α][Repr α] 
+  (t : IndexAddTree)(basisImages: Array α)(h: basisImages.size > 0) : α :=
+  match t with
+  | AddTree.leaf i => basisImages.get (Fin.ofNat' i h)
+  | AddTree.node l r =>
+      let lImage := foldMap l basisImages h
+      let rImage := foldMap r basisImages h  
+      lImage + rImage
+  | AddTree.negLeaf i => -basisImages.get (Fin.ofNat' i h)
+  | AddTree.subNode l r => 
+      let lImage := foldMap l basisImages h
+      let rImage := foldMap r basisImages h  
+      lImage - rImage
+
+def IndexAddTree.foldMapMul {α : Type u}[CommGroup α][Repr α] 
+  (t : IndexAddTree)(basisImages: Array α)(h: basisImages.size > 0) : α :=
+  match t with
+  | AddTree.leaf i => basisImages.get (Fin.ofNat' i h)
+  | AddTree.node l r =>
+      let lImage := foldMapMul l basisImages h
+      let rImage := foldMapMul r basisImages h  
+      lImage * rImage
+  | AddTree.negLeaf i => (basisImages.get (Fin.ofNat' i h))⁻¹
+  | AddTree.subNode l r => 
+      let lImage := foldMapMul l basisImages h
+      let rImage := foldMapMul r basisImages h  
+      lImage / rImage
