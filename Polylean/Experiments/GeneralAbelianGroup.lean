@@ -15,9 +15,13 @@ inductive Vector (T : Type _) : ℕ → Type
   | nil : Vector T Nat.zero
   | cons : T → {n : ℕ} → Vector T n → Vector T (Nat.succ n)
 
-def Vector.map (ϕ : T → S) {n : ℕ} : Vector T n → Vector S n
+def Vector.map (ϕ : T → S) : Vector T n → Vector S n
   | nil => nil
   | cons t v => cons (ϕ t) (map ϕ v)
+
+theorem Vector.mapcomp (ϕ : T → S) (ψ : S → R) {n : ℕ} : (v : Vector T n) → Vector.map ψ (Vector.map ϕ v) = Vector.map (ψ ∘ ϕ) v
+  | nil => rfl
+  | cons t v' => by simp only [map]; rw [mapcomp _ _ v']; rfl
 
 instance : AddCommGroup Unit :=
   {
@@ -41,7 +45,9 @@ def ℤpowgroup : (n : ℕ) → AddCommGroup (ℤ ^ n)
     | Nat.zero => inferInstanceAs (AddCommGroup Unit)
     | Nat.succ n => @DirectSum.directSum ℤ (pow_times ℤ n) _ (ℤpowgroup n)
 
-instance (n : ℕ) : AddCommGroup (ℤ ^ n) := ℤpowgroup n
+instance ℤgrp (n : ℕ) : AddCommGroup (ℤ ^ n) := ℤpowgroup n
+
+instance (n : ℕ) : AddCommGroup (pow_times ℤ n) := ℤpowgroup n
 
 instance : FreeAbelianGroup Unit Empty :=
   {
@@ -57,7 +63,9 @@ def ℤpowfreegroup (n : ℕ) : FreeAbelianGroup (ℤ ^ n) (pow_sum Unit n)  :=
     | Nat.zero => inferInstanceAs (FreeAbelianGroup Unit Empty)
     | Nat.succ n => @prodFree _ _ _ (inferInstanceAs (AddCommGroup (ℤ ^ n))) _ _ _ (ℤpowfreegroup n)
 
-instance (n : ℕ) : FreeAbelianGroup (ℤ ^ n) (pow_sum Unit n) := ℤpowfreegroup n
+instance ℤfreegrp (n : ℕ) : FreeAbelianGroup (ℤ ^ n) (pow_sum Unit n) := ℤpowfreegroup n
+
+instance (n : ℕ) : FreeAbelianGroup (pow_times ℤ n) (pow_sum Unit n) := ℤpowfreegroup n
 
 def unit_pow_vect {T : Type _} {n : ℕ} (v : Vector T n) : pow_sum Unit n → T :=
   match n with
@@ -75,26 +83,26 @@ def zeros : (n : ℕ) → ℤ ^ n
 
 def ℤbasis : (n : ℕ) → Vector (ℤ ^ n) n
   | Nat.zero => Vector.nil
-  | Nat.succ n => Vector.cons (Prod.mk (1 : ℤ) (zeros n)) (ℤbasis n |>.map (Prod.mk (0 : ℤ) .))
-
-#check @FreeAbelianGroup.induced_extends
-#check @FreeAbelianGroup.i
-#check @FreeAbelianGroup.induced_hom
+  | Nat.succ n => Vector.cons (Prod.mk (1 : ℤ) (zeros n)) (ℤbasis n |>.map ι₂)
 
 @[simp] theorem zero_zero : (n : ℕ) → (0 : ℤ ^ n) = (zeros n)
   | Nat.zero => rfl
   | Nat.succ m => by rw [zeros, ← zero_zero m]; rfl
 
-theorem induced_ext {A : Type _} [AddCommGroup A] (n : ℕ) (v : Vector A n) : (ℤbasis n |>.map (induced_map v)) = v :=
-  match n, v with
-    | Nat.zero, Vector.nil => rfl
-    | Nat.succ m, Vector.cons a v' => by
-      let induced_extends := @FreeAbelianGroup.induced_extends (ℤ ^ (Nat.succ m)) _ _ _ _ _ (unit_pow_vect (Vector.cons a v'))
-      simp [Vector.map]
-      apply And.intro
-      · have i_val : @FreeAbelianGroup.i _ _ (Unit ⊕ pow_sum Unit m) _ (Sum.inl ()) = Prod.mk (1 : ℤ) (zeros m) := by simp [FreeAbelianGroup.i, ι]
-        rw [← i_val]
-        apply congrFun induced_extends (Sum.inl ())
-      · sorry
-
 instance ind_hom {A : Type _} [AddCommGroup A] {n : ℕ} (v : Vector A n) : AddCommGroup.Homomorphism (induced_map v) := FreeAbelianGroup.induced_hom A _
+
+theorem map_basis {A : Type _} [AddCommGroup A] : {m : ℕ} → (v : Vector A m) → (Vector.map (FreeAbelianGroup.inducedMap A (unit_pow_vect v)) (ℤbasis m)) = v
+  | _, Vector.nil => rfl
+  | Nat.succ m, Vector.cons t v' => by
+    simp [Vector.map]
+    apply And.intro
+    · have : Prod.mk (1 : ℤ) (zeros m) = (ℤfreegrp (Nat.succ m)).i (Sum.inl () : Unit ⊕ (pow_sum Unit m)) := by
+        rw [← zero_zero, FreeAbelianGroup.left_incl]; apply congrArg; rfl
+      rw [this]
+      apply ( congrFun ((ℤfreegrp (Nat.succ m)).induced_extends (unit_pow_vect (Vector.cons t v'))) (Sum.inl ()) )
+    · have ih := map_basis v'
+      rw [Vector.mapcomp, ← ih]
+      apply congrFun
+      apply congrArg
+      have : unit_pow_vect v' = (unit_pow_vect (Vector.cons t v')) ∘ Sum.inr := by apply funext; intro; simp [unit_pow_vect]
+      rw [ih, this, FreeAbelianGroup.induced_right]
