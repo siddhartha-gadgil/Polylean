@@ -57,7 +57,7 @@ def AddTree.foldMul {α : Type u}[CommGroup α][Repr α]  (t : AddTree α ) : α
 
 abbrev IndexAddTree := AddTree Nat 
 
-def AddTree.indexTree {α : Type u}[Repr α][DecidableEq α](t: AddTree α)
+@[simp] def AddTree.indexTree {α : Type u}[Repr α][DecidableEq α](t: AddTree α)
   (accum : Array α := #[]) : 
       IndexAddTree × (Array α) := 
   match t with
@@ -111,7 +111,7 @@ partial def treeM (e : Expr) : MetaM Expr := do
   | none  =>
     mkAppM ``AddTree.leaf #[e]
 
-def IndexAddTree.foldMap {α : Type u}[AddCommGroup α][Repr α] 
+@[simp] def IndexAddTree.foldMap {α : Type u}[AddCommGroup α][Repr α] 
   (t : IndexAddTree)(basisImages: Array α)(h: basisImages.size > 0) : α :=
   match t with
   | AddTree.leaf i => basisImages.get (Fin.ofNat' i h)
@@ -125,7 +125,7 @@ def IndexAddTree.foldMap {α : Type u}[AddCommGroup α][Repr α]
       let rImage := foldMap r basisImages h  
       lImage - rImage
 
-def IndexAddTree.foldMapMul {α : Type u}[CommGroup α][Repr α] 
+@[simp] def IndexAddTree.foldMapMul {α : Type u}[CommGroup α][Repr α] 
   (t : IndexAddTree)(basisImages: Array α)(h: basisImages.size > 0) : α :=
   match t with
   | AddTree.leaf i => basisImages.get (Fin.ofNat' i h)
