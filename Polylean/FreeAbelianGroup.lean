@@ -384,7 +384,7 @@ theorem FreeAbelianGroup.induced_right (G : Type _) [AddCommGroup G] (f : X_A �
 
 theorem FreeAbelianGroup.left_incl (xa : X_A) : FreeAbelianGroup.i ((Sum.inl xa) : X_A ⊕ X_B) = (FAb_A.i xa, (0 : B)) := by simp [i, ι]
 
-theorem FreeAbelianGroup.right_incl (xb : X_B) : FreeAbelianGroup.i ((Sum.inr xb) : X_A ⊕ X_B) = ((0 : A), FAb_B.i xb) := sorry
+theorem FreeAbelianGroup.right_incl (xb : X_B) : FreeAbelianGroup.i ((Sum.inr xb) : X_A ⊕ X_B) = ((0 : A), FAb_B.i xb) := by simp [i, ι]
 
 end Product
 
