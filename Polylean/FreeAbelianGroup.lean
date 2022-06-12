@@ -310,7 +310,7 @@ def ι : (X_A ⊕ X_B) → A × B
   | Sum.inl x_a => (FAb_A.i x_a, 0)
   | Sum.inr x_b => (0, FAb_B.i x_b)
 
-def inducedMap (G : Type _) [AddCommGroup G] (f : X_A ⊕ X_B → G) : A × B → G
+def inducedProdMap (G : Type _) [AddCommGroup G] (f : X_A ⊕ X_B → G) : A × B → G
   | (a, b) =>
     let f_A : X_A → G := f ∘ Sum.inl
     let f_B : X_B → G := f ∘ Sum.inr
@@ -321,10 +321,10 @@ def inducedMap (G : Type _) [AddCommGroup G] (f : X_A ⊕ X_B → G) : A × B �
 instance prodFree : FreeAbelianGroup (A × B) (X_A ⊕ X_B)  :=
   {
     i := ι
-    inducedMap := inducedMap 
+    inducedMap := inducedProdMap
     induced_extends := by
       intro G GrpG f
-      simp [inducedMap]
+      simp [inducedProdMap]
       apply funext
       intro x
       simp
@@ -344,7 +344,7 @@ instance prodFree : FreeAbelianGroup (A × B) (X_A ⊕ X_B)  :=
       apply AddCommGroup.Homomorphism.mk
       intro (a, b)
       intro (a', b')
-      simp [inducedMap, DirectSum.mul]
+      simp [inducedProdMap, DirectSum.mul]
       rw [add_assoc, add_assoc, add_left_cancel_iff, ← add_assoc, ← add_assoc, add_right_cancel_iff, add_comm]
     unique_extension := by
       intro G GrpG f g Homf Homg
@@ -373,6 +373,18 @@ instance prodFree : FreeAbelianGroup (A × B) (X_A ⊕ X_B)  :=
       have bcoordeq : f (0, b) = g (0, b) := congrFun B_unique b
       rw [acoordeq, bcoordeq]
   }
+
+theorem FreeAbelianGroup.induced_left (G : Type _) [AddCommGroup G] (f : X_A ⊕ X_B → G) :
+  (FreeAbelianGroup.inducedMap G f) ∘ (ι₁ : A → A × B) = (FAb_A.inducedMap G (f ∘ Sum.inl)) := by
+    apply funext; intro a; simp [FreeAbelianGroup.inducedMap, inducedProdMap]
+
+theorem FreeAbelianGroup.induced_right (G : Type _) [AddCommGroup G] (f : X_A ⊕ X_B → G) :
+  (FreeAbelianGroup.inducedMap G f) ∘ (ι₂ : B → A × B) = (FAb_B.inducedMap G (f ∘ Sum.inr)) := by
+    apply funext; intro b; simp [FreeAbelianGroup.inducedMap, inducedProdMap]
+
+theorem FreeAbelianGroup.left_incl (xa : X_A) : FreeAbelianGroup.i ((Sum.inl xa) : X_A ⊕ X_B) = (FAb_A.i xa, (0 : B)) := by simp [i, ι]
+
+theorem FreeAbelianGroup.right_incl (xb : X_B) : FreeAbelianGroup.i ((Sum.inr xb) : X_A ⊕ X_B) = ((0 : A), FAb_B.i xb) := sorry
 
 end Product
 

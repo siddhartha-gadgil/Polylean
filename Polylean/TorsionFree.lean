@@ -44,7 +44,7 @@ instance {A B : Type _} [AddCommGroup A] [AddCommGroup B] [TorsionFreeAdditive A
     have scal_mul_pair : ∀ m : ℕ, m • (a, b) = (m • a, m • b) := by
       intro m
       induction m with
-        | zero => simp [SMul.sMul, SubNegMonoid.gsmul_zero']; rfl
+        | zero => simp [SMul.sMul, SubNegMonoid.gsmul_zero']
         | succ m ih => simp [SMul.sMul] at *; simp [ih]
     show (n.succ • (a, b)) = (0, 0) → ((a, b) = (0, 0))
     have prod_eq {α β : Type _} (a c : α) (b d : β) : (a, b) = (c, d) ↔ (a = c) ∧ (b = d) := by simp

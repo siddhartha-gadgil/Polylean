@@ -86,18 +86,16 @@ abbrev ι₁ [Zero A] [Zero B] : A → A × B := λ a => (a, 0)
 
 abbrev ι₂ [Zero A] [Zero B] : B → A × B := λ b => (0, b)
 
+instance {A B : Type _} [AddCommGroup A] [AddCommGroup B] : AddCommGroup.Homomorphism (@ι₁ A B _ _) where
+  add_dist := by intros; simp
+
+instance {A B : Type _} [AddCommGroup A] [AddCommGroup B] : AddCommGroup.Homomorphism (@ι₂ A B _ _) where
+  add_dist := by intros; simp
+
 instance proj₁ {G : Type _} [AddCommGroup G] (ϕ : A × B → G) [Homϕ : AddCommGroup.Homomorphism ϕ] : AddCommGroup.Homomorphism (ϕ ∘ ι₁) where
-  add_dist := by
-    intro a a'
-    simp [ι₁]
-    rw [← Homϕ.add_dist]
-    simp
+  add_dist := by intros; simp [ι₁]
 
 instance proj₂ {G : Type _} [AddCommGroup G] (ϕ : A × B → G) [Homϕ : AddCommGroup.Homomorphism ϕ] : AddCommGroup.Homomorphism (ϕ ∘ ι₂) where
-  add_dist := by
-    intro b b'
-    simp [ι₂]
-    rw [← Homϕ.add_dist]
-    simp
+  add_dist := by intros; simp [ι₂]
 
 end Homomorphisms
