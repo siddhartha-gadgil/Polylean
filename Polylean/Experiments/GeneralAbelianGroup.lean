@@ -1,4 +1,7 @@
 import Polylean.FreeAbelianGroup
+import Polylean.Experiments.AddTree
+
+section defs
 
 def pow_times (T : Type _) : ℕ → Type _
   | Nat.zero => Unit
@@ -18,6 +21,68 @@ inductive Vector (T : Type _) : ℕ → Type
 def Vector.map (ϕ : T → S) : Vector T n → Vector S n
   | nil => nil
   | cons t v => cons (ϕ t) (map ϕ v)
+
+def Vector.get : Vector T n → Fin n → T
+  | Vector.cons a _, ⟨Nat.zero, _⟩ => a
+  | Vector.cons _ as, ⟨Nat.succ m, h⟩ => get as ⟨m, Nat.le_of_succ_le_succ h⟩
+
+theorem Vector.get_map (f : T → S) (v : Vector T n) (fn : Fin n) : f (v.get fn) = (v.map f).get fn := by
+  induction v with
+    | nil => cases fn; contradiction
+    | cons a v' ih =>
+      match fn with
+        | ⟨Nat.zero, _⟩ => rw [get, map, get]
+        | ⟨Nat.succ m, _⟩ => rw [get, map, get, ih]
+
+def Vector.toList {A : Type _} {n : ℕ} : Vector A n → List A
+  | Vector.nil => List.nil
+  | Vector.cons a v' => List.cons a (toList v')
+
+def Vector.toArray {A : Type _} {n : ℕ} : Vector A n → Array A :=
+  λ v => v.toList.toArray
+
+theorem Vector.listlength {A : Type _} {n : ℕ} (v : Vector A n) : v.toList.length = n := by
+  induction v with
+    | nil => rfl
+    | cons _ _ ih => rw [toList, List.length, ih]
+
+theorem List.arraylist {A : Type _} (l : List A) : l.toArray.toList = l := by
+  induction l with
+    | nil => rfl
+    | cons _ _ ih =>
+      sorry
+      -- simp [toArray, toArrayAux, Array.mkEmpty, Array.push, concat]
+      -- simp [toArray, Array.mkEmpty] at ih
+
+theorem Array.dataarray {A : Type _} (a : Array A) : a.data.toArray = a := by
+  sorry
+
+theorem List.arraydata {A : Type _} (l : List A) : l.toArray.data = l := sorry
+
+theorem Array.listarray {A : Type _} (a : Array A) : a.toList.toArray = a := by
+  match a with
+    | ⟨l⟩ =>
+      -- apply congrArg Array.mk
+      induction l with
+        | nil => rfl
+        | cons _ _ ih =>
+          -- [toList, foldr]
+          sorry
+
+
+theorem List.arraysize {A: Type _} (l : List A) : l.toArray.size = l.length := by
+  rw [Array.size, arraydata]
+
+theorem Vector.arraysize {A : Type _} {n : ℕ} (v : Vector A n) : v.toArray.size = n := by
+  rw [toArray, List.arraysize, listlength]
+
+theorem Array.getfromvector (v : Vector A n) (fn : Fin _) : Array.get (v.toArray) fn = v.get ((Vector.arraysize v) ▸ fn) := by
+  induction v with
+    | nil => cases fn; contradiction
+    | cons a v' ih =>
+      simp [Vector.toArray, Array.get]
+      have := List.arraydata (Vector.toList (Vector.cons a v'))
+      sorry
 
 theorem Vector.mapcomp (ϕ : T → S) (ψ : S → R) {n : ℕ} : (v : Vector T n) → Vector.map ψ (Vector.map ϕ v) = Vector.map (ψ ∘ ϕ) v
   | nil => rfl
@@ -74,9 +139,6 @@ match n with
     match v with
       | Vector.cons t v' => λ s => Sum.casesOn s (fun | Unit.unit => t) (unit_pow_vect v')
 
-def induced_map {A : Type _} [AddCommGroup A] {n : ℕ} (v : Vector A n) : ℤ^n → A :=
-FreeAbelianGroup.inducedMap A (unit_pow_vect v)
-
 def zeros : (n : ℕ) → ℤ ^ n
 | Nat.zero => ()
 | Nat.succ n => Prod.mk (0 : ℤ) (zeros n)
@@ -88,6 +150,13 @@ def ℤbasis : (n : ℕ) → Vector (ℤ ^ n) n
 theorem zero_zero : (n : ℕ) → (0 : ℤ ^ n) = (zeros n)
 | Nat.zero => rfl
 | Nat.succ m => by rw [zeros, ← zero_zero m]; rfl
+
+end defs
+
+section
+
+def induced_map {A : Type _} [AddCommGroup A] {n : ℕ} (v : Vector A n) : ℤ^n → A :=
+FreeAbelianGroup.inducedMap A (unit_pow_vect v)
 
 instance ind_hom {A : Type _} [AddCommGroup A] {n : ℕ} (v : Vector A n) : AddCommGroup.Homomorphism (induced_map v) := FreeAbelianGroup.induced_hom A _
 
@@ -106,3 +175,80 @@ theorem map_basis {A : Type _} [AddCommGroup A] : {m : ℕ} → (v : Vector A m)
     apply congrArg
     have : unit_pow_vect v' = (unit_pow_vect (Vector.cons t v')) ∘ Sum.inr := by apply funext; intro; simp [unit_pow_vect]
     rw [ih, this, FreeAbelianGroup.induced_right]
+
+end
+
+-- adding here for the timebeing to avoid breaking the rest of the code
+@[simp] theorem AddCommGroup.Homomorphism.neg_dist {A B : Type _} [AddCommGroup A] [AddCommGroup B] (ϕ : A → B) [AddCommGroup.Homomorphism ϕ]
+  : ∀ a a' : A, ϕ (a - a') = ϕ a - ϕ a' := by
+  intros
+  repeat (rw [sub_eq_add_neg])
+  simp
+
+section AddTreeGroup
+
+variable (t : IndexAddTree)
+variable {A : Type _} [AddCommGroup A] [Repr A]
+variable {n : ℕ} (v : Vector A (n.succ)) -- basisImages
+
+instance prodrepr (A B : Type _) [Repr A] [Repr B] : Repr (A × B) := inferInstance
+
+def ℤprodrepr : (n : ℕ) → Repr (ℤ ^ n)
+    | Nat.zero => inferInstanceAs (Repr Unit)
+    | Nat.succ m => @prodrepr ℤ (ℤ ^ m) _ (ℤprodrepr m)
+
+instance (n : ℕ) : Repr (ℤ ^ n) := ℤprodrepr n
+
+def vectsizepos {α : Type _} {m : ℕ} (w : Vector α m.succ) : w.toArray.size > 0 := by
+  rw [GT.gt]
+  apply Eq.substr (Vector.arraysize w)
+  apply Nat.zero_lt_succ
+
+theorem IndexAddTree.trees_consistent : IndexAddTree.foldMap t v.toArray (vectsizepos v) =
+                         (induced_map v) (IndexAddTree.foldMap t (ℤbasis n.succ).toArray (vectsizepos _)) := by
+  induction t with
+    | leaf a =>
+      simp [foldMap]
+      rw [Array.getfromvector, Array.getfromvector, Vector.get_map (induced_map v), induced_map, map_basis]
+      apply congrArg
+      sorry
+    | negLeaf a =>
+      simp [foldMap]
+      rw [Array.getfromvector, Array.getfromvector, Vector.get_map (induced_map v), induced_map, map_basis]
+      apply congrArg
+      sorry
+    | node _ _ ihl ihr => simp [ihl, ihr, foldMap]
+    | subNode _ _ ihl ihr => simp [ihl, ihr, foldMap]
+
+#check Array.get
+#print Fin.ofNat'
+#check Vector.get_map
+
+end AddTreeGroup
+
+
+section formalexample
+
+def n : ℕ := 3
+
+open Vector in
+def ν {A : Type _} [AddCommGroup A] (v : Vector A n) :=
+    match v with
+      | cons x (cons y (cons z nil)) => x + (y - z) + z - x = y
+
+theorem valid_iff_free_basis : (∀ {A : Type _} [AddCommGroup A], ∀ v : Vector A n, ν v) ↔ (ν (ℤbasis n)) := by
+  apply Iff.intro
+  · intro h
+    apply h
+  · intro h
+    intro A _ v
+    have ϕ := induced_map v
+    have := congrArg ϕ h
+    simp only [ι₁, ι₂, zeros] at this
+    simp only [AddCommGroup.Homomorphism.add_dist] at this
+    sorry
+
+theorem eqn_valid {A : Type _} [AddCommGroup A] : ∀ v : Vector A n, ν v :=
+  (Iff.mpr valid_iff_free_basis) rfl
+
+end formalexample
