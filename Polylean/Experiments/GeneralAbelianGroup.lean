@@ -16,18 +16,38 @@ def pow_sum (T : Type _) : ℕ → Type _
 
 section arrays_lists
 
-theorem List.arraylist {A : Type _} (l : List A) : l.toArray.toList = l := by
+-- def Array.get' {α : Type _} (a : Array α) {n : ℕ} (h : a.size = n) (i : ℕ) (hi : i < n) : α :=
+--  Array.get a ⟨i, Eq.substr h hi⟩
+
+section get'
+
+variable {α : Type _} (l : List α) {n : ℕ} (h : l.length = n)
+
+def List.get' (i : ℕ) (hi : i < n) : α :=
+  List.get l ⟨i, Eq.substr h hi⟩
+
+@[simp] theorem List.get'_zero (hi : Nat.zero < n) : l.get' h Nat.zero hi = l.head (List.ne_nil_of_length_pos (Eq.substr h hi)) := by
+  match l with
+    | nil => subst h; contradiction
+    | cons _ _ => rfl
+
+-- theorem List.get'_succ (hd : α) (tl : List α) (hyp_len : (hd :: tl).length = n) (i : ℕ) (hi : Nat.succ i < n) : (hd :: tl).get' hyp_len i.succ hi =
+--  tl.get' _ i _ := sorry
+
+end get'
+
+@[simp] theorem Array.dataarray {A : Type _} (a : Array A) : a.data.toArray = a := by
+  sorry
+
+@[simp] theorem List.arraydata {A : Type _} (l : List A) : l.toArray.data = l := sorry
+
+@[simp] theorem List.arraylist {A : Type _} (l : List A) : l.toArray.toList = l := by
   induction l with
     | nil => rfl
     | cons _ _ ih =>
       sorry
 
-theorem Array.dataarray {A : Type _} (a : Array A) : a.data.toArray = a := by
-  sorry
-
-theorem List.arraydata {A : Type _} (l : List A) : l.toArray.data = l := sorry
-
-theorem Array.listarray {A : Type _} (a : Array A) : a.toList.toArray = a := by
+@[simp] theorem Array.listarray {A : Type _} (a : Array A) : a.toList.toArray = a := by
   match a with
     | ⟨l⟩ =>
       -- apply congrArg Array.mk
@@ -37,19 +57,31 @@ theorem Array.listarray {A : Type _} (a : Array A) : a.toList.toArray = a := by
           -- [toList, foldr]
           sorry
 
-theorem List.arraysize {A: Type _} (l : List A) : l.toArray.size = l.length := by
+@[simp] theorem List.arraysize {α : Type _} (l : List α) : l.toArray.size = l.length := by
   rw [Array.size, arraydata]
 
-theorem Array.getfromlist : (l : List T) → (fn : Fin _) → Array.get (l.toArray) fn = l.get ((List.arraysize l) ▸ fn) := sorry
+def Array.get' {α : Type _} (a : Array α) {n : ℕ} (h : a.size = n) (i : ℕ) (hi : i < n) : α :=
+  a.data.get' h i hi
+
+@[simp] theorem Array.getfromlist : (l : List T)  → (i : ℕ) → (h : i < l.length) → Array.get (l.toArray) ⟨i, Eq.substr l.arraysize h⟩ = l.get ⟨i, h⟩
+  | List.nil, _, h => by contradiction
+  | List.cons hd tl, Nat.zero, _ => by simp [get]; sorry
+  | List.cons _ _, Nat.succ m, h => by rw [List.get]; admit
+
+theorem Array.get'fromlist : (l : List T) → {n : ℕ} → (i : ℕ) → (h : l.length = n) → (hi : i < n) → Array.get' (l.toArray) (by rw [List.arraysize]; exact h) i hi = l.get' h i hi
+  | List.cons hd tl, _, Nat.zero, rfl, hi => by
+    rw [List.get'_zero, Array.get', List.get'_zero]
+    sorry
+  | List.cons _ _, _, Nat.succ j, h, hi => sorry
 
 theorem List.maplength {T S : Type _} (ϕ : T → S) : (l : List T) → l.length = (l.map ϕ).length
   | List.nil => rfl
   | List.cons h t => by rw [List.length, List.map, List.length, maplength ϕ t]
 
 theorem List.mapget {T S : Type _} (ϕ : T → S) : (l : List T) → (i : ℕ) → (h : i < List.length l) → ϕ (l.get ⟨i, h⟩) = (l.map ϕ).get ⟨i, Eq.subst (maplength ϕ l) h⟩
-  | List.nil, _, h => by contradiction
+  | List.nil, _, _ => by contradiction
   | List.cons _ _, Nat.zero, _ => by simp [get, map]
-  | List.cons _ t, Nat.succ m, h => by simp [get, map]; rfl
+  | List.cons _ _, Nat.succ _, _ => by simp [get, map]; rfl
 
 def List.mapcomp (ϕ : T → S) (ψ : S → R) : (l : List T) → List.map ψ (List.map ϕ l) = List.map (ψ ∘ ϕ) l
   | nil => rfl
@@ -177,6 +209,14 @@ lemma ℤbasisarrlengthpos : Array.size (List.toArray (ℤbasis n)) > 0 := by
   rw [ℤbasislen]
   assumption
 
+-- set_option pp.all true
+theorem array_get'_index_eq (hl : l.toArray.size = n) (hℤb : (ℤbasis n).toArray.size = n) (i : ℕ) (hi : i < n) :
+  Array.get' (List.toArray l) hl i hi =
+    induced_map l h (Array.get' (List.toArray (ℤbasis n)) hℤb i hi) := by
+    rw [Array.getfromlist, Array.getfromlist, List.mapget (induced_map l h)]
+    have : i < List.length (List.map (induced_map l h) (ℤbasis n)) ↔ i < n := sorry
+    rw [this]
+
 theorem IndexAddTree.trees_consistent : IndexAddTree.foldMap t l.toArray (larrlengthpos l h hpos) =
                          (induced_map l h) (IndexAddTree.foldMap t (ℤbasis n).toArray (ℤbasisarrlengthpos hpos)) := by
   induction t with
@@ -184,7 +224,7 @@ theorem IndexAddTree.trees_consistent : IndexAddTree.foldMap t l.toArray (larrle
       simp [foldMap]
       rw [Array.getfromlist, Array.getfromlist, List.mapget (induced_map l h)]
       have := map_basis l h
-      -- rw [this]
+      sorry
       -- apply congrArg
       sorry
     | negLeaf a =>
