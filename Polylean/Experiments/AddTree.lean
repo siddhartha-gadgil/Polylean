@@ -1,6 +1,7 @@
 import Lean.Meta 
 import Lean.Elab
 import Mathlib.Algebra.Group.Defs
+import Polylean.Morphisms
 import Std
 import Lean
 open Lean Meta Elab Nat Term Std
@@ -138,3 +139,13 @@ partial def treeM (e : Expr) : MetaM Expr := do
       let lImage := foldMapMul l basisImages h
       let rImage := foldMapMul r basisImages h  
       lImage / rImage
+
+elab "tree#" s:term : term => do
+  let e ← Term.elabTerm s none
+  treeM e
+
+def egTree (n m: ℤ)  := tree# ((n + m) + (m + (2 + n)))
+
+#print egTree
+
+#eval AddTree.fold <| egTree 12 3
