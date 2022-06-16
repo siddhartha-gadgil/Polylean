@@ -14,7 +14,10 @@ lemma List.aux_append {α : Type _} (l : List α) : ∀ l' : List α, List.toArr
       simp [toArrayAux, Array.push, concat]
       rw [ih (concat l' h)]
       simp
-      let rec concat_append : ∀ (a : α) (l₁ l₂ : List α), concat l₁ a ++ l₂ = l₁ ++ (a :: l₂) := sorry
+      let rec concat_append (a : α) (l₁ : List α) (l₂ : List α) : concat l₁ a ++ l₂ = l₁ ++ (a :: l₂)  := by
+        induction l₁ with
+          | nil => simp [concat]
+          | cons h t ih => simp [concat]; assumption
       apply concat_append
 
 -- converting a list to an array and then extracting the data preserves the list
@@ -134,6 +137,10 @@ def ℤbasis : (n : ℕ) → List (ℤ ^ n)
 | Nat.zero => List.nil
 | Nat.succ n => List.cons (Prod.mk (1 : ℤ) (zeros n)) (ℤbasis n |>.map ι₂)
 
+@[simp] def ℤbasislen : ∀ m : ℕ, List.length (ℤbasis m) = m
+    | Nat.zero => rfl
+    | Nat.succ m' => by rw [ℤbasis, List.length, Nat.add_one, ← List.maplength, ℤbasislen m']
+
 theorem zero_zero : (n : ℕ) → (0 : ℤ ^ n) = (zeros n)
 | Nat.zero => rfl
 | Nat.succ m => by rw [zeros, ← zero_zero m]; rfl
@@ -189,45 +196,44 @@ def ℤprodrepr : (n : ℕ) → Repr (ℤ ^ n)
 
 instance (n : ℕ) : Repr (ℤ ^ n) := ℤprodrepr n
 
-lemma larrlengthpos : Array.size (List.toArray l) > 0 := by
-  rw [GT.gt, List.arraysize, h]
-  exact hpos
+-- some useful lemmas to deal with theorems about `Fin`
+lemma Fin.eq_of_eq_of_Nat' : {i m n : ℕ} → (h : m = n) → (hm : m > 0) → Fin.val (Fin.ofNat' i hm) = Fin.val (Fin.ofNat' i (h ▸ hm))
+  | _, _, _, rfl, hm => rfl
 
-def ℤbasislen : ∀ m : ℕ, List.length (ℤbasis m) = m
-    | Nat.zero => rfl
-    | Nat.succ m' => by rw [ℤbasis, List.length, Nat.add_one, ← List.maplength, ℤbasislen m']
+lemma Fin.eq_val_bound : {m n : ℕ} → {f : Fin m} → (m = n) → (f.val < n)
+  | _, _, ⟨_, prf⟩, rfl => prf
 
-lemma ℤbasisarrlengthpos : Array.size (List.toArray (ℤbasis n)) > 0 := by
-  rw [GT.gt, List.arraysize]
-  rw [ℤbasislen]
-  assumption
 
 -- taking an abstract tree to a given list of `n` elements of group `A` is equivalent to
 -- first taking it to the basis of `ℤ^n` and then apply the `inducedFreeMap`
-theorem IndexAddTree.trees_consistent : IndexAddTree.foldMap t l.toArray (larrlengthpos l h hpos) =
-                         (inducedFreeMap l h) (IndexAddTree.foldMap t (ℤbasis n).toArray (ℤbasisarrlengthpos hpos)) := by
+theorem IndexAddTree.fold_tree_freegroup_eq : IndexAddTree.foldMap t l.toArray (by simp [h, hpos]) =
+                         (inducedFreeMap l h) (IndexAddTree.foldMap t (ℤbasis n).toArray (by simp [hpos])) := by
   induction t with
     | leaf _ =>
         simp [foldMap]
         rw [Array.getfromlist, Array.getfromlist, List.mapget (inducedFreeMap l h), List.get_index_eq (map_basis l h)]
         apply congrArg
-        -- apply Fin.eq_of_val_eq
-        all_goals sorry
+        apply Fin.eq_of_val_eq; simp
+        subst h
+        apply Fin.eq_of_eq_of_Nat'; simp
+        all_goals (apply Fin.eq_val_bound; simp)
     | negLeaf _ =>
         simp [foldMap]
         apply congrArg
         rw [Array.getfromlist, Array.getfromlist, List.mapget (inducedFreeMap l h), List.get_index_eq (map_basis l h)]
         apply congrArg
-        apply Fin.eq_of_val_eq
-        simp
+        apply Fin.eq_of_val_eq; simp
         subst h
-        all_goals sorry
+        apply Fin.eq_of_eq_of_Nat'; simp
+        all_goals (apply Fin.eq_val_bound; simp)
     | node _ _ ihl ihr => simp [ihl, ihr, foldMap]
     | subNode _ _ ihl ihr => simp [ihl, ihr, foldMap]
 
 end AddTreeGroup
 
+
 /-
+
 section FormalExample
 
 abbrev n : ℕ := 3
@@ -243,8 +249,10 @@ theorem valid_iff_free_basis : (∀ {A : Type} [AddCommGroup A], ∀ (l : List A
     exact hyp (ℤbasis n) (ℤbasislen n)
   · intro hyp
     intro A _ l h
-    let ϕ := induced_map l rfl
+    let ϕ := inducedFreeMap l rfl
     have basismap := map_basis l rfl
+    sorry
+    /-
     match l, h with
       | List.cons a (List.cons b (List.cons c List.nil)), rfl =>
         simp [ν, ℤbasis] at hyp
@@ -254,10 +262,11 @@ theorem valid_iff_free_basis : (∀ {A : Type} [AddCommGroup A], ∀ (l : List A
         simp [List.map, ℤbasis, ι₁, ι₂, zeros, unit_pow_list, h, map_basis] at basismap
         let ⟨ha, hb, hc⟩ := basismap
         simp [ha, hb, hc] at ϕmap
-
+    -/
 
 theorem eqn_valid {A : Type} [AddCommGroup A] : ∀ (l : List A) (h : l.length = n), ν l h :=
   (Iff.mpr valid_iff_free_basis) rfl
 
 end FormalExample
+
 -/
