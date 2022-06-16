@@ -281,6 +281,11 @@ variable (ϕ : A → B) [AddCommGroup.Homomorphism ϕ]
   have : ϕ a + ϕ (-a) = ϕ a + - ϕ a := by rw [← add_dist]; simp
   exact add_left_cancel this
 
+@[simp] theorem neg_dist : ∀ a a' : A, ϕ (a - a') = ϕ a - ϕ a' := by
+  intros
+  repeat (rw [sub_eq_add_neg])
+  simp
+
 attribute [simp] add_left_cancel_iff
 attribute [simp] add_right_cancel_iff
 
