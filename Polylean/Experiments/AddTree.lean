@@ -1,7 +1,7 @@
 import Lean.Meta 
 import Lean.Elab
 import Mathlib.Algebra.Group.Defs
-import Polylean.Morphisms
+import Polylean.Experiments.FinGenFreeAbGroup
 import Std
 import Lean
 open Lean Meta Elab Nat Term Std
@@ -126,7 +126,7 @@ partial def treeM (e : Expr) : MetaM Expr := do
       let rImage := foldMap r basisImages h  
       lImage - rImage
 
-@[simp] def IndexAddTree.foldMapMul {α : Type u}[CommGroup α][Repr α] 
+@[simp] def IndexAddTree.foldMapMul {α : Type u}[CommGroup α][Repr α]
   (t : IndexAddTree)(basisImages: Array α)(h: basisImages.size > 0) : α :=
   match t with
   | AddTree.leaf i => basisImages.get (Fin.ofNat' i h)
@@ -140,11 +140,45 @@ partial def treeM (e : Expr) : MetaM Expr := do
       let rImage := foldMapMul r basisImages h  
       lImage / rImage
 
+-- taking an abstract tree to a given list of `n` elements of group `A` is equivalent to
+-- first taking it to the basis of `ℤ^n` and then apply the `inducedFreeMap`
+theorem IndexAddTree.fold_tree_freegroup_eq (t : IndexAddTree) {A : Type _} [AddCommGroup A] [Repr A]
+  {n : ℕ} (l : List A) (h : l.length = n) (hpos : n > 0) :
+  IndexAddTree.foldMap t l.toArray (by simp [h, hpos]) =
+  (inducedFreeMap l h) (IndexAddTree.foldMap t (ℤbasis n).toArray (by simp [hpos])) := by
+  induction t with
+    | leaf _ =>
+        simp [foldMap]
+        rw [Array.getfromlist, Array.getfromlist, List.mapget (inducedFreeMap l h), List.get_index_eq (map_basis l h)]
+        apply congrArg
+        apply Fin.eq_of_val_eq; simp
+        subst h
+        apply Fin.eq_of_eq_of_Nat'; simp
+        all_goals (apply Fin.eq_val_bound; simp)
+    | negLeaf _ =>
+        simp [foldMap]
+        apply congrArg
+        rw [Array.getfromlist, Array.getfromlist, List.mapget (inducedFreeMap l h), List.get_index_eq (map_basis l h)]
+        apply congrArg
+        apply Fin.eq_of_val_eq; simp
+        subst h
+        apply Fin.eq_of_eq_of_Nat'; simp
+        all_goals (apply Fin.eq_val_bound; simp)
+    | node _ _ ihl ihr => simp [ihl, ihr, foldMap]
+    | subNode _ _ ihl ihr => simp [ihl, ihr, foldMap]
+
+
 elab "tree#" s:term : term => do
   let e ← Term.elabTerm s none
   treeM e
 
-def egTree (n m: ℤ)  := tree# ((n + m) + (m + (2 + n)))
+def IndexAddTree.reduce {α : Type _} [AddCommGroup α] [Repr α] [DecidableEq α] (it : IndexAddTree) (arr : Array α) (harr : arr.size > 0) : α :=
+  (inducedFreeMap arr.data rfl) (IndexAddTree.foldMap it (ℤbasis arr.size).toArray (by simp [harr]))
+
+
+abbrev egTree (n m : ℤ)  := tree# ((n + m) + (m + (2 + n)) - n)
+
+#check egTree
 
 #print egTree
 

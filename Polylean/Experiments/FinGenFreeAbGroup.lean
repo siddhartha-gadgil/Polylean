@@ -1,5 +1,4 @@
 import Polylean.FreeAbelianGroup
-import Polylean.Experiments.AddTree
 
 section ArraysAndLists
 
@@ -145,6 +144,23 @@ theorem zero_zero : (n : ℕ) → (0 : ℤ ^ n) = (zeros n)
 | Nat.zero => rfl
 | Nat.succ m => by rw [zeros, ← zero_zero m]; rfl
 
+
+instance prodrepr (A B : Type _) [Repr A] [Repr B] : Repr (A × B) := inferInstance
+
+def ℤprodrepr : (n : ℕ) → Repr (ℤ ^ n)
+    | Nat.zero => inferInstanceAs (Repr Unit)
+    | Nat.succ m => @prodrepr ℤ (ℤ ^ m) _ (ℤprodrepr m)
+
+instance (n : ℕ) : Repr (ℤ ^ n) := ℤprodrepr n
+
+
+-- some useful lemmas to deal with theorems about `Fin`
+lemma Fin.eq_of_eq_of_Nat' : {i m n : ℕ} → (h : m = n) → (hm : m > 0) → Fin.val (Fin.ofNat' i hm) = Fin.val (Fin.ofNat' i (h ▸ hm))
+  | _, _, _, rfl, hm => rfl
+
+lemma Fin.eq_val_bound : {m n : ℕ} → {f : Fin m} → (m = n) → (f.val < n)
+  | _, _, ⟨_, prf⟩, rfl => prf
+
 end Defs
 
 
@@ -178,59 +194,6 @@ theorem map_basis {A : Type _} [AddCommGroup A] : {m : ℕ} → (l : List A) →
     exact ih
 
 end InducedFreeMap
-
-
-section AddTreeGroup
-
-variable (t : IndexAddTree)
-variable {A : Type _} [AddCommGroup A] [Repr A]
-variable {n : ℕ} (l : List A) (h : l.length = n) (hpos : n > 0) -- basisImages
-
--- a few helper results and lemmas
-
-instance prodrepr (A B : Type _) [Repr A] [Repr B] : Repr (A × B) := inferInstance
-
-def ℤprodrepr : (n : ℕ) → Repr (ℤ ^ n)
-    | Nat.zero => inferInstanceAs (Repr Unit)
-    | Nat.succ m => @prodrepr ℤ (ℤ ^ m) _ (ℤprodrepr m)
-
-instance (n : ℕ) : Repr (ℤ ^ n) := ℤprodrepr n
-
--- some useful lemmas to deal with theorems about `Fin`
-lemma Fin.eq_of_eq_of_Nat' : {i m n : ℕ} → (h : m = n) → (hm : m > 0) → Fin.val (Fin.ofNat' i hm) = Fin.val (Fin.ofNat' i (h ▸ hm))
-  | _, _, _, rfl, hm => rfl
-
-lemma Fin.eq_val_bound : {m n : ℕ} → {f : Fin m} → (m = n) → (f.val < n)
-  | _, _, ⟨_, prf⟩, rfl => prf
-
-
--- taking an abstract tree to a given list of `n` elements of group `A` is equivalent to
--- first taking it to the basis of `ℤ^n` and then apply the `inducedFreeMap`
-theorem IndexAddTree.fold_tree_freegroup_eq : IndexAddTree.foldMap t l.toArray (by simp [h, hpos]) =
-                         (inducedFreeMap l h) (IndexAddTree.foldMap t (ℤbasis n).toArray (by simp [hpos])) := by
-  induction t with
-    | leaf _ =>
-        simp [foldMap]
-        rw [Array.getfromlist, Array.getfromlist, List.mapget (inducedFreeMap l h), List.get_index_eq (map_basis l h)]
-        apply congrArg
-        apply Fin.eq_of_val_eq; simp
-        subst h
-        apply Fin.eq_of_eq_of_Nat'; simp
-        all_goals (apply Fin.eq_val_bound; simp)
-    | negLeaf _ =>
-        simp [foldMap]
-        apply congrArg
-        rw [Array.getfromlist, Array.getfromlist, List.mapget (inducedFreeMap l h), List.get_index_eq (map_basis l h)]
-        apply congrArg
-        apply Fin.eq_of_val_eq; simp
-        subst h
-        apply Fin.eq_of_eq_of_Nat'; simp
-        all_goals (apply Fin.eq_val_bound; simp)
-    | node _ _ ihl ihr => simp [ihl, ihr, foldMap]
-    | subNode _ _ ihl ihr => simp [ihl, ihr, foldMap]
-
-end AddTreeGroup
-
 
 /-
 
