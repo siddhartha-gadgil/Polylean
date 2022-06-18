@@ -154,13 +154,14 @@ instance : subGroup (λ ((k, q) : K × Q) => q = (0 : Q)) where
   mul_closure := by
     intro ⟨ka, qa⟩ ⟨kb, qb⟩; intro hqa hqb
     show (Mul.mul (ka, qa) (kb, qb)).snd = 0
-    simp [Mul.mul, MetabelianGroup.mul] at *
-    rw [hqa, hqb, add_zero]
+    rw [hqa, hqb]
+    simp [Mul.mul, MetabelianGroup.mul]
   inv_closure := by
     intro ⟨ka, qa⟩; intro h
-    simp [Inv.inv, MetabelianGroup.inv] at *
+    rw [h]
+    simp [Inv.inv, MetabelianGroup.inv]
     apply neg_eq_of_add_eq_zero
-    rw [h, add_zero]
+    rw [add_zero]
   id_closure := rfl
 
 instance kernel_group : Group (Metabelian.Kernel Q K) :=
