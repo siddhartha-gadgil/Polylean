@@ -1,7 +1,8 @@
 import Mathlib.Algebra.Group.Defs
 import Mathlib.Algebra.Ring.Basic
+import Polylean.SMul
 
-/-
+/-!
 It appears that mathlib4 does not yet have homomorphisms. We need:
 
 * Homomorophisms for Abelian (additive) groups.
@@ -10,12 +11,12 @@ It appears that mathlib4 does not yet have homomorphisms. We need:
 As with all structures, there should be a typeclass for _being a morphism_ and theorems that let us access the defining properties of a morphism.
 -/
 
-/-
+/-!
 This file defines some group theory preliminaries such as
-- Group homomorphisms and additive group homomorphisms
-- Subgroups
-- Kernel and image subgroups
-- Group isomorphisms
+* Group homomorphisms and additive group homomorphisms
+* Subgroups
+* Kernel and image subgroups
+* Group isomorphisms
 -/
 
 -- @[to_additive]
@@ -25,7 +26,10 @@ class Group.Homomorphism {G H : Type _} [Group G] [Group H] (ϕ : G → H) where
 
 section Group
 
-theorem Group.mul_left_cancel {G : Type _} [Group G] {a b c : G} : a * b = a * c → b = c := by
+universe u
+variable {G : Type u} [Group G] {a b c : G}
+
+@[simp] theorem Group.mul_left_cancel : a * b = a * c → b = c := by
   intro h
   have : b = a⁻¹ * (a * b) := by simp
   simp [h] at this
@@ -33,7 +37,7 @@ theorem Group.mul_left_cancel {G : Type _} [Group G] {a b c : G} : a * b = a * c
 
 instance {G : Type _} [Group G] : IsMulLeftCancel G := ⟨@Group.mul_left_cancel G _⟩
 
-theorem Group.mul_right_cancel {G : Type _} [Group G] {a b c : G} : b * a = c * a → b = c := by
+@[simp] theorem Group.mul_right_cancel : b * a = c * a → b = c := by
   intro h
   have : b = (b * a) * a⁻¹ := by simp
   simp [h] at this
@@ -45,6 +49,20 @@ instance {G : Type _} [Group G] : IsMulRightCancel G := ⟨@Group.mul_right_canc
   have : (1 : G)⁻¹ * 1 = 1 := mul_left_inv 1
   rw [mul_one] at this
   assumption
+
+@[simp] theorem mul_left_eq_cancel : a * b = a ↔ b = 1 := by
+  apply Iff.intro
+  · intro h
+    rw [← mul_right_inj a, h, mul_one]
+  · intro h
+    rw [h, mul_one]
+
+@[simp] theorem mul_right_eq_cancel : b * a = a ↔ b = 1 := by
+  apply Iff.intro
+  · intro h
+    rw [← mul_left_inj a, h, one_mul]
+  · intro h
+    rw [h, one_mul]
 
 instance Group.to_additive {G : Type _} [Grp : Group G] (mul_comm : ∀ g h : G, g * h = h * g) : AddCommGroup G :=
   {
@@ -70,6 +88,22 @@ instance Group.to_additive {G : Type _} [Grp : Group G] (mul_comm : ∀ g h : G,
 
 end Group
 
+section AddCommGroup
+
+variable {A : Type _} [AddCommGroup A] {a b c : A}
+
+@[simp] theorem add_left_eq_cancel : a + b = a ↔ b = 0 := by
+  apply Iff.intro
+  · intro h
+    rw [← add_right_inj a, h, add_zero]
+  · intro h
+    rw [h, add_zero]
+
+@[simp] theorem add_right_eq_cancel : b + a = a ↔ b = 0 := by
+  rw [add_comm]; simp
+
+end AddCommGroup
+
 namespace Group.Homomorphism
 
 variable {G H : Type _} [GrpG : Group G] [GrpH : Group H]
@@ -82,11 +116,11 @@ variable {ϕ : G → H} [Homϕ : Group.Homomorphism ϕ]
   have : (ϕ 1) * (ϕ 1) = (ϕ 1) * 1 := by rw [← Homomorphism.mul_distrib, mul_one, mul_one]
   exact mul_left_cancel this
 
-theorem hom_inv {g : G} : (ϕ g)⁻¹ = ϕ g⁻¹ := by
+@[simp] theorem hom_inv {g : G} : (ϕ g)⁻¹ = ϕ g⁻¹ := by
   have : ϕ g * ϕ g⁻¹ = ϕ g * (ϕ g)⁻¹ := by rw [← Homomorphism.mul_distrib]; simp
   exact GrpH.mul_left_cancel (Eq.symm this)
 
-theorem hom_pow {g : G} {n : ℕ} : (ϕ g) ^ n = ϕ (g ^ n) := by
+@[simp] theorem hom_pow {g : G} {n : ℕ} : (ϕ g) ^ n = ϕ (g ^ n) := by
   induction n with
     | zero => simp
     | succ m ih => rw [pow_succ, pow_succ, Homϕ.mul_dist, ih]
@@ -117,6 +151,7 @@ class subGroup (P : G → Prop) where
   inv_closure : ∀ {a : G}, P a → P a⁻¹
   id_closure : P 1
 
+-- defines a group structure on the subtype, using the closure properties
 instance subGroup.Group (P : G → Prop) [H : subGroup P] : Group (subType P) :=
    {
     mul := λ ⟨g₁, prf₁⟩ ⟨g₂, prf₂⟩ => ⟨g₁ * g₂, H.mul_closure prf₁ prf₂⟩
@@ -180,9 +215,18 @@ section Morphisms
 class AddCommGroup.Homomorphism {A B : Type _} [AddCommGroup A] [AddCommGroup B] (ϕ : A → B) where
   add_dist : ∀ a a' : A, ϕ (a + a') = ϕ a + ϕ a'
 
+@[simp] theorem AddCommGroup.add_distrib {A B : Type _} [AddCommGroup A] [AddCommGroup B]
+(ϕ : A → B) [AddCommGroup.Homomorphism ϕ] (a a' : A) : ϕ (a + a') = ϕ a + ϕ a' := AddCommGroup.Homomorphism.add_dist a a'
+
 class Monoid.Homomorphism {M N : Type _} [Monoid M] [Monoid N] (ϕ : M → N) where
   mul_dist : ∀ m m' : M, ϕ (m * m') = ϕ m * ϕ m'
   one_map : ϕ 1 = 1
+
+@[simp] theorem Monoid.mul_distrib {M N : Type _} [Monoid M] [Monoid N]
+  (ϕ : M → N) [Monoid.Homomorphism ϕ] (m m' : M) : ϕ (m * m') = ϕ m * ϕ m' := Monoid.Homomorphism.mul_dist m m'
+
+@[simp] theorem Monoid.one_map {M N : Type _} [Monoid M] [Monoid N]
+  (ϕ : M → N) [Monoid.Homomorphism ϕ] : ϕ 1 = 1 := Monoid.Homomorphism.one_map
 
 class CommRing.Homomorphism {R S : Type _} [CommRing R] [CommRing S] (ϕ : R → S)
   extends AddCommGroup.Homomorphism ϕ, Monoid.Homomorphism ϕ
@@ -191,13 +235,13 @@ class CommRing.Homomorphism {R S : Type _} [CommRing R] [CommRing S] (ϕ : R →
 instance hom_comp {A B C : Type _} [AddCommGroup A] [AddCommGroup B] [AddCommGroup C]
          (ϕ : A → B) [AddCommGroup.Homomorphism ϕ] (ψ : B → C) [AddCommGroup.Homomorphism ψ] :
          AddCommGroup.Homomorphism (ψ ∘ ϕ) where
-  add_dist := by intros; simp [AddCommGroup.Homomorphism.add_dist]
+  add_dist := by intros; simp
 
 instance {L M N : Type _} [Monoid L] [Monoid M] [Monoid N]
          (ϕ : L → M) [Monoid.Homomorphism ϕ] (ψ : M → N) [Monoid.Homomorphism ψ] :
          Monoid.Homomorphism (ψ ∘ ϕ) where
-  mul_dist := by intros; simp [Monoid.Homomorphism.mul_dist]
-  one_map := by simp [Monoid.Homomorphism.one_map]
+  mul_dist := by intros; simp
+  one_map := by simp
 
 
 instance {A : Type _} [AddCommGroup A] : AddCommGroup.Homomorphism (id : A → A) where
@@ -209,49 +253,82 @@ instance {M : Type _} [Monoid M] : Monoid.Homomorphism (id : M → M) where
 
 end Morphisms
 
-section AddCommGroup.Homomorphism
+section SubNegMonoid
 
-variable {A B : Type _} [α : AddCommGroup A] [β : AddCommGroup B]
-variable (ϕ : A → B) [abg : AddCommGroup.Homomorphism ϕ]
+attribute [simp] SubNegMonoid.gsmul_zero'
+attribute [simp] SubNegMonoid.gsmul_succ'
 
-theorem add_dist : ∀ a a' : A, ϕ (a + a') = ϕ a + ϕ a' := abg.add_dist
+attribute [simp] Int.cast_id
 
-theorem zero_image : ϕ (0 : A) = (0 : B) := by
-  have : ϕ 0 + ϕ 0 = ϕ 0 + 0 := by rw [← add_dist, add_zero, add_zero]
+variable {A : Type _} [SubNegMonoid A] (a : A)
+
+@[simp] theorem SubNegMonoid.gsmul_succ'_ (n : ℕ) : SubNegMonoid.gsmul (↑(n) + 1) a = a + SubNegMonoid.gsmul (↑ n) a := by
+  rw [← Int.cast_ofNat, Int.cast_id, ← Int.ofNat_succ]; exact SubNegMonoid.gsmul_succ' _ _
+
+end SubNegMonoid
+
+namespace AddCommGroup.Homomorphism
+
+variable {A B : Type _} [AddCommGroup A] [AddCommGroup B]
+variable (ϕ : A → B) [AddCommGroup.Homomorphism ϕ]
+
+@[simp] theorem zero_image : ϕ (0 : A) = (0 : B) := by
+  have : ϕ 0 + ϕ 0 = ϕ 0 + 0 := by rw [← add_dist]; simp
   exact add_left_cancel this
 
-theorem neg_push : ∀ a : A, ϕ (-a) = -ϕ a := by
+@[simp] theorem neg_push : ∀ a : A, ϕ (-a) = -ϕ a := by
   intro a
-  have : ϕ a + ϕ (-a) = ϕ a + - ϕ a := by rw [← add_dist, add_right_neg, add_right_neg, zero_image ϕ]
+  have : ϕ a + ϕ (-a) = ϕ a + - ϕ a := by rw [← add_dist]; simp
   exact add_left_cancel this
 
-theorem hom_mul : ∀ a : A, ∀ n : ℕ, SubNegMonoid.gsmul n (ϕ a) = ϕ (SubNegMonoid.gsmul n a) := by
+@[simp] theorem neg_dist : ∀ a a' : A, ϕ (a - a') = ϕ a - ϕ a' := by
+  intros
+  repeat (rw [sub_eq_add_neg])
+  simp
+
+attribute [simp] add_left_cancel_iff
+attribute [simp] add_right_cancel_iff
+
+end AddCommGroup.Homomorphism
+
+section mul_hom
+
+variable {A B : Type _} [AddCommGroup A] [AddCommGroup B]
+variable (ϕ : A → B) [AddCommGroup.Homomorphism ϕ]
+
+instance : SMul ℕ A where
+  sMul := SubNegMonoid.gsmul ∘ Int.ofNat
+
+@[simp] theorem hom_mul : ∀ a : A, ∀ n : ℕ, n • (ϕ a) = ϕ (n • a) := by
   intro a n
   induction n with
-    | zero => simp; rw [SubNegMonoid.gsmul_zero', SubNegMonoid.gsmul_zero']; exact Eq.symm (zero_image _)
-    | succ m ih => rw [← Int.cast_ofNat, Int.cast_id, SubNegMonoid.gsmul_succ', SubNegMonoid.gsmul_succ', abg.add_dist, add_left_cancel_iff]; simp [ih]
+    | zero => simp [SMul.sMul]
+    | succ m ih =>
+      simp [SMul.sMul] at *
+      simp [ih]
 
-theorem nsmul_hom : ∀ n : ℕ, ∀ a b : A, nsmul_rec n (a + b) = nsmul_rec n a + nsmul_rec n b := by
+@[simp] theorem nsmul_hom : ∀ n : ℕ, ∀ a b : A, nsmul_rec n (a + b) = nsmul_rec n a + nsmul_rec n b := by
   intros n a b
   cases n
   · simp [nsmul_rec]
-  · simp [nsmul_rec]
+  · repeat (rw [nsmul_rec])
     rw [add_assoc, add_assoc, add_left_cancel_iff, ← add_assoc, add_comm (nsmul_rec _ a) _, add_assoc, add_left_cancel_iff]
-    exact nsmul_hom _ a b
+    apply nsmul_hom
 
-theorem gsmul_hom : ∀ n : ℤ, ∀ a b : A, gsmul_rec n (a + b) = gsmul_rec n a + gsmul_rec n b := by
+@[simp] theorem gsmul_hom : ∀ n : ℤ, ∀ a b : A, gsmul_rec n (a + b) = gsmul_rec n a + gsmul_rec n b := by
   intros n a b
   cases n
-  · simp [gsmul_rec]; exact nsmul_hom _ a b
+  · simp [gsmul_rec]
   · simp [gsmul_rec]; apply neg_eq_of_add_eq_zero
-    rw [nsmul_hom _ a b, add_assoc, add_comm (nsmul_rec _ b) _, ← add_assoc, ← add_assoc, add_right_neg, zero_add, add_left_neg]
+    rw [add_assoc, add_comm (nsmul_rec _ b) _, ← add_assoc, ← add_assoc]; simp
 
 instance {n : ℤ} : AddCommGroup.Homomorphism (gsmul_rec n : A → A) where
   add_dist := gsmul_hom n
 
-theorem neg_hom : ∀ a a' : A, -(a + a') = -a + -a' := by
+@[simp] theorem neg_hom : ∀ a a' : A, -(a + a') = -a + -a' := by
   intro a a'
-  rw [← @add_left_cancel_iff _ _ _ a _ _, ← @add_left_cancel_iff _ _ _ a' _ _, ← add_assoc a (-a) _, add_right_neg, zero_add, add_right_neg,
+  rw [← @add_left_cancel_iff _ _ _ a _ _, ← @add_left_cancel_iff _ _ _ a' _ _]
+  rw [← add_assoc a (-a) _, add_right_neg, zero_add, add_right_neg,
   ← add_assoc, add_comm a a', add_right_neg]
 
 def neg (a : A) := -a
@@ -262,7 +339,7 @@ instance : AddCommGroup.Homomorphism (neg : A → A) where
 instance : AddCommGroup.Homomorphism (id : A → A) where
   add_dist := λ _ _ => rfl
 
-end AddCommGroup.Homomorphism
+end mul_hom
 
 section AddCommGroup.Isomorphism
 
@@ -277,6 +354,9 @@ class AddCommGroup.Isomorphism (A B : Type _) [AddCommGroup A] [AddCommGroup B] 
   [invHom : AddCommGroup.Homomorphism inv]
   idSrc : inv ∘ map = id
   idTgt : map ∘ inv = id
+
+attribute [simp] AddCommGroup.Isomorphism.idSrc
+attribute [simp] AddCommGroup.Isomorphism.idTgt
 
 variable (A B C : Type _) [AddCommGroup A] [AddCommGroup B] [AddCommGroup C]
 

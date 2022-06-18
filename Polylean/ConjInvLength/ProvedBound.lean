@@ -130,6 +130,8 @@ def provedBound : (w: Word) → ProvedBound w := fun w =>
   match h:w with
   | [] => ProvedBound.emptyWord
   | x :: ys =>
+    have lb : (List.length ys) < List.length (x :: ys) := by
+      simp [List.length_cons, Nat.le_refl]
     let head := ProvedBound.prepend x (provedBound ys)
     let splits := provedSplits x⁻¹  ys
     have wl:  w.length = ys.length + 1 := by
@@ -150,6 +152,7 @@ def provedBound : (w: Word) → ProvedBound w := fun w =>
         (provedBound ps.fst) (provedBound ps.snd))
     ProvedBound.min head tail
 termination_by  _ w => w.length
+decreasing_by assumption
 
 #eval (provedBound ([α, α, β, α!, β!])).bound
 

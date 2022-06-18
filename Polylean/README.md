@@ -19,8 +19,8 @@ The group `P` is a so called _Metabelian Group_, an extension of an abelian grou
 * In the file `GardamGroup.lean`, the specific construction of `P` is given using the general construction of Metabelian groups.
 * In the file `MetabelianGroup.lean`, Metabelian Groups are constructed based on appropriate data, and proved to be groups.
 * The data for a Metabelian group includes a _Group Action_. These are defined and their basic properties proved in `GroupAction.lean`.
-* Product groups are defined, as a special case, in `ProductGroup.lean`.
-* Homomorphisms are defined in `Homomorphism.lean` and some properties are proved.
+* Product groups are defined, as a special case, in `ProductGroups.lean`.
+* Homomorphisms are defined in `Morphisms.lean` and some properties are proved.
 
 ## Constructing group rings
 

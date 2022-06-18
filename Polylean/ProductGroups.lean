@@ -11,24 +11,25 @@ section Product
 
 variable {Q K : Type _} [AddCommGroup Q] [AddCommGroup K]
 
-def trivial_mul : Q → K → K
+def trivial_action : Q → K → K
   | _ => id
 
 -- the trivial action of `Q` on `K`
-instance trivial_action : AddCommGroup.ActionByAutomorphisms Q K :=
+instance : AutAction Q K trivial_action :=
   {
-    sMul := trivial_mul
     id_action := rfl
-    compatibility := rfl
-    add_dist := λ b b' => rfl
+    compatibility := λ _ _ => rfl
+    aut_action := λ _ => inferInstanceAs (AddCommGroup.Homomorphism id)
   }
 
 -- the trivial cocycle
 def trivial_cocycle : Q → Q → K
   | _, _ => 0
 
-instance : @Cocycle Q K _ _ trivial_action trivial_cocycle :=
+instance : @Cocycle Q K _ _ trivial_cocycle :=
   {
+    α := trivial_action
+    autaction := inferInstance
     cocycleId := rfl
     cocycleCondition := λ _ _ _ => rfl
   }
@@ -52,13 +53,14 @@ variable {A B : Type _} [AddCommGroup A] [AddCommGroup B]
 instance directSum : AddCommGroup (A × B) :=
   Group.to_additive product_comm
 
-theorem directSum_mul {a a' : A} {b b' : B} : MetabelianGroup.mul trivial_cocycle (a, b) (a', b') = (a + a', b + b') := by
+theorem mul {a a' : A} {b b' : B} : MetabelianGroup.mul trivial_cocycle (a, b) (a', b') = (a + a', b + b') := by
     simp [MetabelianGroup.mul, trivial_cocycle]
     rfl
 
-theorem directSum_add (a a' : A) (b b' : B) : directSum.add (a, b) (a', b') = (a + a', b + b') := directSum_mul
+@[simp] theorem add (a a' : A) (b b' : B) : (a, b) + (a', b') = (a + a', b + b') := mul
 
 end DirectSum
+
 
 section Homomorphisms
 
@@ -78,28 +80,32 @@ instance (ϕ : A → C) [ϕHom : AddCommGroup.Homomorphism ϕ] (ψ : B → D) [�
                 intro (a, b)
                 intro (a', b')
                 simp [trivial_cocycle, MetabelianGroup.mul, prod]
-                have : b • a' = a' := rfl
-                rw [this, ϕHom.add_dist, ψHom.add_dist, ← DirectSum.directSum_add]
                 rfl
 
 abbrev ι₁ [Zero A] [Zero B] : A → A × B := λ a => (a, 0)
 
 abbrev ι₂ [Zero A] [Zero B] : B → A × B := λ b => (0, b)
 
+/-
+instance {A B : Type _} [AddCommGroup A] [AddCommGroup B] : AddCommGroup.Homomorphism (@ι₁ A B _ _) where
+  add_dist := by intros; simp
+
+instance {A B : Type _} [AddCommGroup A] [AddCommGroup B] : AddCommGroup.Homomorphism (@ι₂ A B _ _) where
+  add_dist := by intros; simp
+-/
+
 instance proj₁ {G : Type _} [AddCommGroup G] (ϕ : A × B → G) [Homϕ : AddCommGroup.Homomorphism ϕ] : AddCommGroup.Homomorphism (ϕ ∘ ι₁) where
   add_dist := by
     intro a a'
     simp [ι₁]
     rw [← Homϕ.add_dist]
-    have : (a, (0 : B)) + (a', (0 : B)) = (a + a', (0 + 0 : B)) := DirectSum.directSum_add a a' 0 0
-    rw [this, add_zero]
+    simp
 
 instance proj₂ {G : Type _} [AddCommGroup G] (ϕ : A × B → G) [Homϕ : AddCommGroup.Homomorphism ϕ] : AddCommGroup.Homomorphism (ϕ ∘ ι₂) where
   add_dist := by
     intro b b'
     simp [ι₂]
     rw [← Homϕ.add_dist]
-    have : ((0 : A), b) + ((0 : A), b') = ((0 + 0 : A), b + b') := DirectSum.directSum_add 0 0 b b'
-    rw [this, add_zero]
+    simp
 
 end Homomorphisms
