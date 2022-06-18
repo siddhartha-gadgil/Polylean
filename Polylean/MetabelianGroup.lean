@@ -78,7 +78,16 @@ theorem left_id : ∀ (g : K × Q), mul c e g = g
   | (k, q) => by simp [e, mul]
 
 theorem right_id : ∀ (g : K × Q), mul c g e = g
-  | (k, q) => by simp [e, mul]
+  | (k, q) => by 
+        rw [e, mul]
+        show (k + q • 0 + c q 0, q + 0) = (k, q)
+        have cq0 : c q 0 = 0 := by apply Cocycle.rightId
+        rw [cq0]
+        have q0 : q • (0 : K) = 0 := 
+          by apply AutAction.act_zero
+        rw[q0]
+        repeat (rw [add_zero])
+
 
 theorem left_inv : ∀ (g : K × Q), mul c (inv c g) g = e
   | (k , q) => by
@@ -155,13 +164,25 @@ instance : subGroup (λ ((k, q) : K × Q) => q = (0 : Q)) where
     intro ⟨ka, qa⟩ ⟨kb, qb⟩; intro hqa hqb
     show (Mul.mul (ka, qa) (kb, qb)).snd = 0
     rw [hqa, hqb]
-    simp [Mul.mul, MetabelianGroup.mul]
+    rw [Mul.mul]
+    show (MetabelianGroup.mul c (ka, 0) (kb, 0)).snd = 0
+    rw [MetabelianGroup.mul]
+    show (ka + 0 • kb + c 0 0, (0 : Q) + 0).snd = 0
+    have c00 : c 0 0 = 0 := by apply Cocycle.rightId
+    rw [c00]
+
+    admit
+    -- simp [Mul.mul, MetabelianGroup.mul]
   inv_closure := by
     intro ⟨ka, qa⟩; intro h
     rw [h]
-    simp [Inv.inv, MetabelianGroup.inv]
-    apply neg_eq_of_add_eq_zero
-    rw [add_zero]
+    have zl : (ka, (0 : Q))⁻¹ = (-ka, 0) := by 
+        rw [Inv.inv]
+        show MetabelianGroup.inv c (ka, 0) = (-ka, 0)
+        rw [MetabelianGroup.inv]
+        admit
+    rw [zl]      
+ 
   id_closure := rfl
 
 instance kernel_group : Group (Metabelian.Kernel Q K) :=
@@ -180,7 +201,7 @@ instance : AddCommGroup (Metabelian.Kernel Q K) := Group.to_additive (Metabelian
 instance : AddCommGroup.Homomorphism (Metabelian.Kernel.inclusion Q K) where
   add_dist := by
     intro k k'
-    simp [Metabelian.Kernel.inclusion]
+    rw [Metabelian.Kernel.inclusion]
     apply subType.eq_of_val_eq
     show (k + k', (0 : Q)) = Mul.mul (k, 0) (k', 0)
     simp [Mul.mul, MetabelianGroup.mul]
@@ -196,8 +217,16 @@ instance : AddCommGroup.Isomorphism K (Metabelian.Kernel Q K) :=
     mapHom := inferInstance
     inv := Metabelian.Kernel.projection Q K
     invHom := inferInstance
-    idSrc := by apply funext; intro; simp [Metabelian.Kernel.projection, Metabelian.Kernel.inclusion]
-    idTgt := by apply funext; intro ⟨⟨k, 0⟩, rfl⟩; simp [Metabelian.Kernel.projection, Metabelian.Kernel.inclusion]
-  }
+    idSrc := by 
+              apply funext
+              intro x
+              show (Metabelian.Kernel.projection Q K) ((Metabelian.Kernel.inclusion Q K) x) = x 
+              rw [Metabelian.Kernel.projection, Metabelian.Kernel.inclusion]
+    idTgt := by 
+              apply funext 
+              intro ⟨⟨k, 0⟩, rfl⟩
+              show (Metabelian.Kernel.inclusion Q K) ((Metabelian.Kernel.projection Q K) ⟨⟨k, 0⟩, rfl⟩) = ⟨⟨k, 0⟩, rfl⟩
+              rw [Metabelian.Kernel.projection, Metabelian.Kernel.inclusion]
+      }
 
 end Exactness
