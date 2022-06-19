@@ -77,10 +77,11 @@ infixr:100 " × " => prod
 instance (ϕ : A → C) [ϕHom : AddCommGroup.Homomorphism ϕ] (ψ : B → D) [ψHom : AddCommGroup.Homomorphism ψ] :
   AddCommGroup.Homomorphism (ϕ × ψ) where
     add_dist := by
-                intro (a, b)
-                intro (a', b')
-                simp [trivial_cocycle, MetabelianGroup.mul, prod]
-                rfl
+                intro (a, b) (a', b')
+                rw [prod, DirectSum.add]
+                show (ϕ (a + a'), ψ (b + b')) = (ϕ a, ψ b) + (ϕ a', ψ b')
+                rw [DirectSum.add]
+                rw [ϕHom.add_dist, ψHom.add_dist]
 
 abbrev ι₁ [Zero A] [Zero B] : A → A × B := λ a => (a, 0)
 
@@ -97,15 +98,13 @@ instance {A B : Type _} [AddCommGroup A] [AddCommGroup B] : AddCommGroup.Homomor
 instance proj₁ {G : Type _} [AddCommGroup G] (ϕ : A × B → G) [Homϕ : AddCommGroup.Homomorphism ϕ] : AddCommGroup.Homomorphism (ϕ ∘ ι₁) where
   add_dist := by
     intro a a'
-    simp [ι₁]
-    rw [← Homϕ.add_dist]
-    simp
+    show ϕ (a + a', 0) = ϕ (a, 0) + ϕ (a', 0)
+    rw [← Homϕ.add_dist, DirectSum.add, add_zero]
 
 instance proj₂ {G : Type _} [AddCommGroup G] (ϕ : A × B → G) [Homϕ : AddCommGroup.Homomorphism ϕ] : AddCommGroup.Homomorphism (ϕ ∘ ι₂) where
   add_dist := by
     intro b b'
-    simp [ι₂]
-    rw [← Homϕ.add_dist]
-    simp
+    show ϕ (0, b + b') = ϕ (0, b) + ϕ (0, b')
+    rw [← Homϕ.add_dist, DirectSum.add, add_zero]
 
 end Homomorphisms
