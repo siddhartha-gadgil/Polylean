@@ -37,11 +37,9 @@ instance : @Cocycle Q K _ _ trivial_cocycle :=
 theorem product_comm : ∀ g h : K × Q, MetabelianGroup.mul trivial_cocycle g h = MetabelianGroup.mul trivial_cocycle h g := by
   intro (k, q)
   intro (k', q')
-  simp [MetabelianGroup.mul, trivial_cocycle]
-  apply And.intro
-  · have : ∀ q : Q, ∀ κ : K, q • κ = κ := λ _ _ => rfl
-    rw [this, this, add_comm]
-  · exact AddCommGroup.add_comm q q'
+  repeat (rw [MetabelianGroup.mul])
+  show  (k + k' + 0, q + q') = (k' + k + 0, q' + q)
+  rw [add_zero, add_zero, AddCommGroup.add_comm k k', AddCommGroup.add_comm q q']
 
 end Product
 
@@ -54,8 +52,8 @@ instance directSum : AddCommGroup (A × B) :=
   Group.to_additive product_comm
 
 theorem mul {a a' : A} {b b' : B} : MetabelianGroup.mul trivial_cocycle (a, b) (a', b') = (a + a', b + b') := by
-    simp [MetabelianGroup.mul, trivial_cocycle]
-    rfl
+    show (a + a' + 0, b + b') = _
+    rw [add_zero]
 
 @[simp] theorem add (a a' : A) (b b' : B) : (a, b) + (a', b') = (a + a', b + b') := mul
 

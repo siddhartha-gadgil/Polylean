@@ -39,7 +39,7 @@ theorem gsmul_succ (n: ℤ) (x : A) : gsmul (n+1) x = x + gsmul n x  := by
         rw [l]
         rw [l₀]
         simp
-      | succ l ih =>
+      | succ l _ =>
         have l₀ : -[1+ Nat.succ l] + 1 = -[1+ l] := by rfl
         rw [l₀]
         rw [abg.gsmul_neg']
@@ -203,7 +203,7 @@ instance fromBasisHom {F: Type}[AddCommGroup F]
     exact f p
 
 instance inducedHomomorphism (F : Type) [AddCommGroup F] {X : Type} [fag : FreeAbelianGroup F X]
-  {A : Type} [abg : AddCommGroup A] (f : X → A) : AddCommGroup.Homomorphism (fag.inducedMap A f) :=
+  {A : Type} [AddCommGroup A] (f : X → A) : AddCommGroup.Homomorphism (fag.inducedMap A f) :=
     fag.induced_hom A f
 
 instance fromBasisFamilyHom {F: Type}[AddCommGroup F]
@@ -324,50 +324,48 @@ instance prodFree : FreeAbelianGroup (A × B) (X_A ⊕ X_B)  :=
     inducedMap := inducedProdMap
     induced_extends := by
       intro G GrpG f
-      simp [inducedProdMap]
       apply funext
       intro x
-      simp
       cases x
       · rename_i x_A
-        simp [ι]
-        have fA_extends := congrFun (FAb_A.induced_extends (f ∘ Sum.inl)) x_A
-        simp at fA_extends
-        assumption
+        show (inducedProdMap G f) (FAb_A.i x_A, (0 : B)) = _
+        rw [inducedProdMap]
+        simp
+        have fA_extends : FreeAbelianGroup.inducedMap G (f ∘ Sum.inl) (FreeAbelianGroup.i x_A) = f (Sum.inl x_A) := congrFun (FAb_A.induced_extends (f ∘ Sum.inl)) x_A
+        exact fA_extends
       · rename_i x_B
-        simp [ι]
-        have fB_extends := congrFun (FAb_B.induced_extends (f ∘ Sum.inr)) x_B
-        simp at fB_extends
-        assumption
+        show (inducedProdMap G f) ((0 : A), FAb_B.i x_B) = _
+        rw [inducedProdMap]
+        simp
+        have fB_extends : FreeAbelianGroup.inducedMap G (f ∘ Sum.inr) (FreeAbelianGroup.i x_B) = f (Sum.inr x_B) := congrFun (FAb_B.induced_extends (f ∘ Sum.inr)) x_B
+        exact fB_extends
     induced_hom := by
       intro G GrpG f
       apply AddCommGroup.Homomorphism.mk
       intro (a, b)
       intro (a', b')
-      simp [inducedProdMap, DirectSum.mul]
+      rw [DirectSum.add]
+      repeat (rw [inducedProdMap])
+      simp
       rw [add_assoc, add_assoc, add_left_cancel_iff, ← add_assoc, ← add_assoc, add_right_cancel_iff, add_comm]
     unique_extension := by
       intro G GrpG f g Homf Homg
       intro h
       apply funext
       intro (a, b)
-      have coordsplit : (a, b) = (a, 0) + (0, b) := by simp
+      have coordsplit : (a, b) = (a, 0) + (0, b) := by rw [DirectSum.add, add_zero, zero_add]
       rw [coordsplit, Homf.add_dist, Homg.add_dist]
       have A_unique : f ∘ ι₁ = g ∘ ι₁ := by
         apply FAb_A.unique_extension (f ∘ ι₁) (g ∘ ι₁)
         apply funext
         intro x_A
-        simp [ι₁]
         have := congrFun h (Sum.inl x_A)
-        simp [ι] at this
         assumption
       have B_unique : f ∘ ι₂ = g ∘ ι₂ := by
         apply FAb_B.unique_extension (f ∘ ι₂) (g ∘ ι₂)
         apply funext
         intro x_B
-        simp [ι₂]
         have := congrFun h (Sum.inr x_B)
-        simp [ι] at this
         assumption
       have acoordeq : f (a, 0) = g (a, 0) := congrFun A_unique a
       have bcoordeq : f (0, b) = g (0, b) := congrFun B_unique b
