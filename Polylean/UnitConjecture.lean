@@ -77,7 +77,6 @@ theorem α_non_trivial : ¬ (trivial_element α) := by
       apply eqg
       native_decide
     rw [← eq₂] at eq₁
-    have ineq : -z ≠  x * y := by native_decide
     contradiction
 
 /-- the existence of a non-trivial unit in `𝔽₂[P]` -/
