@@ -132,6 +132,10 @@ instance metabeliangroup : Group (K × Q) :=
     gpow_neg' := by intros; rfl,
   }
 
+def mult (k k' : K) (q q' : Q) : (k, q) * (k', q') =  (k + (q • k') + c q q', q + q') := rfl
+
+def inverse (k : K) (q : Q) : (k, q)⁻¹ = (- ((-q) • (k  + c q (-q))), -q) := rfl
+
 end MetabelianGroup
 
 
@@ -151,7 +155,7 @@ instance G : Group (K × Q) := MetabelianGroup.metabeliangroup c
 
 -- this is the subgroup of the metabelian group that occurs as
 -- the image of the inclusion of `K` and the kernel of the projection onto `Q`.
-def Metabelian.Kernel := subType (λ ((k, q) : K × Q) => q = (0 : Q))
+def Metabelian.Kernel := subType (λ ((_, q) : K × Q) => q = (0 : Q))
 
 def Metabelian.Kernel.inclusion : K → (Metabelian.Kernel Q K)
   | k => ⟨(k, 0), rfl⟩
@@ -159,57 +163,50 @@ def Metabelian.Kernel.inclusion : K → (Metabelian.Kernel Q K)
 def Metabelian.Kernel.projection : (Metabelian.Kernel Q K) → K
   | ⟨(k, _), _⟩ => k
 
-instance : subGroup (λ ((k, q) : K × Q) => q = (0 : Q)) where
+instance : subGroup (λ ((_, q) : K × Q) => q = (0 : Q)) where
   mul_closure := by
-    intro ⟨ka, qa⟩ ⟨kb, qb⟩; intro hqa hqb
-    show (Mul.mul (ka, qa) (kb, qb)).snd = 0
-    rw [hqa, hqb]
-    rw [Mul.mul]
-    show (MetabelianGroup.mul c (ka, 0) (kb, 0)).snd = 0
-    rw [MetabelianGroup.mul]
-    show (ka + 0 • kb + c 0 0, (0 : Q) + 0).snd = 0
-    have c00 : c 0 0 = 0 := by apply Cocycle.rightId
-    rw [c00]
-
-    admit
-    -- simp [Mul.mul, MetabelianGroup.mul]
+    intro ⟨ka, qa⟩ ⟨kb, qb⟩; intro (hqa : qa = 0) (hqb : qb = 0)
+    subst hqa hqb
+    rw [MetabelianGroup.mult, add_zero]
   inv_closure := by
-    intro ⟨ka, qa⟩; intro h
-    rw [h]
-    have zl : (ka, (0 : Q))⁻¹ = (-ka, 0) := by 
-        rw [Inv.inv]
-        show MetabelianGroup.inv c (ka, 0) = (-ka, 0)
-        rw [MetabelianGroup.inv]
-        admit
-    rw [zl]      
- 
+    intro ⟨ka, qa⟩; intro (h : qa = 0)
+    subst h
+    rw [MetabelianGroup.inverse, neg_zero]
   id_closure := rfl
 
 instance kernel_group : Group (Metabelian.Kernel Q K) :=
   subGroup.Group _
 
-instance kernel_inclusion : Group.Homomorphism (subType.val (λ ((k, q) : K × Q) => q = (0 : Q))) := inferInstance
+instance kernel_inclusion : Group.Homomorphism (subType.val (λ ((_, q) : K × Q) => q = (0 : Q))) := inferInstance
 
 theorem Metabelian.Kernel.mul_comm : ∀ k k' : Metabelian.Kernel Q K, k * k' = k' * k := by
   intro ⟨⟨ka, 0⟩, rfl⟩; intro ⟨⟨kb, 0⟩, rfl⟩
   apply subType.eq_of_val_eq
-  show Mul.mul (ka, (0 : Q)) (kb, 0) = Mul.mul (kb, 0) (ka, 0)
-  simp [Mul.mul, MetabelianGroup.mul]; rw [add_comm]
+  show (ka, (0 : Q)) * (kb, 0) = (kb, 0) * (ka, 0)
+  repeat (rw [MetabelianGroup.mult])
+  simp
+  exact (add_comm ka kb)
 
-instance : AddCommGroup (Metabelian.Kernel Q K) := Group.to_additive (Metabelian.Kernel.mul_comm _ _ _)
+instance kernel_addgroup : AddCommGroup (Metabelian.Kernel Q K) :=
+  Group.to_additive (Metabelian.Kernel.mul_comm Q K c)
 
 instance : AddCommGroup.Homomorphism (Metabelian.Kernel.inclusion Q K) where
   add_dist := by
     intro k k'
-    rw [Metabelian.Kernel.inclusion]
+    show _ = ⟨(k, 0) * (k', 0), _⟩
     apply subType.eq_of_val_eq
-    show (k + k', (0 : Q)) = Mul.mul (k, 0) (k', 0)
-    simp [Mul.mul, MetabelianGroup.mul]
+    show ((k + k'), (0 : Q)) = (k, (0 : Q)) * (k', (0 : Q))
+    rw [MetabelianGroup.mult]
+    simp
 
 instance : AddCommGroup.Homomorphism (Metabelian.Kernel.projection Q K) where
   add_dist := by
     intro ⟨⟨k, 0⟩, rfl⟩; intro ⟨⟨k', 0⟩, rfl⟩
-    simp [Metabelian.Kernel.projection, MetabelianGroup.mul]
+    -- show (Metabelian.Kernel.projection Q K) ⟨(k, (0 : Q)) * (k', (0 : Q)), _⟩ = k + k'
+    show (fun (k, _) => k) ((k, (0 : Q)) * (k', (0 : Q))) = k + k'
+    rw [MetabelianGroup.mult]
+    -- show k + (0 : Q) • k' + c 0 0 = k + k'
+    simp
 
 instance : AddCommGroup.Isomorphism K (Metabelian.Kernel Q K) :=
   {
@@ -227,6 +224,6 @@ instance : AddCommGroup.Isomorphism K (Metabelian.Kernel Q K) :=
               intro ⟨⟨k, 0⟩, rfl⟩
               show (Metabelian.Kernel.inclusion Q K) ((Metabelian.Kernel.projection Q K) ⟨⟨k, 0⟩, rfl⟩) = ⟨⟨k, 0⟩, rfl⟩
               rw [Metabelian.Kernel.projection, Metabelian.Kernel.inclusion]
-      }
+  }
 
 end Exactness

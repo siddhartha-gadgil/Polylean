@@ -102,6 +102,11 @@ variable {A : Type _} [AddCommGroup A] {a b c : A}
 @[simp] theorem add_right_eq_cancel : b + a = a ↔ b = 0 := by
   rw [add_comm]; simp
 
+@[simp] theorem neg_zero : (-0 : A) = (0 : A) := by
+  have : (-0 : A) + (0 : A) = (0 : A) := neg_add_self (0 : A)
+  rw [add_zero] at this
+  exact this
+
 end AddCommGroup
 
 namespace Group.Homomorphism
