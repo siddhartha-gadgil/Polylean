@@ -44,10 +44,22 @@ instance {A B : Type _} [AddCommGroup A] [AddCommGroup B] [TorsionFreeAdditive A
     have scal_mul_pair : ∀ m : ℕ, m • (a, b) = (m • a, m • b) := by
       intro m
       induction m with
-        | zero => simp [SMul.sMul, SubNegMonoid.gsmul_zero']; rfl
-        | succ m ih => simp [SMul.sMul] at *; simp [ih]
+        | zero => 
+          simp only [SMul.sMul, SubNegMonoid.gsmul_zero', Function.comp, SubNegMonoid.gsmul, gsmul_rec, nsmul_rec]
+          show 0 =  (SubNegMonoid.gsmul 0 a, SubNegMonoid.gsmul 0 b)
+          rw [SubNegMonoid.gsmul_zero']
+          rw [SubNegMonoid.gsmul_zero']
+          rfl
+        | succ m ih => 
+            simp only [SMul.sMul, Function.comp, ih]
+            rw [SubNegMonoid.gsmul_succ']
+            rw [SubNegMonoid.gsmul_succ']
+            rw [SubNegMonoid.gsmul_succ']
+            show (a, b) + m • (a, b) = (a + m • a,b +  m • b)
+            admit
+
     show (n.succ • (a, b)) = (0, 0) → ((a, b) = (0, 0))
-    have prod_eq {α β : Type _} (a c : α) (b d : β) : (a, b) = (c, d) ↔ (a = c) ∧ (b = d) := by simp
+    have prod_eq {α β : Type _} (a c : α) (b d : β) : (a, b) = (c, d) ↔ (a = c) ∧ (b = d) := by simp 
     rw [scal_mul_pair, prod_eq, prod_eq]
     intro ⟨_, _⟩; apply And.intro <;> apply TorsionFreeAdditive.torsion_free <;> assumption
 
