@@ -108,7 +108,7 @@ lemma odd_ne_zero : {a : ℤ} → ¬(a + a + 1 = 0) := by
 theorem square_free : ∀ g : P, g ^ 2 = 1 → g = 1 := by
   intro ⟨(p, q, r), x⟩
   apply Q.rec (λ x => ((p, q, r), x) ^ 2 = ((0, 0, 0), (⟨0, _⟩, ⟨0, _⟩)) → ((p, q, r), x) = ((0, 0, 0), (⟨0, _⟩, ⟨0, _⟩)))
-  <;> rw [s_square, s] <;> intros <;> (try (apply odd_ne_zero; assumption))
+  <;> rw [s_square, s] <;> simp only [subType.val]
 
   have zero_of_double_zero : ∀ m : ℤ, m + m = 0 → m = 0 := by
     intro m; have : m + m = SubNegMonoid.gsmul (Int.ofNat Nat.zero.succ.succ) m := by rw [SubNegMonoid.gsmul_succ', add_left_cancel_iff, SubNegMonoid.gsmul_succ', Int.ofNat_zero, SubNegMonoid.gsmul_zero', add_zero]
