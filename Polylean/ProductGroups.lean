@@ -41,6 +41,18 @@ theorem product_comm : ∀ g h : K × Q, MetabelianGroup.mul trivial_cocycle g h
   show  (k + k' + 0, q + q') = (k' + k + 0, q' + q)
   rw [add_zero, add_zero, AddCommGroup.add_comm k k', AddCommGroup.add_comm q q']
 
+theorem product_coords : ∀ g h : K × Q,
+     MetabelianGroup.mul trivial_cocycle g h = (g.1 + h.1, g.2 + h.2) := by
+        intro (k, q)
+        intro (k', q')
+        rw [MetabelianGroup.mul]
+        let tc : @trivial_cocycle Q K _ q q' = 0 := by rfl
+        show (k + q • k' + trivial_cocycle q q', q + q') = (k + k', q + q')
+        rw [tc, add_zero]
+        simp only [SMul.sMul] 
+        have tc' : trivial_action q k'= k' := by rfl
+        rw [tc']
+        
 end Product
 
 namespace DirectSum

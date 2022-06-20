@@ -56,7 +56,10 @@ instance {A B : Type _} [AddCommGroup A] [AddCommGroup B] [TorsionFreeAdditive A
             rw [SubNegMonoid.gsmul_succ']
             rw [SubNegMonoid.gsmul_succ']
             show (a, b) + m • (a, b) = (a + m • a,b +  m • b)
-            admit
+            rw [ih]
+            let lem : (a, b) + (m • a, m • b) =
+                  (a + m • a, b + m • b) := product_coords (a, b) (m • a, m • b) 
+            exact lem
 
     show (n.succ • (a, b)) = (0, 0) → ((a, b) = (0, 0))
     have prod_eq {α β : Type _} (a c : α) (b d : β) : (a, b) = (c, d) ↔ (a = c) ∧ (b = d) := by simp 
@@ -90,7 +93,7 @@ theorem s_square : ∀ g : P, g ^ 2 = (s g).val := by
   intro ((p, q, r), x); revert x
   have square_mul {G : Type} [Group G] (g : G) : g ^ 2 = g * g := by
     show g ^ (Nat.succ 1) = g * g; rw [pow_succ, pow_one]
-  apply Q.rec <;> simp [s, square_mul, Pmul] <;> simp [action, cocycle, prod, id, neg]
+  apply Q.rec <;> simp only [s, square_mul, Pmul] <;> simp [action, cocycle, prod, id, neg]
 
 -- ℤ³ is torsion-free
 instance torsionfreeℤ3 : TorsionFreeAdditive K := inferInstance
