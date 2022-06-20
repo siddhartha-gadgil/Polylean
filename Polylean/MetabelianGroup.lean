@@ -66,12 +66,12 @@ variable (c : Q → Q → K) [ccl : Cocycle c]
 The multiplication operation defined using the cocycle.
 The cocycle condition is crucially used in showing associativity and other properties.
 -/
-def mul : (K × Q) → (K × Q) → (K × Q)
+@[reducible] def mul : (K × Q) → (K × Q) → (K × Q)
   | (k, q), (k', q') => (k + (q • k') + c q q', q + q')
 
 def e : K × Q := (0, 0)
 
-def inv : K × Q → K × Q
+@[reducible] def inv : K × Q → K × Q
   | (k, q) => (- ((-q) • (k  + c q (-q))), -q)
 
 theorem left_id : ∀ (g : K × Q), mul c e g = g

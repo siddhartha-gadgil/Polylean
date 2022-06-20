@@ -67,7 +67,7 @@ theorem mul {a a' : A} {b b' : B} : MetabelianGroup.mul trivial_cocycle (a, b) (
     show (a + a' + 0, b + b') = _
     rw [add_zero]
 
-@[simp] theorem add (a a' : A) (b b' : B) : (a, b) + (a', b') = (a + a', b + b') := mul
+@[reducible, simp] theorem add (a a' : A) (b b' : B) : (a, b) + (a', b') = (a + a', b + b') := mul
 
 end DirectSum
 
@@ -78,7 +78,7 @@ variable {A B C D : Type _} [AddCommGroup A] [AddCommGroup B] [AddCommGroup C] [
 
 -- products of homomorphisms
 -- this is used in defining the group action required for constructing the Metabelian group `P`
-def prod (f : A → C) (g : B → D) : A × B → C × D
+@[reducible] def prod (f : A → C) (g : B → D) : A × B → C × D
   | (a, b) => (f a, g b)
 
 infixr:100 " × " => prod

@@ -35,7 +35,7 @@ abbrev ab : Q := (⟨1, by decide⟩, ⟨1, by decide⟩)
 
 -- the action of `Q` on `K` by automorphisms
 -- `id` and `neg` are the identity and negation homomorphisms
-def action : Q → K → K
+@[reducible] def action : Q → K → K
   | (⟨0, _⟩, ⟨0, _⟩) => id × id × id
   | (⟨0, _⟩, ⟨1, _⟩) => neg × id × neg
   | (⟨1, _⟩, ⟨0, _⟩) => id × neg × neg
@@ -71,7 +71,7 @@ instance : AutAction Q K action :=
 
 
 -- the cocycle in the construction
-def cocycle : Q → Q → K
+@[reducible] def cocycle : Q → Q → K
   | (⟨0, _⟩, ⟨0, _⟩) , (⟨0, _⟩, ⟨0, _⟩)  => 0
   | (⟨0, _⟩, ⟨0, _⟩) , (⟨0, _⟩, ⟨1, _⟩)  => 0
   | (⟨0, _⟩, ⟨0, _⟩) , (⟨1, _⟩, ⟨0, _⟩)  => 0

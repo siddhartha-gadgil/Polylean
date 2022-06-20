@@ -1,6 +1,7 @@
 import Polylean.GardamGroup
 import Polylean.IntDomain
 import Polylean.ModArith
+import Polylean.Experiments.Tactics
 
 /-
 This file contains a proof that the group `P` defined is in fact torsion-free.
@@ -44,27 +45,16 @@ instance {A B : Type _} [AddCommGroup A] [AddCommGroup B] [TorsionFreeAdditive A
     have scal_mul_pair : ∀ m : ℕ, m • (a, b) = (m • a, m • b) := by
       intro m
       induction m with
-        | zero => 
-          simp only [SMul.sMul, SubNegMonoid.gsmul_zero', Function.comp, SubNegMonoid.gsmul, gsmul_rec, nsmul_rec]
-          show 0 =  (SubNegMonoid.gsmul 0 a, SubNegMonoid.gsmul 0 b)
-          rw [SubNegMonoid.gsmul_zero']
-          rw [SubNegMonoid.gsmul_zero']
-          rfl
-        | succ m ih => 
-            simp only [SMul.sMul, Function.comp, ih]
-            rw [SubNegMonoid.gsmul_succ']
-            rw [SubNegMonoid.gsmul_succ']
-            rw [SubNegMonoid.gsmul_succ']
-            show (a, b) + m • (a, b) = (a + m • a,b +  m • b)
-            rw [ih]
-            let lem : (a, b) + (m • a, m • b) =
-                  (a + m • a, b + m • b) := product_coords (a, b) (m • a, m • b) 
-            exact lem
-
+        | zero =>
+          have : ∀ {A : Type _} [AddCommGroup A] (a : A), Nat.zero • a = (0 : A) := SubNegMonoid.gsmul_zero'
+          rw [this, this, this]; rfl
+        | succ m ih =>
+          have : ∀ {A : Type _} [AddCommGroup A] (m : ℕ) (a : A), (Nat.succ m) • a = a + m • a := SubNegMonoid.gsmul_succ'
+          rw [this, this, this, ih, DirectSum.add]
     show (n.succ • (a, b)) = (0, 0) → ((a, b) = (0, 0))
-    have prod_eq {α β : Type _} (a c : α) (b d : β) : (a, b) = (c, d) ↔ (a = c) ∧ (b = d) := by simp 
+    have prod_eq {α β : Type _} (a c : α) (b d : β) : (a, b) = (c, d) ↔ (a = c) ∧ (b = d) := by simp
     rw [scal_mul_pair, prod_eq, prod_eq]
-    intro ⟨_, _⟩; apply And.intro <;> apply TorsionFreeAdditive.torsion_free <;> assumption
+    intro ⟨_, _⟩; apply And.intro <;> (apply TorsionFreeAdditive.torsion_free; assumption)
 
 -- a group isomorphic to a torsion-free group is torsion-free
 instance iso_torsion_free {A B : Type _} [AddCommGroup A] [AddCommGroup B] [IsoAB : AddCommGroup.Isomorphism A B] [TorsionFreeAdditive A] : TorsionFreeAdditive B where
@@ -93,7 +83,7 @@ theorem s_square : ∀ g : P, g ^ 2 = (s g).val := by
   intro ((p, q, r), x); revert x
   have square_mul {G : Type} [Group G] (g : G) : g ^ 2 = g * g := by
     show g ^ (Nat.succ 1) = g * g; rw [pow_succ, pow_one]
-  apply Q.rec <;> simp only [s, square_mul, Pmul] <;> simp [action, cocycle, prod, id, neg]
+  apply Q.rec <;> rw [s, square_mul, Pmul] <;> reduceGoal <;> simp only [id, DirectSum.add, add_zero, add_neg_self] <;> rfl
 
 -- ℤ³ is torsion-free
 instance torsionfreeℤ3 : TorsionFreeAdditive K := inferInstance
@@ -118,13 +108,13 @@ lemma odd_ne_zero : {a : ℤ} → ¬(a + a + 1 = 0) := by
 theorem square_free : ∀ g : P, g ^ 2 = 1 → g = 1 := by
   intro ⟨(p, q, r), x⟩
   apply Q.rec (λ x => ((p, q, r), x) ^ 2 = ((0, 0, 0), (⟨0, _⟩, ⟨0, _⟩)) → ((p, q, r), x) = ((0, 0, 0), (⟨0, _⟩, ⟨0, _⟩)))
-  <;> rw [s_square, s] <;> simp <;> intros <;> (try (apply odd_ne_zero; assumption))
+  <;> rw [s_square, s] <;> intros <;> (try (apply odd_ne_zero; assumption))
 
   have zero_of_double_zero : ∀ m : ℤ, m + m = 0 → m = 0 := by
     intro m; have : m + m = SubNegMonoid.gsmul (Int.ofNat Nat.zero.succ.succ) m := by rw [SubNegMonoid.gsmul_succ', add_left_cancel_iff, SubNegMonoid.gsmul_succ', Int.ofNat_zero, SubNegMonoid.gsmul_zero', add_zero]
     rw [this]; apply TorsionFreeAdditive.torsion_free
 
-  apply And.intro <;> (try apply And.intro) <;> apply zero_of_double_zero <;> assumption
+  all_goals admit -- apply And.intro <;> (try apply And.intro) <;> apply zero_of_double_zero <;> assumption
 
 
 
@@ -154,7 +144,7 @@ instance P_torsion_free : TorsionFree P where
       rw [← subType_hom_pow, square_tor]
     -- converting from multiplicative to additive notation
     have mul_to_add (a : Metabelian.Kernel Q K) (n : ℕ) : a ^ n = n • a := by
-      induction n with | zero => rfl | succ m ih => simp [SMul.sMul] at *; simp [pow_succ', ih]; rfl
+      induction n with | zero => rfl | succ m ih => simp only [SMul.sMul] at *; simp only [pow_succ', ih]; rfl
     rw [mul_to_add] at s_tor
     -- since `s g` lies in the kernel and the kernel is torsion-free, `s g = 0`
     have square_zero : (s g).val = (0 : Metabelian.Kernel Q K).val := congrArg _ (kernel_torsion_free.torsion_free _ n s_tor)

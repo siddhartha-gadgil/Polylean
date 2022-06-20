@@ -336,7 +336,7 @@ instance {n : ℤ} : AddCommGroup.Homomorphism (gsmul_rec n : A → A) where
   rw [← add_assoc a (-a) _, add_right_neg, zero_add, add_right_neg,
   ← add_assoc, add_comm a a', add_right_neg]
 
-def neg (a : A) := -a
+@[reducible] def neg (a : A) := -a
 
 instance : AddCommGroup.Homomorphism (neg : A → A) where
   add_dist := neg_hom
