@@ -1,4 +1,3 @@
-import Polylean
 import Polylean.ConjInvLength.LengthBound
 import Polylean.ConjInvLength.Length
 import Polylean.ConjInvLength.ProvedBound
