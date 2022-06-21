@@ -46,21 +46,19 @@ instance {A B : Type _} [AddCommGroup A] [AddCommGroup B] [TorsionFreeAdditive A
       intro m
       induction m with
         | zero =>
-          have : ∀ {A : Type _} [AddCommGroup A] (a : A), Nat.zero • a = (0 : A) := SubNegMonoid.gsmul_zero'
-          rw [this, this, this]; rfl
+          repeat (rw [smul_zero])
+          rw [DirectSum.zero_pair]
         | succ m ih =>
-          have : ∀ {A : Type _} [AddCommGroup A] (m : ℕ) (a : A), (Nat.succ m) • a = a + m • a := SubNegMonoid.gsmul_succ'
-          rw [this, this, this, ih, DirectSum.add]
-    show (n.succ • (a, b)) = (0, 0) → ((a, b) = (0, 0))
-    have prod_eq {α β : Type _} (a c : α) (b d : β) : (a, b) = (c, d) ↔ (a = c) ∧ (b = d) := by simp
-    rw [scal_mul_pair, prod_eq, prod_eq]
+          repeat (rw [smul_succ])
+          rw [ih, DirectSum.add]
+    rw [scal_mul_pair, DirectSum.zero_pair, prod_eq, prod_eq]
     intro ⟨_, _⟩; apply And.intro <;> (apply TorsionFreeAdditive.torsion_free; assumption)
 
 -- a group isomorphic to a torsion-free group is torsion-free
 instance iso_torsion_free {A B : Type _} [AddCommGroup A] [AddCommGroup B] [IsoAB : AddCommGroup.Isomorphism A B] [TorsionFreeAdditive A] : TorsionFreeAdditive B where
   torsion_free := by
     intro b n h
-    have : n.succ • (IsoAB.inv b) = 0 := by simp [h]
+    have : n.succ • (IsoAB.inv b) = 0 := by rw [hom_mul, h]; simp
     have : (IsoAB.map ∘ IsoAB.inv) b = IsoAB.map 0 := congrArg IsoAB.map $ TorsionFreeAdditive.torsion_free (IsoAB.inv b) n this
     rw [IsoAB.idTgt] at this; simp at this
     assumption
@@ -96,7 +94,6 @@ instance kernel_torsion_free : TorsionFreeAdditive (Metabelian.Kernel Q K) := in
 -- @iso_torsion_free (ℤ × ℤ × ℤ) (Metabelian.Kernel Q K) _ _ isoℤ3kernel torsionfreeℤ3
 
 
-
 -- a proof that an odd integer must be non-zero
 lemma odd_ne_zero : {a : ℤ} → ¬(a + a + 1 = 0) := by
   intro a h
@@ -107,16 +104,14 @@ lemma odd_ne_zero : {a : ℤ} → ¬(a + a + 1 = 0) := by
 -- the only element of `P` with order dividing `2` is the identity
 theorem square_free : ∀ g : P, g ^ 2 = 1 → g = 1 := by
   intro ⟨(p, q, r), x⟩
+  have zero_of_double_zero : ∀ m : ℤ, m + m = 0 ↔ m = 0 := by
+    intro m; apply Iff.intro
+    · have : m + m = SubNegMonoid.gsmul (Int.ofNat Nat.zero.succ.succ) m := by rw [SubNegMonoid.gsmul_succ', add_left_cancel_iff, SubNegMonoid.gsmul_succ', Int.ofNat_zero, SubNegMonoid.gsmul_zero', add_zero]
+      rw [this]; apply TorsionFreeAdditive.torsion_free
+    · intro h; rw [h, add_zero]
   apply Q.rec (λ x => ((p, q, r), x) ^ 2 = ((0, 0, 0), (⟨0, _⟩, ⟨0, _⟩)) → ((p, q, r), x) = ((0, 0, 0), (⟨0, _⟩, ⟨0, _⟩)))
-  <;> rw [s_square, s] <;> simp only [subType.val]
-
-  have zero_of_double_zero : ∀ m : ℤ, m + m = 0 → m = 0 := by
-    intro m; have : m + m = SubNegMonoid.gsmul (Int.ofNat Nat.zero.succ.succ) m := by rw [SubNegMonoid.gsmul_succ', add_left_cancel_iff, SubNegMonoid.gsmul_succ', Int.ofNat_zero, SubNegMonoid.gsmul_zero', add_zero]
-    rw [this]; apply TorsionFreeAdditive.torsion_free
-
-  all_goals admit -- apply And.intro <;> (try apply And.intro) <;> apply zero_of_double_zero <;> assumption
-
-
+  <;> rw [s_square, s] <;> simp only [subType.val, prod_eq, zero_of_double_zero, and_false, and_true, true_and] <;> try (apply odd_ne_zero)
+  . exact id
 
 -- if `g` is a torsion element, so is `g ^ 2`
 theorem torsion_implies_square_torsion : ∀ g : P, ∀ n : ℕ, g ^ n = 1 → (g ^ 2) ^ n = 1 :=
@@ -126,7 +121,6 @@ theorem torsion_implies_square_torsion : ∀ g : P, ∀ n : ℕ, g ^ n = 1 → (
               _      = (g ^ n) ^ 2 := by rw [pow_mul]
               _      = (1 : P) ^ 2 := by rw [← g_tor]
               _      = (1 : P)     := rfl
-
 
 
 -- `P` is torsion-free

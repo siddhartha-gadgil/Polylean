@@ -1,4 +1,5 @@
 import Polylean.MetabelianGroup
+import Polylean.Experiments.Tactics
 
 /-
 Define the product of two groups and related concepts.
@@ -41,11 +42,12 @@ theorem product_comm : ∀ g h : K × Q, MetabelianGroup.mul trivial_cocycle g h
   show  (k + k' + 0, q + q') = (k' + k + 0, q' + q)
   rw [add_zero, add_zero, AddCommGroup.add_comm k k', AddCommGroup.add_comm q q']
 
+theorem prod_eq {α β : Type _} (a c : α) (b d : β) : (a, b) = (c, d) ↔ (a = c) ∧ (b = d) := by simp
+
 theorem product_coords : ∀ g h : K × Q,
      MetabelianGroup.mul trivial_cocycle g h = (g.1 + h.1, g.2 + h.2) := by
-        intro (k, q)
-        intro (k', q')
-        rw [MetabelianGroup.mul]
+        intro (k, q) (k', q')
+        reduceGoal
         let tc : @trivial_cocycle Q K _ q q' = 0 := by rfl
         show (k + q • k' + trivial_cocycle q q', q + q') = (k + k', q + q')
         rw [tc, add_zero]
@@ -60,6 +62,7 @@ namespace DirectSum
 variable {A B : Type _} [AddCommGroup A] [AddCommGroup B]
 
 -- Direct sums as an additive version of products
+-- @[irreducible]
 instance directSum : AddCommGroup (A × B) :=
   Group.to_additive product_comm
 
@@ -67,7 +70,16 @@ theorem mul {a a' : A} {b b' : B} : MetabelianGroup.mul trivial_cocycle (a, b) (
     show (a + a' + 0, b + b') = _
     rw [add_zero]
 
-@[reducible, simp] theorem add (a a' : A) (b b' : B) : (a, b) + (a', b') = (a + a', b + b') := mul
+@[reducible, simp] theorem add (a a' : A) (b b' : B) : (a, b) + (a', b') = (a + a', b + b') := by simp only [HAdd.hAdd, Add.add]; exact mul
+
+theorem zero_pair : (0 : A × B) = ((0 : A), (0 : B)) := rfl
+/-
+  have pair_left_id : ∀ x : A × B, (0, 0) + x = x := by
+    intro (a, b); rw [add, zero_add, zero_add]
+  have id_add : (0, 0) + (0 : A × B) = (0, 0) := by rw [add_zero]
+  rw [pair_left_id] at id_add
+  assumption
+-/
 
 end DirectSum
 

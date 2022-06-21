@@ -1,5 +1,6 @@
 import Polylean.Morphisms
 import Polylean.GroupAction
+import Polylean.Experiments.Tactics
 
 /-
 Metabelian groups are group extensions `1 → K → G → Q → 1` with both the kernel and the quotient abelian. Such an extension is determined by data:
@@ -167,11 +168,13 @@ instance : subGroup (λ ((_, q) : K × Q) => q = (0 : Q)) where
   mul_closure := by
     intro ⟨ka, qa⟩ ⟨kb, qb⟩; intro (hqa : qa = 0) (hqb : qb = 0)
     subst hqa hqb
-    rw [MetabelianGroup.mult, add_zero]
+    reduceGoal
+    rw [add_zero]
   inv_closure := by
     intro ⟨ka, qa⟩; intro (h : qa = 0)
     subst h
-    rw [MetabelianGroup.inverse, neg_zero]
+    reduceGoal
+    rw [neg_zero]
   id_closure := rfl
 
 instance kernel_group : Group (Metabelian.Kernel Q K) :=
@@ -184,8 +187,7 @@ theorem Metabelian.Kernel.mul_comm : ∀ k k' : Metabelian.Kernel Q K, k * k' = 
   apply subType.eq_of_val_eq
   show (ka, (0 : Q)) * (kb, 0) = (kb, 0) * (ka, 0)
   repeat (rw [MetabelianGroup.mult])
-  simp
-  exact (add_comm ka kb)
+  simp only [add_zero, Cocycle.cocycleId, AddCommGroup.Action.id_action, add_comm]
 
 instance kernel_addgroup : AddCommGroup (Metabelian.Kernel Q K) :=
   Group.to_additive (Metabelian.Kernel.mul_comm Q K c)
@@ -204,7 +206,7 @@ instance : AddCommGroup.Homomorphism (Metabelian.Kernel.projection Q K) where
     intro ⟨⟨k, 0⟩, rfl⟩; intro ⟨⟨k', 0⟩, rfl⟩
     -- show (Metabelian.Kernel.projection Q K) ⟨(k, (0 : Q)) * (k', (0 : Q)), _⟩ = k + k'
     show (fun (k, _) => k) ((k, (0 : Q)) * (k', (0 : Q))) = k + k'
-    rw [MetabelianGroup.mult]
+    reduceGoal
     -- show k + (0 : Q) • k' + c 0 0 = k + k'
     simp
 
