@@ -42,7 +42,14 @@ theorem product_comm : ∀ g h : K × Q, MetabelianGroup.mul trivial_cocycle g h
   show  (k + k' + 0, q + q') = (k' + k + 0, q' + q)
   rw [add_zero, add_zero, AddCommGroup.add_comm k k', AddCommGroup.add_comm q q']
 
-theorem prod_eq {α β : Type _} (a c : α) (b d : β) : (a, b) = (c, d) ↔ (a = c) ∧ (b = d) := by simp
+theorem prod_eq {α β : Type _} (a c : α) (b d : β) : (a, b) = (c, d) ↔ (a = c) ∧ (b = d) := by
+  apply Iff.intro
+  · intro (h : Prod.mk a b = Prod.mk c d)
+    injection h
+    apply And.intro <;> assumption
+  · intro ⟨hac, hbd⟩
+    subst hac hbd
+    rfl
 
 theorem product_coords : ∀ g h : K × Q,
      MetabelianGroup.mul trivial_cocycle g h = (g.1 + h.1, g.2 + h.2) := by
