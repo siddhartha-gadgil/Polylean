@@ -42,12 +42,24 @@ inductive AddTree (α : Type u)[Repr α] where
   | node : AddTree α  → AddTree α  → AddTree α 
   | subNode: AddTree α  → AddTree α  → AddTree α
 
-def AddTree.fold {α : Type u}[AddCommGroup α][Repr α]  (t : AddTree α ) : α :=
+@[reducible, simp] def AddTree.fold {α : Type u}[AddCommGroup α][Repr α]  (t : AddTree α ) : α :=
   match t with
   | AddTree.leaf a => a
   | AddTree.node l r =>  (fold l) + (fold r)
   | AddTree.negLeaf a => -a
   | AddTree.subNode l r => (fold l) - (fold r)
+
+@[reducible] def AddTree.elements {α : Type _} [Repr α] : AddTree α → List α
+  | AddTree.leaf a => [a]
+  | AddTree.negLeaf a => [a]
+  | AddTree.node l r => (elements l) ++ (elements r)
+  | AddTree.subNode l r => (elements l) ++ (elements r)
+
+@[reducible, simp] def AddTree.map {α β : Type _} [Repr α] [Repr β] (f : α → β) : AddTree α → AddTree β
+  | AddTree.leaf a => AddTree.leaf (f a)
+  | AddTree.negLeaf a => AddTree.negLeaf (f a)
+  | AddTree.node l r => AddTree.node (map f l) (map f r)
+  | AddTree.subNode l r => AddTree.subNode (map f l) (map f r)
 
 def AddTree.foldMul {α : Type u}[CommGroup α][Repr α]  (t : AddTree α ) : α :=
   match t with
@@ -126,6 +138,14 @@ partial def treeM (e : Expr) : MetaM Expr := do
       let rImage := foldMap r basisImages h  
       lImage - rImage
 
+def IndexAddTree.map {α : Type _} [AddCommGroup α] [Repr α] 
+  (t : IndexAddTree) (basisImages : Array α) (h : basisImages.size > 0) : AddTree α :=
+  match t with
+    | AddTree.leaf i => AddTree.leaf (basisImages.get (Fin.ofNat' i h))
+    | AddTree.negLeaf i => AddTree.negLeaf (basisImages.get (Fin.ofNat' i h))
+    | AddTree.node l r => AddTree.node (map l basisImages h) (map r basisImages h)
+    | AddTree.subNode l r => AddTree.subNode (map l basisImages h) (map r basisImages h)
+
 @[simp] def IndexAddTree.foldMapMul {α : Type u}[CommGroup α][Repr α]
   (t : IndexAddTree)(basisImages: Array α)(h: basisImages.size > 0) : α :=
   match t with
@@ -139,6 +159,15 @@ partial def treeM (e : Expr) : MetaM Expr := do
       let lImage := foldMapMul l basisImages h
       let rImage := foldMapMul r basisImages h  
       lImage / rImage
+
+theorem AddTree.fold_tree_map_eq {A B : Type _} [AddCommGroup A] [Repr A] [AddCommGroup B] [Repr B]
+  (φ : A → B) [Homφ : AddCommGroup.Homomorphism φ] : (t : AddTree A) → φ t.fold = (t.map φ).fold := by 
+    intro t
+    induction t with
+      | leaf a => rw [map, fold, fold] 
+      | negLeaf a => rw [map, fold, fold, Homφ.neg_push]
+      | node l r ihl ihr => rw [map, fold, fold, Homφ.add_dist, ihl, ihr]
+      | subNode l r ihl ihr => rw [map, fold, fold, Homφ.neg_dist, ihl, ihr]
 
 -- taking an abstract tree to a given list of `n` elements of group `A` is equivalent to
 -- first taking it to the basis of `ℤ^n` and then apply the `inducedFreeMap`
