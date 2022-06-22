@@ -36,7 +36,7 @@ def invOp? (fname: Name)(e : Expr)  : MetaM (Option (Expr)) := do
   else
     return none
 
-inductive AddTree (α : Type u)[Repr α] where
+inductive AddTree (α : Type u) where
   | leaf : α → AddTree α 
   | negLeaf : α → AddTree α 
   | node : AddTree α  → AddTree α  → AddTree α 
@@ -55,7 +55,19 @@ inductive AddTree (α : Type u)[Repr α] where
   | AddTree.node l r => (elements l) ++ (elements r)
   | AddTree.subNode l r => (elements l) ++ (elements r)
 
-@[reducible, simp] def AddTree.map {α β : Type _} [Repr α] [Repr β] (f : α → β) : AddTree α → AddTree β
+def AddTree.negate {α : Type _} : AddTree α → AddTree α
+  | AddTree.leaf a => AddTree.negLeaf a
+  | AddTree.negLeaf a => AddTree.leaf a
+  | AddTree.node l r => AddTree.subNode l r
+  | AddTree.subNode l r => AddTree.node l r
+
+def AddTree.reduce {α : Type _} : AddTree (AddTree α) → AddTree α
+  | AddTree.leaf adt => adt
+  | AddTree.negLeaf adt => negate adt
+  | AddTree.node lt rt => AddTree.node (reduce lt) (reduce rt)
+  | AddTree.subNode lt rt => AddTree.subNode (reduce lt) (reduce rt)
+
+@[reducible, simp] def AddTree.map {α β : Type _} (f : α → β) : AddTree α → AddTree β
   | AddTree.leaf a => AddTree.leaf (f a)
   | AddTree.negLeaf a => AddTree.negLeaf (f a)
   | AddTree.node l r => AddTree.node (map f l) (map f r)
@@ -67,6 +79,15 @@ def AddTree.foldMul {α : Type u}[CommGroup α][Repr α]  (t : AddTree α ) : α
   | AddTree.node l r =>  (foldMul l) * (foldMul r)
   | AddTree.negLeaf a => a⁻¹ 
   | AddTree.subNode l r => (foldMul l) / (foldMul r)
+
+instance : Monad AddTree :=
+  {
+    pure := AddTree.leaf
+    map := AddTree.map
+    bind := λ adt f => (adt.map f).reduce
+  }
+
+instance : LawfulMonad AddTree := sorry
 
 abbrev IndexAddTree := AddTree Nat 
 
