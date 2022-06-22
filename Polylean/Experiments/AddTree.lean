@@ -80,6 +80,11 @@ def AddTree.foldMul {α : Type u}[CommGroup α][Repr α]  (t : AddTree α ) : α
   | AddTree.negLeaf a => a⁻¹ 
   | AddTree.subNode l r => (foldMul l) / (foldMul r)
 
+/-
+Reference:  Monads, partial evaluations, and rewriting by Tobias Fritz and Paulo Perrone
+https://arxiv.org/pdf/1810.06037.pdf
+-/
+
 instance : Monad AddTree :=
   {
     pure := AddTree.leaf
