@@ -64,7 +64,7 @@ abbrev IndexAddTree := AddTree Nat
   | AddTree.leaf a => 
     match accum.getIdx? a with
     | some i => (AddTree.leaf i, accum)
-    | none => (AddTree.leaf (accum.size), accum)
+    | none => (AddTree.leaf (accum.size), accum.push a)
   | AddTree.node l r =>  
     let (lIdx, lAccum) := indexTree l accum
     let (rIdx, rAccum) := indexTree r lAccum
@@ -77,6 +77,10 @@ abbrev IndexAddTree := AddTree Nat
     let (lIdx, lAccum) := indexTree l accum
     let (rIdx, rAccum) := indexTree r lAccum
     (AddTree.subNode lIdx rIdx, rAccum)
+
+@[simp] def AddTree.indexTree₀  {α : Type u}[Repr α][DecidableEq α](t: AddTree α) := t.indexTree #[]
+
+theorem pos_size {α : Type u}[Repr α][DecidableEq α](t: AddTree α) : t.indexTree₀.2.size > 0 := sorry 
 
 partial def treeM (e : Expr) : MetaM Expr := do
   match ← hOp? ``HAdd.hAdd e with
@@ -104,12 +108,12 @@ partial def treeM (e : Expr) : MetaM Expr := do
     mkAppM ``AddTree.subNode #[l, r]
   | none  =>
   match ← invOp? ``Neg.neg e with
-  | some a => mkAppM ``AddTree.negLeaf #[e]
+  | some a => mkAppM ``AddTree.negLeaf #[a]
   | none  =>
   match ← invOp? ``Inv.inv e with
-  | some a => mkAppM ``AddTree.negLeaf #[e]
+  | some a => mkAppM ``AddTree.negLeaf #[a]
   | none  =>
-    mkAppM ``AddTree.leaf #[e]
+      mkAppM ``AddTree.leaf #[e]
 
 @[simp] def IndexAddTree.foldMap {α : Type u}[AddCommGroup α][Repr α] 
   (t : IndexAddTree)(basisImages: Array α)(h: basisImages.size > 0) : α :=
@@ -125,6 +129,11 @@ partial def treeM (e : Expr) : MetaM Expr := do
       let rImage := foldMap r basisImages h  
       lImage - rImage
 
+@[simp] def foldPair{α : Type u}[AddCommGroup α][Repr α] 
+  (tb : IndexAddTree × Array α)(h: tb.snd.size > 0) : α  := 
+  let (t, basisImages) := tb
+  t.foldMap basisImages h
+
 @[simp] def IndexAddTree.foldMapMul {α : Type u}[CommGroup α][Repr α] 
   (t : IndexAddTree)(basisImages: Array α)(h: basisImages.size > 0) : α :=
   match t with
@@ -138,3 +147,11 @@ partial def treeM (e : Expr) : MetaM Expr := do
       let lImage := foldMapMul l basisImages h
       let rImage := foldMapMul r basisImages h  
       lImage / rImage
+
+elab "indexTree#" t:term : term => do
+  let e ← elabTerm t none
+  let t ← treeM e
+  mkAppM ``AddTree.indexTree₀ #[t]
+
+@[simp] def egInd {α : Type u}[AddCommGroup α][Repr α][DecidableEq α] (x y: α) := 
+    indexTree# (x + y + x - y)
