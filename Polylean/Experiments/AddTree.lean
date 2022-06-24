@@ -11,30 +11,25 @@ def Lean.Expr.simplify(e: Expr) : MetaM Expr := do
     let r ← simp e (← Simp.Context.mkDefault)
     return r.expr
 
+def verify [Monad M] : Bool → M (Option Unit)
+  | true => return some ()
+  | false => return none
 
-def hOp? (fname: Name)(e : Expr)  : MetaM (Option (Expr × Expr)) := do
+def hOp? (fname: Name) (e : Expr) : MetaM (Option (Expr × Expr)) := do
   let type ← inferType e
-  if e.isAppOfArity fname 6 then
-    let x := e.appFn!.appArg!
-    let y := e.appArg!
-    if (← isDefEq (← inferType x) type) &&
-       (← isDefEq (← inferType y) type) then
-      return some (x, y)
-    else
-      return none
-  else
-    return none
+  guard (e.isAppOfArity fname 6)
+  let x := e.appFn!.appArg!
+  let y := e.appArg!
+  guard (← isDefEq (← inferType x) type)
+  guard (← isDefEq (← inferType y) type)
+  return (x, y)
 
-def invOp? (fname: Name)(e : Expr)  : MetaM (Option (Expr)) := do
+def invOp? (fname: Name) (e : Expr) : MetaM (Option (Expr)) := do
   let type ← inferType e
-  if e.isAppOfArity fname 4 then
-    let y := e.appArg!
-    if  (← isDefEq (← inferType y) type) then
-      return some y
-    else
-      return none
-  else
-    return none
+  let _ ← verify (e.isAppOfArity fname 4)
+  let y := e.appArg!
+  let _ ← verify (← isDefEq (← inferType y) type)
+  return y
 
 inductive AddTree (α : Type u) where
   | leaf : α → AddTree α 
@@ -150,7 +145,7 @@ partial def treeM (e : Expr) : MetaM Expr := do
   | none  =>
     mkAppM ``AddTree.leaf #[e]
 
-@[simp] def IndexAddTree.foldMap {α : Type u}[AddCommGroup α][Repr α] 
+@[simp] def IndexAddTree.foldMap {α : Type u}[AddCommGroup α][Repr α]
   (t : IndexAddTree)(basisImages: Array α)(h: basisImages.size > 0) : α :=
   match t with
   | AddTree.leaf i => basisImages.get (Fin.ofNat' i h)
@@ -165,12 +160,16 @@ partial def treeM (e : Expr) : MetaM Expr := do
       lImage - rImage
 
 def IndexAddTree.map {α : Type _} [AddCommGroup α] [Repr α] 
-  (t : IndexAddTree) (basisImages : Array α) (h : basisImages.size > 0) : AddTree α :=
-  match t with
-    | AddTree.leaf i => AddTree.leaf (basisImages.get (Fin.ofNat' i h))
-    | AddTree.negLeaf i => AddTree.negLeaf (basisImages.get (Fin.ofNat' i h))
-    | AddTree.node l r => AddTree.node (map l basisImages h) (map r basisImages h)
-    | AddTree.subNode l r => AddTree.subNode (map l basisImages h) (map r basisImages h)
+  (t : IndexAddTree) (basisImages : Array α) : AddTree α :=
+  if h:basisImages.size = 0 then
+    AddTree.leaf (0 : α)
+  else
+    have hpos := Nat.pos_of_ne_zero h
+    match t with
+    | AddTree.leaf i => AddTree.leaf (basisImages.get (Fin.ofNat' i hpos))
+    | AddTree.negLeaf i => AddTree.negLeaf (basisImages.get (Fin.ofNat' i hpos))
+    | AddTree.node l r => AddTree.node (map l basisImages) (map r basisImages)
+    | AddTree.subNode l r => AddTree.subNode (map l basisImages) (map r basisImages)
 
 @[simp] def IndexAddTree.foldMapMul {α : Type u}[CommGroup α][Repr α]
   (t : IndexAddTree)(basisImages: Array α)(h: basisImages.size > 0) : α :=
@@ -233,8 +232,23 @@ def IndexAddTree.reduce {α : Type _} [AddCommGroup α] [Repr α] [DecidableEq �
 
 abbrev egTree (n m : ℤ)  := tree# ((n + m) + (m + (2 + n)) - n)
 
+abbrev egParse := tree# 2
+
+/-
 #check egTree
 
 #print egTree
 
 #eval AddTree.fold <| egTree 12 3
+
+
+section test
+
+variable {a b : ℤ}
+
+def ℤexpr := a + b - a + a + b
+
+def ℤexprtree (a b : ℤ) := tree# (a + b - a + a + b)
+
+end test
+-/
