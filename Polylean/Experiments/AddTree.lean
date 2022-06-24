@@ -1,6 +1,7 @@
 import Lean.Meta 
 import Lean.Elab
 import Mathlib.Algebra.Group.Defs
+import Polylean.Experiments.Tactics
 import Std
 import Lean
 open Lean Meta Elab Nat Term Std
@@ -57,7 +58,7 @@ def AddTree.foldMul {α : Type u}[CommGroup α][Repr α]  (t : AddTree α ) : α
 
 abbrev IndexAddTree := AddTree Nat 
 
-@[simp] def AddTree.indexTree {α : Type u}[Repr α][DecidableEq α](t: AddTree α)
+@[simp, reducible] def AddTree.indexTree {α : Type u}[Repr α][DecidableEq α](t: AddTree α)
   (accum : Array α := #[]) : 
       IndexAddTree × (Array α) := 
   match t with
@@ -72,15 +73,44 @@ abbrev IndexAddTree := AddTree Nat
   | AddTree.negLeaf a => 
     match accum.getIdx? a with
     | some i => (AddTree.negLeaf i, accum)
-    | none => (AddTree.negLeaf (accum.size), accum)
+    | none => (AddTree.negLeaf (accum.size), accum.push a)
   | AddTree.subNode l r => 
     let (lIdx, lAccum) := indexTree l accum
     let (rIdx, rAccum) := indexTree r lAccum
     (AddTree.subNode lIdx rIdx, rAccum)
 
-@[simp] def AddTree.indexTree₀  {α : Type u}[Repr α][DecidableEq α](t: AddTree α) := t.indexTree #[]
+@[simp, reducible] def AddTree.indexTree₀  {α : Type u}[Repr α][DecidableEq α](t: AddTree α) := t.indexTree #[]
 
-theorem pos_size {α : Type u}[Repr α][DecidableEq α](t: AddTree α) : t.indexTree₀.2.size > 0 := sorry 
+lemma Array.size_pos_if_index {α : Type _} [DecidableEq α] {arr : Array α} {a : α} {i : ℕ} : arr.getIdx? a = some i → arr.size > 0 := by
+  rw [getIdx?, findIdx?, findIdx?.loop]
+  exact if h:0 < arr.size then
+    λ _ => h
+  else by simp [h]
+
+lemma Array.push_size_pos {α : Type _} (arr : Array α) (a : α) : (arr.push a).size > 0 := by
+  match arr with
+    | ⟨l⟩ =>
+      simp only [push, size]
+      induction l with
+        | nil => simp only [List.concat, List.length]
+        | cons _ _ _ => simp only [List.concat, List.length, Nat.add_one]; apply Nat.succ_pos
+
+theorem pos_size {α : Type u}[Repr α][DecidableEq α] (t: AddTree α) : (arr : Array α) → (t.indexTree arr).2.size > 0 := by
+  induction t with
+    | leaf a =>
+      simp only [AddTree.indexTree]
+      intro arr
+      match h:arr.getIdx? a with
+        | some i => simp only [h]; exact Array.size_pos_if_index h
+        | none => simp only [h]; apply Array.push_size_pos
+    | negLeaf a =>
+      simp only [AddTree.indexTree]
+      intro arr
+      match h:arr.getIdx? a with
+        | some i => simp only [h]; exact Array.size_pos_if_index h
+        | none => simp only [h]; apply Array.push_size_pos
+    | node _ _ _ ihr => simp only [AddTree.indexTree]; intro arr; apply ihr
+    | subNode _ _ _ ihr => simp only [AddTree.indexTree]; intro arr; apply ihr
 
 partial def treeM (e : Expr) : MetaM Expr := do
   match ← hOp? ``HAdd.hAdd e with
