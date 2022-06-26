@@ -2,6 +2,7 @@ import Lean.Meta
 import Lean.Elab
 import Mathlib.Algebra.Group.Defs
 import Polylean.Experiments.FinGenFreeAbGroup
+import Polylean.Experiments.Tactics
 import Std
 import Lean
 open Lean Meta Elab Nat Term Std
@@ -15,21 +16,28 @@ def verify [Monad M] : Bool → M (Option Unit)
   | true => return some ()
   | false => return none
 
-def hOp? (fname: Name) (e : Expr) : MetaM (Option (Expr × Expr)) := do
+def hOp? (fname : Name) (e : Expr) : MetaM (Option (Expr × Expr)) := do
   let type ← inferType e
-  guard (e.isAppOfArity fname 6)
-  let x := e.appFn!.appArg!
-  let y := e.appArg!
-  guard (← isDefEq (← inferType x) type)
-  guard (← isDefEq (← inferType y) type)
-  return (x, y)
+  if e.isAppOfArity fname 6 then
+    let x := e.appFn!.appArg!
+    let y := e.appArg!
+    if (← isDefEq (← inferType x) type) && (← isDefEq (← inferType y) type) then
+      return some (x, y)
+    else
+      return none
+  else
+    return none
 
-def invOp? (fname: Name) (e : Expr) : MetaM (Option (Expr)) := do
+def invOp? (fname : Name) (e : Expr) : MetaM (Option (Expr)) := do
   let type ← inferType e
-  let _ ← verify (e.isAppOfArity fname 4)
-  let y := e.appArg!
-  let _ ← verify (← isDefEq (← inferType y) type)
-  return y
+  if (e.isAppOfArity fname 4) then
+    let y := e.appArg!
+    if (← isDefEq (← inferType y) type) then
+      return some y
+    else
+      return none
+  else
+    return none
 
 inductive AddTree (α : Type u) where
   | leaf : α → AddTree α 
@@ -37,7 +45,7 @@ inductive AddTree (α : Type u) where
   | node : AddTree α  → AddTree α  → AddTree α 
   | subNode: AddTree α  → AddTree α  → AddTree α
 
-@[reducible, simp] def AddTree.fold {α : Type u}[AddCommGroup α][Repr α]  (t : AddTree α ) : α :=
+@[reducible, simp] def AddTree.fold {α : Type u} [AddCommGroup α] (t : AddTree α) : α :=
   match t with
   | AddTree.leaf a => a
   | AddTree.node l r =>  (fold l) + (fold r)
@@ -229,10 +237,17 @@ elab "tree#" s:term : term => do
 def IndexAddTree.reduce {α : Type _} [AddCommGroup α] [Repr α] [DecidableEq α] (it : IndexAddTree) (arr : Array α) (harr : arr.size > 0) : α :=
   (inducedFreeMap arr.data rfl) (IndexAddTree.foldMap it (ℤbasis arr.size).toArray (by simp [harr]))
 
+variable (x : ℤ)
 
-abbrev egTree (n m : ℤ)  := tree# ((n + m) + (m + (2 + n)) - n)
+abbrev egTree (n m : ℤ) := tree# ((n + m) + (m + (m + n)) - n)
 
-abbrev egParse := tree# 2
+abbrev egParse : AddTree ℤ := tree# (2 : ℤ) + ((5 : ℤ) - (x : ℤ))
+
+theorem fold_inv : (2 : ℤ) + ((5 : ℤ) - (x : ℤ)) = (egParse x).fold := by reduceGoal; simp
+
+#print fold_inv
+
+#print Term.elabByTactic
 
 /-
 #check egTree
@@ -252,3 +267,5 @@ def ℤexprtree (a b : ℤ) := tree# (a + b - a + a + b)
 
 end test
 -/
+
+#check Term.elabTerm
