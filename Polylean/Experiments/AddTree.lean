@@ -52,7 +52,7 @@ inductive AddTree (α : Type u) where
   | AddTree.negLeaf a => -a
   | AddTree.subNode l r => (fold l) - (fold r)
 
-@[reducible] def AddTree.elements {α : Type _} [Repr α] : AddTree α → List α
+@[reducible] def AddTree.elements {α : Type _} : AddTree α → List α
   | AddTree.leaf a => [a]
   | AddTree.negLeaf a => [a]
   | AddTree.node l r => (elements l) ++ (elements r)
@@ -99,7 +99,7 @@ instance : LawfulMonad AddTree := sorry
 
 abbrev IndexAddTree := AddTree Nat 
 
-@[simp] def AddTree.indexTree {α : Type u}[Repr α][DecidableEq α](t: AddTree α)
+@[simp] def AddTree.indexTree {α : Type u} [DecidableEq α] (t : AddTree α)
   (accum : Array α := #[]) : 
       IndexAddTree × (Array α) := 
   match t with
@@ -168,8 +168,8 @@ partial def treeM (e : Expr) : MetaM Expr := do
       lImage - rImage
 
 def IndexAddTree.map {α : Type _} [AddCommGroup α] [Repr α] 
-  (t : IndexAddTree) (basisImages : Array α) : AddTree α :=
-  if h:basisImages.size = 0 then
+  (t : IndexAddTree) (basisImages : List α) : AddTree α :=
+  if h:basisImages.length = 0 then
     AddTree.leaf (0 : α)
   else
     have hpos := Nat.pos_of_ne_zero h
@@ -193,7 +193,7 @@ def IndexAddTree.map {α : Type _} [AddCommGroup α] [Repr α]
       let rImage := foldMapMul r basisImages h  
       lImage / rImage
 
-theorem AddTree.fold_tree_map_eq {A B : Type _} [AddCommGroup A] [Repr A] [AddCommGroup B] [Repr B]
+theorem AddTree.fold_tree_map_eq {A B : Type _} [AddCommGroup A] [AddCommGroup B]
   (φ : A → B) [Homφ : AddCommGroup.Homomorphism φ] : (t : AddTree A) → φ t.fold = (t.map φ).fold := by 
     intro t
     induction t with
@@ -256,7 +256,6 @@ theorem fold_inv : (2 : ℤ) + ((5 : ℤ) - (x : ℤ)) = (egParse x).fold := by 
 
 #eval AddTree.fold <| egTree 12 3
 
-
 section test
 
 variable {a b : ℤ}
@@ -268,4 +267,23 @@ def ℤexprtree (a b : ℤ) := tree# (a + b - a + a + b)
 end test
 -/
 
+def egFold {α : Type _} (a : α) [AddCommGroup α] [DecidableEq α] : α :=
+  let t : AddTree α := tree# a
+  let ⟨it, ⟨l⟩⟩ := t.indexTree
+  let n : ℕ := l.length
+  let τ : AddTree (ℤ ^ n) := it.map (ℤbasis n)
+  let ϕ : ℤ ^ n → α := inducedFreeMap l rfl
+  have := AddTree.fold_tree_map_eq ϕ τ
+  (τ.map ϕ).fold
+
+example {x y z : ℤ} : (tree# ((x + y - x) + (z - y))) = AddTree.leaf z := by
+ admit
+
+
+#eval 1 + 1
+
+@[irreducible] def a : ℤ := 32432
+
 #check Term.elabTerm
+
+#check consumeMData
