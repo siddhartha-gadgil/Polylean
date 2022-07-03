@@ -1,8 +1,6 @@
 import Lean.Meta 
 import Lean.Elab
-import Mathlib.Algebra.Group.Defs
 import Polylean.Experiments.FinGenFreeAbGroup
-import Polylean.Experiments.Tactics
 import Std
 import Lean
 open Lean Meta Elab Nat Term Std
@@ -27,6 +25,16 @@ def hOp? (fname : Name) (e : Expr) : MetaM (Option (Expr × Expr)) := do
       return none
   else
     return none
+
+def hOp (fname : Name) (e : Expr) : MetaM (Expr × Expr) := do
+  let e ← reduce e
+  dbg_trace e
+  guard (e.isAppOfArity fname 6)
+  match e with
+    | Expr.app (Expr.app _ a _) b _ =>
+      guard (← isDefEq (← inferType a) (← inferType b))
+      return (a, b)
+    | _ => failure
 
 def invOp? (fname : Name) (e : Expr) : MetaM (Option (Expr)) := do
   let type ← inferType e
@@ -167,8 +175,36 @@ partial def treeM (e : Expr) : MetaM Expr := do
       let rImage := foldMap r basisImages h  
       lImage - rImage
 
-def IndexAddTree.map {α : Type _} [AddCommGroup α] [Repr α] 
+syntax (name := addtreeElab) "addTree#" term : term
+
+partial def addtreeM : TermElab :=
+  fun stx typ? => do
+  match stx with
+  | `(HAdd.hAdd _ _ _ _ $a:term $b:term) =>
+    dbg_trace "Addition"
+    let l ← addtreeM a typ?
+    let r ← addtreeM b typ?
+    return mkApp2 (mkConst `AddTree.node) l r
+  | `(HSub.hSub _ _ _ _ $a:term $b:term) =>
+    dbg_trace "Subtraction"
+    let l ← addtreeM a typ?
+    let r ← addtreeM b typ?
+    return mkApp2 (mkConst `AddTree.subNode) l r
+  | `(Neg.neg _ _ $a:term) =>
+    dbg_trace "Negation"
+    let t ← addtreeM a typ?
+    return mkApp (mkConst `AddTree.negLeaf) t
+  | `($a:term) =>
+    dbg_trace "Leaf"
+    return mkApp (mkConst `AddTree.leaf) (← Term.elabTerm a typ?) -- this leads to an infinite recursion. Maybe creating a new syntax category will help
+
+attribute [termElab addtreeElab] addtreeM -- adding the attribute in the usual way is not working, probably because the function is recursive and partial
+
+#print Term.elabTerm
+
+def IndexAddTree.map {α : Type _} [AddCommGroup α] [Repr α]
   (t : IndexAddTree) (basisImages : List α) : AddTree α :=
+
   if h:basisImages.length = 0 then
     AddTree.leaf (0 : α)
   else
@@ -243,9 +279,6 @@ abbrev egTree (n m : ℤ) := tree# ((n + m) + (m + (m + n)) - n)
 
 abbrev egParse : AddTree ℤ := tree# (2 : ℤ) + ((5 : ℤ) - (x : ℤ))
 
-theorem fold_inv : (2 : ℤ) + ((5 : ℤ) - (x : ℤ)) = (egParse x).fold := by reduceGoal; simp
-
-#print fold_inv
 
 #print Term.elabByTactic
 
@@ -267,8 +300,8 @@ def ℤexprtree (a b : ℤ) := tree# (a + b - a + a + b)
 end test
 -/
 
-def egFold {α : Type _} (a : α) [AddCommGroup α] [DecidableEq α] : α :=
-  let t : AddTree α := tree# a
+def reduceTerm {α : Type _} (a : α) (t : AddTree α) [AddCommGroup α] [DecidableEq α] : α :=
+  -- let t : AddTree α := tree# a
   let ⟨it, ⟨l⟩⟩ := t.indexTree
   let n : ℕ := l.length
   let τ : AddTree (ℤ ^ n) := it.map (ℤbasis n)
@@ -276,14 +309,14 @@ def egFold {α : Type _} (a : α) [AddCommGroup α] [DecidableEq α] : α :=
   have := AddTree.fold_tree_map_eq ϕ τ
   (τ.map ϕ).fold
 
-example {x y z : ℤ} : (tree# ((x + y - x) + (z - y))) = AddTree.leaf z := by
- admit
+-- set_option pp.all true
 
+variable {x y z : ℤ}
 
-#eval 1 + 1
+#reduce (reduceTerm ((x + y - x) + (z - y)) (tree# ((x + y - x) + (z - y))))
+
+#reduce tree# ((-12) + 3)
 
 @[irreducible] def a : ℤ := 32432
 
 #check Term.elabTerm
-
-#check consumeMData
