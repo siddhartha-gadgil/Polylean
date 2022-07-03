@@ -13,35 +13,23 @@ inductive AddTree (α : Type _) where
   | subNode: AddTree α  → AddTree α  → AddTree α
   deriving Repr
 
-@[reducible, simp] def AddTree.fold {α : Type u} [AddCommGroup α] : AddTree α → α
+def AddTree.fold {α : Type u} [AddCommGroup α] : AddTree α → α
   | AddTree.leaf a => a
   | AddTree.node l r =>  (fold l) + (fold r)
   | AddTree.negLeaf t => -(fold t)
   | AddTree.subNode l r => (fold l) - (fold r)
 
-@[reducible] def AddTree.elements {α : Type _} : AddTree α → List α
-  | AddTree.leaf a => [a]
-  | AddTree.negLeaf t => elements t
-  | AddTree.node l r => (elements l) ++ (elements r)
-  | AddTree.subNode l r => (elements l) ++ (elements r)
-
-def AddTree.negate {α : Type _} : AddTree α → AddTree α
-  | AddTree.leaf a => AddTree.negLeaf (AddTree.leaf a)
-  | AddTree.negLeaf t => t
-  | AddTree.node l r => AddTree.subNode l r
-  | AddTree.subNode l r => AddTree.node l r
-
-def AddTree.reduce {α : Type _} : AddTree (AddTree α) → AddTree α
-  | AddTree.leaf adt => adt
-  | AddTree.negLeaf adt => negate $ reduce adt
-  | AddTree.node lt rt => AddTree.node (reduce lt) (reduce rt)
-  | AddTree.subNode lt rt => AddTree.subNode (reduce lt) (reduce rt)
-
-@[reducible, simp] def AddTree.map {α β : Type _} (f : α → β) : AddTree α → AddTree β
+def AddTree.map {α β : Type _} (f : α → β) : AddTree α → AddTree β
   | AddTree.leaf a => AddTree.leaf (f a)
   | AddTree.negLeaf a => AddTree.negLeaf (map f a)
   | AddTree.node l r => AddTree.node (map f l) (map f r)
   | AddTree.subNode l r => AddTree.subNode (map f l) (map f r)
+
+def AddTree.reduce {α : Type _} : AddTree (AddTree α) → AddTree α
+  | AddTree.leaf adt => adt
+  | AddTree.negLeaf adt => AddTree.negLeaf (reduce adt)
+  | AddTree.node lt rt => AddTree.node (reduce lt) (reduce rt)
+  | AddTree.subNode lt rt => AddTree.subNode (reduce lt) (reduce rt)
 
 
 /-
@@ -85,12 +73,11 @@ abbrev IndexAddTree := AddTree Nat
 
 def IndexAddTree.map {α : Type _} [AddCommGroup α] [Repr α]
   (t : IndexAddTree) (basisImages : List α) : AddTree α :=
-
   if h:basisImages.length = 0 then
     AddTree.leaf (0 : α)
   else
     match t with
-    | AddTree.leaf i => AddTree.leaf (basisImages.get (Fin.ofNat' i $ Nat.pos_of_ne_zero h))
+    | AddTree.leaf i => AddTree.leaf (basisImages.get $ Fin.ofNat' i $ Nat.pos_of_ne_zero h)
     | AddTree.negLeaf τ => AddTree.negLeaf (map τ basisImages)
     | AddTree.node l r => AddTree.node (map l basisImages) (map r basisImages)
     | AddTree.subNode l r => AddTree.subNode (map l basisImages) (map r basisImages)
@@ -101,7 +88,7 @@ end IndexAddTree
 section Reflection
 
 def hOp (fname : Name) : Expr → MetaM (Expr × Expr)
-  | e@(Expr.app (Expr.app _ a _) b _) => do
+  | e@(.app (Expr.app _ a _) b _) => do
       guard $ e.isAppOf fname
       guard $ ← isDefEq (← inferType a) (← inferType e)
       guard $ ← isDefEq (← inferType b) (← inferType e)
@@ -109,7 +96,7 @@ def hOp (fname : Name) : Expr → MetaM (Expr × Expr)
   | _ => failure
 
 def invOp (fname : Name) : Expr → MetaM Expr
- | e@(Expr.app _ a _) => do
+ | e@(.app _ a _) => do
     guard $ e.isAppOf fname
     guard $ ← isDefEq (← inferType a) (← inferType e)
     return a
@@ -153,12 +140,6 @@ partial def addtreeM : TermElab :=
     dbg_trace "Leaf"
     return mkApp (mkConst `AddTree.leaf) (← Term.elabTerm a typ?) -- this leads to an infinite recursion. Maybe creating a new syntax category will help
 
-def elabTest : TermElabM Expr := do
-  let s : Syntax ← `(2 + 3)
-  addtreeM s .none
-
--- attribute [termElab addtreeElab] addtreeM -- adding the attribute in the usual way is not working, probably because the function is recursive and partial
-
 end Reflection
 
 
@@ -170,3 +151,50 @@ theorem AddTree.fold_tree_map_eq {A B : Type _} [AddCommGroup A] [AddCommGroup B
       | negLeaf a ih => rw [map, fold, fold, Homφ.neg_push, ih]
       | node l r ihl ihr => rw [map, fold, fold, Homφ.add_dist, ihl, ihr]
       | subNode l r ihl ihr => rw [map, fold, fold, Homφ.neg_dist, ihl, ihr]
+
+inductive Hidden
+  | conceal : {α : Sort _} → (a : α) → Hidden
+
+def extractHidden (e : Expr) : MetaM Expr := do
+  guard $ e.isAppOf ``Hidden.conceal
+  match e with
+  | .app _ v _ => return v
+  | _ => failure
+
+def AddTree.reduceTreeEqElm {α : Type} [DecidableEq α] [AddCommGroup α] (t : AddTree α) : α :=
+  let ⟨it, ⟨l⟩⟩ := t.indexTree
+  let n := l.length
+  let ϕ : ℤ ^ n → α := inducedFreeMap l rfl
+  let τ : AddTree (ℤ ^ n) := it.map (ℤbasis n)
+  τ |>.map ϕ |> fold
+
+def AddTree.reduceTreeEqn {α : Type _} [DecidableEq α] [AddCommGroup α] (t : AddTree α) : Hidden :=
+  let ⟨it, ⟨l⟩⟩ := t.indexTree
+  let n := l.length
+  let ϕ : ℤ ^ n → α := inducedFreeMap l rfl
+  let τ : AddTree (ℤ ^ n) := it.map (ℤbasis n)
+  Hidden.conceal $ AddTree.fold_tree_map_eq ϕ τ
+
+def AddTree.reduceProof (e : Expr) : MetaM Expr := do
+  let t ← treeM e
+  let prf ← extractHidden $ ← mkAppM ``AddTree.reduceTreeEqn #[t]
+  let eqn ← inferType prf
+  guard $ eqn.isEq -- checking that the equation is indeed an equation
+  match eqn with
+  | .app (.app _ lhs _) rhs _ => -- extracting the lhs and rhs of the equation
+    -- showing that `rhs` and `e` are definitionally equal
+    let rhs_eq_e ← mkFreshExprMVar (some $ ← mkEq rhs e)
+    assignExprMVar rhs_eq_e.mvarId! (mkConst ``rfl)
+    -- composing `lhs = rhs` and `rhs = e` by transitivity of equality
+    let lhs_eq_e ← mkFreshExprMVar (some $ ← mkEq lhs e)
+    assignExprMVar lhs_eq_e.mvarId! $ ← mkEqTrans prf rhs_eq_e
+    -- reducing both sides of the equation and returning the expression
+    -- reduce lhs_eq_e
+    return lhs_eq_e
+  | _ => failure
+
+elab "reduceProof# " s:term : term => do
+  let e ← Term.elabTerm s none
+  AddTree.reduceProof e
+
+-- #check reduceProof# ((1 : ℤ) + 2 + ((-3) + 5))
