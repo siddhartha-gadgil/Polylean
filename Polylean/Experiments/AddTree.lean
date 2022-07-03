@@ -11,6 +11,7 @@ inductive AddTree (α : Type _) where
   | negLeaf : AddTree α → AddTree α
   | node : AddTree α  → AddTree α  → AddTree α 
   | subNode: AddTree α  → AddTree α  → AddTree α
+  deriving Repr
 
 @[reducible, simp] def AddTree.fold {α : Type u} [AddCommGroup α] : AddTree α → α
   | AddTree.leaf a => a
@@ -114,17 +115,20 @@ def invOp (fname : Name) : Expr → MetaM Expr
     return a
  | _ => failure
 
-partial def trieM (e : Expr) : MetaM Expr :=
-    hOp ``HAdd.hAdd e >>= (λ (a, b) => return ← mkAppM ``AddTree.node #[← trieM a, ← trieM b])    <|>
-    hOp ``HSub.hSub e >>= (λ (a, b) => return ← mkAppM ``AddTree.subNode #[← trieM a, ← trieM b]) <|>
-    invOp ``Neg.neg e >>= (λ a => return ← mkAppM ``AddTree.negLeaf #[← trieM a])                 <|>
+partial def treeM (e : Expr) : MetaM Expr :=
+    hOp ``HAdd.hAdd e >>= (λ (a, b) => return ← mkAppM ``AddTree.node #[← treeM a, ← treeM b])    <|>
+    hOp ``HSub.hSub e >>= (λ (a, b) => return ← mkAppM ``AddTree.subNode #[← treeM a, ← treeM b]) <|>
+    invOp ``Neg.neg e >>= (λ a => return ← mkAppM ``AddTree.negLeaf #[← treeM a])                 <|>
     mkAppM ``AddTree.leaf #[e]
 
 elab "tree#" s:term : term => do
   let e ← Term.elabTerm s none
-  trieM e
+  treeM e
 
-#check tree# ((2 + -3) - 1)
+#eval tree# -((2 + -3) - 1)
+
+-- abbrev tree {α : Type _} (a : α) : AddTree α := tree# a
+
 
 syntax (name := addtreeElab) "addTree#" term : term
 
