@@ -17,8 +17,8 @@ declare_aesop_rule_sets [AddTree]
 
 @[aesop norm (rule_sets [AddTree]) [unfold]] def AddTree.fold {α : Type u} [AddCommGroup α] : AddTree α → α
   | AddTree.leaf a => a
-  | AddTree.node l r =>  (fold l) + (fold r)
   | AddTree.negLeaf t => -(fold t)
+  | AddTree.node l r =>  (fold l) + (fold r)
   | AddTree.subNode l r => (fold l) - (fold r)
 
 @[aesop norm (rule_sets [AddTree]) [unfold]] def AddTree.map {α β : Type _} (f : α → β) : AddTree α → AddTree β
@@ -96,8 +96,7 @@ abbrev IndexAddTree := AddTree Nat
     let (rIdx, rAccum) := indexTree r lAccum
     (AddTree.subNode lIdx rIdx, rAccum)
 
-def IndexAddTree.map {α : Type _} [AddCommGroup α] [Repr α]
-  (t : IndexAddTree) (basisImages : List α) : AddTree α :=
+def IndexAddTree.map {α : Type _} [AddCommGroup α] (t : IndexAddTree) (basisImages : List α) : AddTree α :=
   if h:basisImages.length = 0 then
     AddTree.leaf (0 : α)
   else
@@ -139,10 +138,6 @@ elab "tree#" s:term : term => do
 
 #eval tree# -((2 + -3) - 1)
 
--- abbrev tree {α : Type _} (a : α) : AddTree α := tree# a
-
-
-syntax (name := addtreeElab) "addTree#" term : term
 
 partial def addtreeM : TermElab :=
   fun stx typ? => do
@@ -169,11 +164,10 @@ end Reflection
 
 
 theorem AddTree.fold_tree_map_eq {A B : Type _} [AddCommGroup A] [AddCommGroup B]
-  (φ : A → B) [Homφ : AddCommGroup.Homomorphism φ] : (t : AddTree A) → φ t.fold = (t.map φ).fold := by 
-    intro t
+  (φ : A → B) [Homφ : AddCommGroup.Homomorphism φ] (t : AddTree A) : φ t.fold = (t.map φ).fold := by
     induction t with
       | leaf a => rw [map, fold, fold] 
-      | negLeaf a ih => rw [map, fold, fold, Homφ.neg_push, ih]
+      | negLeaf t ih => rw [map, fold, fold, Homφ.neg_push, ih]
       | node l r ihl ihr => rw [map, fold, fold, Homφ.add_dist, ihl, ihr]
       | subNode l r ihl ihr => rw [map, fold, fold, Homφ.neg_dist, ihl, ihr]
 
@@ -202,7 +196,7 @@ def AddTree.reduceTreeEqn {α : Type _} [DecidableEq α] [AddCommGroup α] (t : 
 
 def AddTree.reduceProof (e : Expr) : MetaM Expr := do
   let t ← treeM e
-  let prf ← extractHidden $ ← mkAppM ``AddTree.reduceTreeEqn #[t]
+  let prf ← extractHidden $ ← whnf $ ← mkAppM ``AddTree.reduceTreeEqn #[t]
   let eqn ← inferType prf
   guard $ eqn.isEq -- checking that the equation is indeed an equation
   match eqn with
@@ -214,7 +208,6 @@ def AddTree.reduceProof (e : Expr) : MetaM Expr := do
     let lhs_eq_e ← mkFreshExprMVar (some $ ← mkEq lhs e)
     assignExprMVar lhs_eq_e.mvarId! $ ← mkEqTrans prf rhs_eq_e
     -- reducing both sides of the equation and returning the expression
-    -- reduce lhs_eq_e
     return lhs_eq_e
   | _ => failure
 
@@ -222,4 +215,4 @@ elab "reduceProof# " s:term : term => do
   let e ← Term.elabTerm s none
   AddTree.reduceProof e
 
--- #check reduceProof# ((1 : ℤ) + 2 + ((-3) + 5))
+#check reduceProof# ((1 : ℤ) + 2 + ((-3) + 5))
