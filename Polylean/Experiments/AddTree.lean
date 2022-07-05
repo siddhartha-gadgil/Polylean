@@ -3,48 +3,73 @@ import Lean.Elab
 import Polylean.Experiments.FinGenFreeAbGroup
 import Std
 import Lean
+import Aesop
 open Lean Meta Elab Nat Term Std
 
+declare_aesop_rule_sets [AddTree]
 
-inductive AddTree (α : Type _) where
+@[aesop safe (rule_sets [AddTree]) [constructors, cases]] inductive AddTree (α : Type _) where
   | leaf : α → AddTree α 
   | negLeaf : AddTree α → AddTree α
   | node : AddTree α  → AddTree α  → AddTree α 
   | subNode: AddTree α  → AddTree α  → AddTree α
   deriving Repr
 
-def AddTree.fold {α : Type u} [AddCommGroup α] : AddTree α → α
+@[aesop norm (rule_sets [AddTree]) [unfold]] def AddTree.fold {α : Type u} [AddCommGroup α] : AddTree α → α
   | AddTree.leaf a => a
   | AddTree.node l r =>  (fold l) + (fold r)
   | AddTree.negLeaf t => -(fold t)
   | AddTree.subNode l r => (fold l) - (fold r)
 
-def AddTree.map {α β : Type _} (f : α → β) : AddTree α → AddTree β
+@[aesop norm (rule_sets [AddTree]) [unfold]] def AddTree.map {α β : Type _} (f : α → β) : AddTree α → AddTree β
   | AddTree.leaf a => AddTree.leaf (f a)
   | AddTree.negLeaf a => AddTree.negLeaf (map f a)
   | AddTree.node l r => AddTree.node (map f l) (map f r)
   | AddTree.subNode l r => AddTree.subNode (map f l) (map f r)
 
-def AddTree.reduce {α : Type _} : AddTree (AddTree α) → AddTree α
+@[aesop norm (rule_sets [AddTree]) [unfold]] def AddTree.reduce {α : Type _} : AddTree (AddTree α) → AddTree α
   | AddTree.leaf adt => adt
   | AddTree.negLeaf adt => AddTree.negLeaf (reduce adt)
   | AddTree.node lt rt => AddTree.node (reduce lt) (reduce rt)
   | AddTree.subNode lt rt => AddTree.subNode (reduce lt) (reduce rt)
 
-
+section Instances
 /-
 Reference:  Monads, partial evaluations, and rewriting by Tobias Fritz and Paulo Perrone
 https://arxiv.org/pdf/1810.06037.pdf
 -/
 
-instance : Monad AddTree :=
-  {
-    pure := AddTree.leaf
+instance : Functor AddTree where
     map := AddTree.map
-    bind := λ adt f => (adt.map f).reduce
-  }
 
--- instance : LawfulMonad AddTree := sorry
+attribute [aesop norm (rule_sets [AddTree]) [unfold]] Functor.map
+
+instance : LawfulFunctor AddTree where
+  map_const := rfl
+  id_map := by intro _ t; induction t <;> aesop (rule_sets [AddTree])
+  comp_map := by intro _ _ _ _ _ t; induction t <;> aesop (rule_sets [AddTree])
+
+instance : Monad AddTree where
+  pure := AddTree.leaf
+  bind := λ adt f => (adt.map f).reduce
+
+attribute [aesop norm (rule_sets [AddTree]) [unfold]] pure
+attribute [aesop norm (rule_sets [AddTree]) [unfold]] bind
+
+attribute [aesop norm (rule_sets [AddTree]) [unfold]] Seq.seq
+attribute [aesop norm (rule_sets [AddTree]) [unfold]] SeqLeft.seqLeft
+attribute [aesop norm (rule_sets [AddTree]) [unfold]] SeqRight.seqRight
+
+instance : LawfulMonad AddTree where
+  bind_pure_comp := by intro _ _ _ t; induction t <;> aesop (rule_sets [AddTree])
+  bind_map := by intro _ _ _ t; induction t <;> aesop (rule_sets [AddTree])
+  pure_bind := by aesop (rule_sets [AddTree])
+  bind_assoc := by intro _ _ _ t; induction t <;> aesop (rule_sets [AddTree])
+  seqLeft_eq := by intro _ _ t₁ t₂; induction t₁ <;> induction t₂ <;> aesop (rule_sets [AddTree])
+  seqRight_eq := by intro _ _ t₁ t₂; induction t₁ <;> induction t₂ <;> aesop (rule_sets [AddTree])
+  pure_seq := by intro _ _ _ t; induction t <;> aesop (rule_sets [AddTree])
+
+end Instances
 
 
 section IndexAddTree
