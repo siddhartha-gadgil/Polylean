@@ -95,3 +95,28 @@ def mkPair(e₁ e₂ : Expr) : MetaM Expr :=
   mkAppM  ``PProd.mk  #[e₁, e₂]
 
 end ProdSeq
+
+/-- natural number from expression built from `Nat.zero` and `Nat.succ` -/
+partial def exprNat : Expr → TermElabM Nat := fun expr => 
+  do
+    let mvar ←  mkFreshExprMVar (some (mkConst ``Nat))
+    let sExp ←  mkAppM ``Nat.succ #[mvar]
+    let expr ← reduce expr
+    Term.synthesizeSyntheticMVarsNoPostponing
+    if ← isDefEq sExp expr then
+      Term.synthesizeSyntheticMVarsNoPostponing
+      let prev ← exprNat (← whnf mvar)
+      return Nat.succ prev
+    else 
+    if ← isDefEq (mkConst `Nat.zero) expr then
+      return Nat.zero
+    else
+      throwError m!"{expr} not a Nat expression"
+
+-- test
+elab "nat!" t:term : term => do
+  let e ← elabTerm t none
+  let n ← exprNat e
+  return ToExpr.toExpr n
+
+#eval nat! (123 + 4)

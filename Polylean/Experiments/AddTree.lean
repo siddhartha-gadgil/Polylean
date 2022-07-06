@@ -239,6 +239,20 @@ partial def addTreeM (e : Expr) : MetaM <| AddTree Expr := do
       let rImage := foldMap! r basisImages   
       lImage - rImage
 
+def IndexAddTree.foldMapM 
+  (t : IndexAddTree)(basisImages: Array Expr) : TermElabM Expr := do
+  match t with
+  | AddTree.leaf i => return basisImages.get! i
+  | AddTree.node l r => 
+      let lImage ←  foldMapM l basisImages 
+      let rImage ←  foldMapM r basisImages   
+      mkAppM ``Add.add #[lImage, rImage]
+  | AddTree.negLeaf i => mkAppM ``Neg.neg #[basisImages.get! i] 
+  | AddTree.subNode l r => 
+      let lImage ←  foldMapM l basisImages 
+      let rImage ←  foldMapM r basisImages   
+      mkAppM ``Sub.sub #[lImage, rImage]
+
 
 def IndexAddTree.foldMapMAux {α : Type u}[AddCommGroup α][Repr α] 
   (t : IndexAddTree)(basisImages: Array α)(h: basisImages.size > 0) : α :=
@@ -287,18 +301,22 @@ elab "indexTree#" t:term : term => do
   let res ← mkAppM ``AddTree.indexTree₀ #[t]
   reduce res
 
+def AddTree.indexTreeM' (t : AddTree Expr) : TermElabM Expr :=
+  do
+    let res ← AddTree.indexTreeM t (mkConst ``Unit.unit)
+    let res ← reduce res 
+    let (tree, lstIn) := (← split? res).get!
+    let lst ← unpack lstIn
+    let α ← inferType lst.head!
+    let nilList ←  mkAppOptM ``List.nil #[some α]
+    let lst ←  lst.foldrM (fun l i => do
+      mkAppOptM  ``List.cons #[some α, some l, some i]) nilList
+    mkAppM ``Prod.mk #[tree, lst]
+
 elab "indTree#" t:term : term => do
   let e ← elabTerm t none
   let t ← addTreeM e
-  let res ← AddTree.indexTreeM t (mkConst ``Unit.unit)
-  let res ← reduce res 
-  let (tree, lstIn) := (← split? res).get!
-  let lst ← unpack lstIn
-  let α ← inferType lst.head!
-  let nilList ←  mkAppOptM ``List.nil #[some α]
-  let lstIn ←  lst.foldrM (fun l i => do
-    mkAppOptM  ``List.cons #[some α, some l, some i]) nilList
-  mkAppM ``Prod.mk #[tree, lstIn]
+  AddTree.indexTreeM' t
 
 @[simp] noncomputable def egInd {α : Type u}[AddCommGroup α][Repr α][DecidableEq α] (x y: α) := 
     indexTree# (x + y + x - y)
