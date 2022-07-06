@@ -79,8 +79,6 @@ abbrev IndexAddTree := AddTree Nat
     let (rIdx, rAccum) := indexTree r lAccum
     (AddTree.subNode lIdx rIdx, rAccum)
 
-@[simp, reducible] def AddTree.indexTree₀  {α : Type u}[Repr α][DecidableEq α](t: AddTree α) := t.indexTree #[]
-
 lemma Array.size_pos_if_index {α : Type _} [DecidableEq α] {arr : Array α} {a : α} {i : ℕ} : arr.getIdx? a = some i → arr.size > 0 := by
   rw [getIdx?, findIdx?, findIdx?.loop]
   exact if h:0 < arr.size then
@@ -177,6 +175,13 @@ partial def treeM (e : Expr) : MetaM Expr := do
       let lImage := foldMapMul l basisImages h
       let rImage := foldMapMul r basisImages h  
       lImage / rImage
+
+@[simp, reducible] def AddTree.indexTree₀  {α : Type u}[Repr α][DecidableEq α](t: AddTree α) : 
+    IndexAddTree × {a : Array α // a.size > 0} := 
+    let indT := (t.indexTree #[]).fst
+    let arr := (t.indexTree #[]).snd
+    let p : arr.size > 0 := by apply pos_size 
+    (indT, ⟨arr, p⟩)
 
 elab "indexTree#" t:term : term => do
   let e ← elabTerm t none
