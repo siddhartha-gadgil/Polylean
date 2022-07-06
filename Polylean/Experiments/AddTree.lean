@@ -58,7 +58,7 @@ def AddTree.foldMul {α : Type u}[CommGroup α][Repr α]  (t : AddTree α ) : α
 
 abbrev IndexAddTree := AddTree Nat 
 
-@[simp, reducible] def AddTree.indexTree {α : Type u}[Repr α][DecidableEq α](t: AddTree α)
+@[inline] def AddTree.indexTree {α : Type u}[Repr α][DecidableEq α](t: AddTree α)
   (accum : Array α := #[]) : 
       IndexAddTree × (Array α) := 
   match t with
@@ -93,7 +93,8 @@ lemma Array.push_size_pos {α : Type _} (arr : Array α) (a : α) : (arr.push a)
         | nil => simp only [List.concat, List.length]
         | cons _ _ _ => simp only [List.concat, List.length, Nat.add_one]; apply Nat.succ_pos
 
-theorem pos_size {α : Type u}[Repr α][DecidableEq α] (t: AddTree α) : (arr : Array α) → (t.indexTree arr).2.size > 0 := by
+
+@[irreducible] theorem pos_size {α : Type u}[Repr α][DecidableEq α] (t: AddTree α) : (arr : Array α) → (t.indexTree arr).2.size > 0 := by
   induction t with
     | leaf a =>
       simp only [AddTree.indexTree]
@@ -186,14 +187,15 @@ partial def treeM (e : Expr) : MetaM Expr := do
 elab "indexTree#" t:term : term => do
   let e ← elabTerm t none
   let t ← treeM e
-  mkAppM ``AddTree.indexTree₀ #[t]
+  let res ← mkAppM ``AddTree.indexTree₀ #[t]
+  reduce res
 
-@[simp] def egInd {α : Type u}[AddCommGroup α][Repr α][DecidableEq α] (x y: α) := 
+@[simp] noncomputable def egInd {α : Type u}[AddCommGroup α][Repr α][DecidableEq α] (x y: α) := 
     indexTree# (x + y + x - y)
 
 #print egInd
 
-@[simp] def egIndMap {α : Type u}[AddCommGroup α][Repr α][DecidableEq α] 
+@[simp] noncomputable def egIndMap {α : Type u}[AddCommGroup α][Repr α][DecidableEq α] 
   (x y: α) :=
         (egInd x y).fst.foldMap (egInd x y).snd.val (egInd x y).snd.property
 
@@ -201,6 +203,7 @@ elab "indexTree#" t:term : term => do
 
 theorem egIndMapInv{α : Type u}[AddCommGroup α][Repr α][DecidableEq α] 
   (x y: α) : egIndMap x y = x + y + x - y := by 
-      simp 
+      simp
       admit
+      
       
