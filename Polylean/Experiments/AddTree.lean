@@ -190,3 +190,17 @@ elab "indexTree#" t:term : term => do
 
 @[simp] def egInd {α : Type u}[AddCommGroup α][Repr α][DecidableEq α] (x y: α) := 
     indexTree# (x + y + x - y)
+
+#print egInd
+
+@[simp] def egIndMap {α : Type u}[AddCommGroup α][Repr α][DecidableEq α] 
+  (x y: α) :=
+        (egInd x y).fst.foldMap (egInd x y).snd.val (egInd x y).snd.property
+
+#print egIndMap
+
+theorem egIndMapInv{α : Type u}[AddCommGroup α][Repr α][DecidableEq α] 
+  (x y: α) : egIndMap x y = x + y + x - y := by 
+      simp 
+      admit
+      
