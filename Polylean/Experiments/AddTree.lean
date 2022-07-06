@@ -239,22 +239,94 @@ partial def addTreeM (e : Expr) : MetaM <| AddTree Expr := do
       let rImage := foldMap! r basisImages   
       lImage - rImage
 
-def IndexAddTree.foldMapM 
+def IndexAddTree.foldMapMAux 
   (t : IndexAddTree)(basisImages: Array Expr) : TermElabM Expr := do
   match t with
   | AddTree.leaf i => return basisImages.get! i
   | AddTree.node l r => 
-      let lImage ←  foldMapM l basisImages 
-      let rImage ←  foldMapM r basisImages   
+      let lImage ←  foldMapMAux l basisImages 
+      let rImage ←  foldMapMAux r basisImages   
       mkAppM ``Add.add #[lImage, rImage]
   | AddTree.negLeaf i => mkAppM ``Neg.neg #[basisImages.get! i] 
   | AddTree.subNode l r => 
-      let lImage ←  foldMapM l basisImages 
-      let rImage ←  foldMapM r basisImages   
+      let lImage ←  foldMapMAux l basisImages 
+      let rImage ←  foldMapMAux r basisImages   
       mkAppM ``Sub.sub #[lImage, rImage]
 
 
-def IndexAddTree.foldMapMAux {α : Type u}[AddCommGroup α][Repr α] 
+partial def exprNatLeaf : Expr → TermElabM (Option Nat) := fun expr => 
+  do
+    let mvar ←  mkFreshExprMVar (some (mkConst ``Nat))
+    let sExp' ← mkAppM ``AddTree.leaf #[mvar]
+    let expr ← reduce expr
+    Term.synthesizeSyntheticMVarsNoPostponing
+    if ← isDefEq sExp' expr then
+      Term.synthesizeSyntheticMVarsNoPostponing
+      let index ← exprNat (← whnf mvar)
+      return some index
+    else 
+      return none
+  
+elab "leafIndex!" t: term : term => do
+  let e ← elabTerm t none
+  let e ← reduce e
+  let n? ← exprNatLeaf e
+  return (ToExpr.toExpr <| n?.get!)
+
+
+#eval leafIndex! (AddTree.leaf 7)
+
+partial def exprNode : Expr → TermElabM (Option (Expr × Expr)) := fun expr => 
+  do
+    let mvar ←  mkFreshExprMVar (some (mkConst ``IndexAddTree))
+    let mvar' ←  mkFreshExprMVar (some (mkConst ``IndexAddTree))
+    let sExp' ← mkAppM ``AddTree.node #[mvar, mvar']
+    let expr ← reduce expr
+    Term.synthesizeSyntheticMVarsNoPostponing
+    if ← isDefEq sExp' expr then
+      Term.synthesizeSyntheticMVarsNoPostponing
+      return some (mvar, mvar')
+    else 
+      return none
+
+partial def exprIndexTree : Expr → TermElabM IndexAddTree := fun expr => 
+  do
+    match ← exprNode expr with
+    | some (l, r) => do
+      let l ← exprIndexTree l
+      let r ← exprIndexTree r
+      return AddTree.node l r
+    | none  =>
+      match ← exprNatLeaf expr with
+      | some i => return AddTree.leaf i
+      | none => throwError s!"expression {expr} is not a leaf or node"
+
+def IndexAddTree.toString (t: IndexAddTree) : String := 
+  match t with
+  | AddTree.leaf i => s!"leaf {i}"
+  | AddTree.node l r => 
+    "node (" ++ toString l ++ ") (" ++ toString r ++ ")"
+  | AddTree.negLeaf i => s!"negLeaf {i}"
+  | AddTree.subNode l r => 
+    "subNode (" ++ toString l ++ ") (" ++ toString r ++")"
+
+instance : ToString IndexAddTree := ⟨IndexAddTree.toString⟩
+
+elab "checktree" t:term : term => do
+    let e ← elabTerm t none
+    let e ← reduce e
+    let tree ← exprIndexTree e
+    logInfo s!"got tree {tree}"
+    return e
+
+#eval checktree (AddTree.node (AddTree.leaf 7) (AddTree.leaf 8))
+
+def IndexAddTree.foldMapM
+  (tExp: Expr)(basisImages: Array Expr) : TermElabM Expr := do
+  let t ← exprIndexTree tExp
+  foldMapMAux t basisImages
+
+def IndexAddTree.foldMapAux {α : Type u}[AddCommGroup α][Repr α] 
   (t : IndexAddTree)(basisImages: Array α)(h: basisImages.size > 0) : α :=
   match t with
   | AddTree.leaf i => basisImages.get (Fin.ofNat' i h)
