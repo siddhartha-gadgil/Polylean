@@ -4,7 +4,8 @@ import Mathlib.Algebra.Group.Defs
 import Polylean.Experiments.Tactics
 import Std
 import Lean
-open Lean Meta Elab Nat Term Std
+import Polylean.ProdSeq
+open Lean Meta Elab Nat Term Std ProdSeq
 
 
 def Lean.Expr.simplify(e: Expr) : MetaM Expr := do 
@@ -79,6 +80,38 @@ abbrev IndexAddTree := AddTree Nat
     let (rIdx, rAccum) := indexTree r lAccum
     (AddTree.subNode lIdx rIdx, rAccum)
 
+def AddTree.indexTreeM (t: AddTree Expr)(accumExpr : Expr) : 
+      TermElabM Expr := do
+  let accumL ← unpack accumExpr
+  let accum := accumL.toArray
+  match t with
+  | AddTree.leaf a => 
+    match ← accum.findIdxM? fun e => isDefEq e a with
+    | some i => 
+      mkPair (← mkAppM ``AddTree.leaf #[ToExpr.toExpr i]) accumExpr
+    | none =>
+      let newAccum ← pack (accum.push a).toList 
+      mkAppM ``AddTree.leaf #[ToExpr.toExpr accum.size, newAccum]
+  | AddTree.node l r =>
+    let lexpr ← indexTreeM l accumExpr
+    let (lIdx, lAccum) := (← split? lexpr).get!
+    let rexpr ← indexTreeM r lAccum
+    let (rIdx, rAccum) := (← split? rexpr).get!
+    mkPair (← mkAppM ``AddTree.node #[lIdx, rIdx]) (rAccum)
+  | AddTree.negLeaf a => 
+    match ← accum.findIdxM? fun e => isDefEq e a with
+    | some i => 
+        mkPair (← mkAppM ``AddTree.negLeaf #[ToExpr.toExpr i]) accumExpr
+    | none => 
+      let newAccum ← pack (accum.push a).toList 
+      mkAppM ``AddTree.leaf #[ToExpr.toExpr accum.size, newAccum]
+  | AddTree.subNode l r => 
+    let lexpr ← indexTreeM l accumExpr
+    let (lIdx, lAccum) := (← split? lexpr).get!
+    let rexpr ← indexTreeM r lAccum
+    let (rIdx, rAccum) := (← split? rexpr).get!
+    mkPair (← mkAppM ``AddTree.subNode #[lIdx, rIdx]) (rAccum)
+
 lemma Array.size_pos_if_index {α : Type _} [DecidableEq α] {arr : Array α} {a : α} {i : ℕ} : arr.getIdx? a = some i → arr.size > 0 := by
   rw [getIdx?, findIdx?, findIdx?.loop]
   exact if h:0 < arr.size then
@@ -143,6 +176,39 @@ partial def treeM (e : Expr) : MetaM Expr := do
   | some a => mkAppM ``AddTree.negLeaf #[a]
   | none  =>
       mkAppM ``AddTree.leaf #[e]
+
+partial def addTreeM (e : Expr) : MetaM <| AddTree Expr := do
+  match ← hOp? ``HAdd.hAdd e with
+  | some (a, b) => do
+    let l ← addTreeM a
+    let r ← addTreeM b
+    return AddTree.node l r
+  | none  =>
+  match ← hOp? ``HMul.hMul e with
+  | some (a, b) => do
+    let l ← addTreeM a
+    let r ← addTreeM b
+    return AddTree.node l r
+  | none  =>
+    match ← hOp? ``HSub.hSub e with
+  | some (a, b) => do
+    let l ← addTreeM a
+    let r ← addTreeM b
+    return AddTree.subNode l r
+  | none  =>
+  match ← hOp? ``HDiv.hDiv e with
+  | some (a, b) => do
+    let l ← addTreeM a
+    let r ← addTreeM b
+    return AddTree.subNode l r
+  | none  =>
+  match ← invOp? ``Neg.neg e with
+  | some a => return AddTree.negLeaf a
+  | none  =>
+  match ← invOp? ``Inv.inv e with
+  | some a => return AddTree.negLeaf a
+  | none  =>
+      return AddTree.negLeaf e
 
 @[simp] def IndexAddTree.foldMap {α : Type u}[AddCommGroup α][Repr α] 
   (t : IndexAddTree)(basisImages: Array α)(h: basisImages.size > 0) : α :=
