@@ -91,7 +91,7 @@ def AddTree.indexTreeM (t: AddTree Expr)(accumExpr : Expr) :
       mkPair (← mkAppM ``AddTree.leaf #[ToExpr.toExpr i]) accumExpr
     | none =>
       let newAccum ← pack (accum.push a).toList 
-      mkAppM ``AddTree.leaf #[ToExpr.toExpr accum.size, newAccum]
+      mkPair (← mkAppM ``AddTree.leaf #[ToExpr.toExpr accum.size]) newAccum
   | AddTree.node l r =>
     let lexpr ← indexTreeM l accumExpr
     let (lIdx, lAccum) := (← split? lexpr).get!
@@ -104,7 +104,7 @@ def AddTree.indexTreeM (t: AddTree Expr)(accumExpr : Expr) :
         mkPair (← mkAppM ``AddTree.negLeaf #[ToExpr.toExpr i]) accumExpr
     | none => 
       let newAccum ← pack (accum.push a).toList 
-      mkAppM ``AddTree.leaf #[ToExpr.toExpr accum.size, newAccum]
+      mkPair (← mkAppM ``AddTree.leaf #[ToExpr.toExpr accum.size]) newAccum
   | AddTree.subNode l r => 
     let lexpr ← indexTreeM l accumExpr
     let (lIdx, lAccum) := (← split? lexpr).get!
@@ -256,10 +256,22 @@ elab "indexTree#" t:term : term => do
   let res ← mkAppM ``AddTree.indexTree₀ #[t]
   reduce res
 
+elab "indTree#" t:term : term => do
+  let e ← elabTerm t none
+  let t ← addTreeM e
+  let res ← AddTree.indexTreeM t (mkConst ``Unit.unit)
+  reduce res
+
 @[simp] noncomputable def egInd {α : Type u}[AddCommGroup α][Repr α][DecidableEq α] (x y: α) := 
     indexTree# (x + y + x - y)
 
 #print egInd
+
+@[simp] noncomputable def egInd' {α : Type u}[AddCommGroup α][Repr α][DecidableEq α] (x y: α) := 
+    indTree# (x + y + x - y)
+
+#print egInd'
+
 
 @[simp] noncomputable def egIndMap {α : Type u}[AddCommGroup α][Repr α][DecidableEq α] 
   (x y: α) :=
