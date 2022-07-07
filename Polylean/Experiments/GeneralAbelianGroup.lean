@@ -145,6 +145,7 @@ theorem zero_zero : (n : ℕ) → (0 : ℤ ^ n) = (zeros n)
 | Nat.zero => rfl
 | Nat.succ m => by rw [zeros, ← zero_zero m]; rfl
 
+
 end Defs
 
 

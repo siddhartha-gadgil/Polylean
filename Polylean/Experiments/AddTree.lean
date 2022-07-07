@@ -483,3 +483,9 @@ theorem egIndMapInv''{α : Type u}[AddCommGroup α][Repr α][DecidableEq α][Inh
       
 theorem egRoundtrip{α : Type u}[AddCommGroup α][Repr α][DecidableEq α][Inhabited α] 
     (x y : α) : x + y + x - y =  roundtrip# (x + y + x - y)  := by rfl
+
+def ℤnType : Nat →  MetaM Expr
+| 0 => return mkConst ``Unit
+| n + 1 => do mkAppM ``Prod #[mkConst ``Int, ← ℤnType n]
+
+#eval (ℤnType 2)
