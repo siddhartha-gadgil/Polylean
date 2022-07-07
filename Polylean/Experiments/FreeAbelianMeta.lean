@@ -34,3 +34,17 @@ elab "arr#"  n:term "at" j:term  : term => do
       return arr[j']
 
 #eval arr# 7 at 2
+
+elab "free#" t:term : term => do
+  let e ← elabTerm t none
+  let t ← addTreeM e
+  let (indTree, lst) ← AddTree.indexTreeM'' t
+  let arr ←  ℤbasisArrM (lst.length)
+  let exp ← IndexAddTree.foldMapM indTree arr
+  logInfo s!"exp: {exp}"
+  return exp
+
+def egFree {α : Type u}[AddCommGroup α][Repr α][DecidableEq α][Inhabited α] 
+    (x y : α) := free# (x + y + x - y)
+
+#eval egFree (3 : ℤ) (1 : ℤ )
