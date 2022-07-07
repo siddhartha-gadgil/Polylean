@@ -209,7 +209,7 @@ partial def addTreeM (e : Expr) : MetaM <| AddTree Expr := do
   match ← invOp? ``Inv.inv e with
   | some a => return AddTree.negLeaf a
   | none  =>
-      return AddTree.negLeaf e
+      return AddTree.leaf e
 
 @[simp] def IndexAddTree.foldMap {α : Type u}[AddCommGroup α][Repr α] 
   (t : IndexAddTree)(basisImages: Array α)(h: basisImages.size > 0) : α :=
@@ -246,18 +246,31 @@ def IndexAddTree.foldMapMAux
   | AddTree.node l r => 
       let lImage ←  foldMapMAux l basisImages 
       let rImage ←  foldMapMAux r basisImages   
-      mkAppM ``Add.add #[lImage, rImage]
+      mkAppM ``HAdd.hAdd #[lImage, rImage]
   | AddTree.negLeaf i => mkAppM ``Neg.neg #[basisImages.get! i] 
   | AddTree.subNode l r => 
       let lImage ←  foldMapMAux l basisImages 
       let rImage ←  foldMapMAux r basisImages   
-      mkAppM ``Sub.sub #[lImage, rImage]
+      mkAppM ``HSub.hSub #[lImage, rImage]
 
 
 partial def exprNatLeaf : Expr → TermElabM (Option Nat) := fun expr => 
   do
     let mvar ←  mkFreshExprMVar (some (mkConst ``Nat))
     let sExp' ← mkAppM ``AddTree.leaf #[mvar]
+    let expr ← reduce expr
+    Term.synthesizeSyntheticMVarsNoPostponing
+    if ← isDefEq sExp' expr then
+      Term.synthesizeSyntheticMVarsNoPostponing
+      let index ← exprNat (← whnf mvar)
+      return some index
+    else 
+      return none
+
+partial def exprNatNegLeaf : Expr → TermElabM (Option Nat) := fun expr => 
+  do
+    let mvar ←  mkFreshExprMVar (some (mkConst ``Nat))
+    let sExp' ← mkAppM ``AddTree.negLeaf #[mvar]
     let expr ← reduce expr
     Term.synthesizeSyntheticMVarsNoPostponing
     if ← isDefEq sExp' expr then
@@ -289,6 +302,19 @@ partial def exprNode : Expr → TermElabM (Option (Expr × Expr)) := fun expr =>
     else 
       return none
 
+partial def exprSubNode : Expr → TermElabM (Option (Expr × Expr)) := fun expr => 
+  do
+    let mvar ←  mkFreshExprMVar (some (mkConst ``IndexAddTree))
+    let mvar' ←  mkFreshExprMVar (some (mkConst ``IndexAddTree))
+    let sExp' ← mkAppM ``AddTree.subNode #[mvar, mvar']
+    let expr ← reduce expr
+    Term.synthesizeSyntheticMVarsNoPostponing
+    if ← isDefEq sExp' expr then
+      Term.synthesizeSyntheticMVarsNoPostponing
+      return some (mvar, mvar')
+    else 
+      return none
+
 partial def exprIndexTree : Expr → TermElabM IndexAddTree := fun expr => 
   do
     match ← exprNode expr with
@@ -297,9 +323,19 @@ partial def exprIndexTree : Expr → TermElabM IndexAddTree := fun expr =>
       let r ← exprIndexTree r
       return AddTree.node l r
     | none  =>
+      match ← exprSubNode expr with
+    | some (l, r) => do
+      let l ← exprIndexTree l
+      let r ← exprIndexTree r
+      return AddTree.subNode l r
+    | none =>
       match ← exprNatLeaf expr with
       | some i => return AddTree.leaf i
-      | none => throwError s!"expression {expr} is not a leaf or node"
+      | none => 
+        match ← exprNatNegLeaf expr with
+      | some i => return AddTree.negLeaf i
+      | none => 
+        throwError s!"expression {expr} is not a leaf or node"
 
 def IndexAddTree.toString (t: IndexAddTree) : String := 
   match t with
@@ -385,6 +421,23 @@ def AddTree.indexTreeM' (t : AddTree Expr) : TermElabM Expr :=
       mkAppOptM  ``List.cons #[some α, some l, some i]) nilList
     mkAppM ``Prod.mk #[tree, lst]
 
+def AddTree.indexTreeM'' (t : AddTree Expr) : 
+  TermElabM <| Expr × (List Expr) :=
+  do
+    let res ← AddTree.indexTreeM t (mkConst ``Unit.unit)
+    let res ← reduce res 
+    let (tree, lstIn) := (← split? res).get!
+    let lst ← unpack lstIn
+    let α ← inferType lst.head!
+    return (tree, lst)
+
+elab "roundtrip#" t:term : term => do
+  let e ← elabTerm t none
+  let t ← addTreeM e
+  let (indTree, lst) ← AddTree.indexTreeM'' t
+  let arr := lst.toArray
+  IndexAddTree.foldMapM indTree arr
+
 elab "indTree#" t:term : term => do
   let e ← elabTerm t none
   let t ← addTreeM e
@@ -428,3 +481,5 @@ theorem egIndMapInv''{α : Type u}[AddCommGroup α][Repr α][DecidableEq α][Inh
       simp 
       admit
       
+theorem egRoundtrip{α : Type u}[AddCommGroup α][Repr α][DecidableEq α][Inhabited α] 
+    (x y : α) : x + y + x - y =  roundtrip# (x + y + x - y)  := by rfl
