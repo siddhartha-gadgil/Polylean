@@ -106,7 +106,10 @@ def egViaFree {α : Type}[AddCommGroup α][Repr α][DecidableEq α][Inhabited α
 #eval egViaFree (5 : ℤ) (2 : ℤ )
 
 theorem induced_free_map_at{A : Type _} [AddCommGroup A][Inhabited A] {n : ℕ} (l : List A) (h : l.length = n) (k: ℕ) (hk : k < n) :
- (inducedFreeMap l h) (ℤbasisElem n k hk) = (l.toArray)[k] := sorry
+ (inducedFreeMap l h) (ℤbasisElem n k hk) = l.get ⟨k, h ▸ hk⟩ := by
+   rw [ℤbasisElem, List.mapget (inducedFreeMap l h)]
+   apply List.get_index_eq
+   apply map_basis
 
 open AddCommGroup.Homomorphism
 theorem egViaFreeEql{α : Type}[AddCommGroup α][Repr α][DecidableEq α][Inhabited α] 
