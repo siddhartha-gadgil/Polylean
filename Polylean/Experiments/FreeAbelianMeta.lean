@@ -10,8 +10,9 @@ open Lean Meta Elab Nat Term Std ProdSeq ToExpr
 
 instance (n: ℕ) : Inhabited (ℤ ^ n) := ⟨zeros n⟩
 
--- def ℤbasisElem (n : ℕ) (j : ℕ) (h : j < n) : ℤ ^ n := ℤbasis n |>.get ⟨j, by simp [h]⟩
-def ℤbasisElem (n : ℕ) (j : ℕ) : ℤ ^ n := ℤbasis n |>.get! j
+def ℤbasisElem (n : ℕ) (j : ℕ) (h : j < n) : ℤ ^ n := ℤbasis n |>.get ⟨j, by simp [h]⟩
+
+section ToExpr
 
 instance : ToExpr Int where
   toExpr :=
@@ -38,31 +39,10 @@ instance {α : Type _} [ToExpr α] : ToExpr (List α) where
     lstexpr
   toTypeExpr := mkApp (mkConst ``List) $ toTypeExpr α
 
-def zeroIntExpr : TermElabM Expr := do
-  let stx ← `(0)
-  elabTerm stx (some <| mkConst ``Int)
-
-def oneIntExpr : TermElabM Expr := do
-  let stx ← `(1)
-  elabTerm stx (some <| mkConst ``Int)
-
-def zeroExpr : ℕ → TermElabM Expr
-| 0 => return mkConst ``Unit.unit
-| n + 1 => do mkAppM ``Prod.mk #[← zeroIntExpr, ←  zeroExpr n]
-
-#eval ToExpr.toExpr $ (ℤbasis 5).get! 2
-def ℤbasisExpr : ℕ → ℕ → TermElabM Expr 
-| 0, _ => return mkConst ``Unit.unit
-| n + 1, 0 => do mkAppM ``Prod.mk #[← oneIntExpr, ←  zeroExpr n] 
-| n + 1, k + 1 => 
-    do mkAppM ``Prod.mk #[← oneIntExpr, ← ℤbasisExpr n k]
+end ToExpr
 
 def ℤbasisArrM (n: ℕ): TermElabM (Array Expr) := do
-  let mut arr := #[]
-  for j in [0:n] do
-    arr := arr.push (← mkAppM ``ℤbasisElem #[toExpr n, toExpr j])
-    -- arr := arr.push (← ℤbasisExpr n j)
-  return arr
+  return ℤbasis n |>.map toExpr |>.toArray
 
 elab "arr#"  n:term "at" j:term  : term => do
       let nExp ← elabTerm n (some <| mkConst ``Nat)
@@ -88,10 +68,6 @@ def egFree {α : Type u}[AddCommGroup α][Repr α][DecidableEq α][Inhabited α]
     (x y : α) := free# (x + y + x - y + x + y)
 
 #eval egFree (5 : ℤ) (2 : ℤ )
-
-#check @inducedFreeMap
-
-#check Eq.refl
 
 def provedLength{α : Type}(l: List α) : PSigma (fun n : ℕ  => l.length = n) := PSigma.mk (l.length) rfl
 
@@ -129,16 +105,16 @@ def egViaFree {α : Type}[AddCommGroup α][Repr α][DecidableEq α][Inhabited α
 
 #eval egViaFree (5 : ℤ) (2 : ℤ )
 
-theorem induced_free_map_at{A : Type _} [AddCommGroup A][Inhabited A] {n : ℕ} (l : List A) (h : l.length = n)(k: ℕ) : 
-  (inducedFreeMap l h) (ℤbasisElem n k) = (l.toArray)[k] := sorry
+theorem induced_free_map_at{A : Type _} [AddCommGroup A][Inhabited A] {n : ℕ} (l : List A) (h : l.length = n) (k: ℕ) (hk : k < n) :
+ (inducedFreeMap l h) (ℤbasisElem n k hk) = (l.toArray)[k] := sorry
 
 open AddCommGroup.Homomorphism
 theorem egViaFreeEql{α : Type}[AddCommGroup α][Repr α][DecidableEq α][Inhabited α] 
-    (x y : α) : x + y + x - y =  viafree# (x + y + x - y)  := by 
+    (x y : α) : x + y + x - y =  viafree# (x + y + x - y)  := by
         simp only [neg_dist, AddCommGroup.add_distrib, induced_free_map_at]
         have l₀ : #[x, y].getOp 0 = x := by rfl
         have l₁ : #[x, y].getOp 1 = y := by rfl
-        rw[l₀, l₁]
-        
-        
+        -- rw[l₀, l₁]
+        admit
+
 #print egViaFreeEql
