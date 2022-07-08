@@ -41,8 +41,39 @@ instance {α : Type _} [ToExpr α] : ToExpr (List α) where
 
 end ToExpr
 
+def zeroExpr : ℕ → TermElabM Expr
+| 0 => return mkConst ``Unit.unit
+| n + 1 => do mkAppM ``Prod.mk #[toExpr (0 : Int), ←  zeroExpr n]
+
+def ℤbasisExpr : ℕ → ℕ → TermElabM Expr
+| 0, _ => return mkConst ``Unit.unit
+| n + 1, 0 => do mkAppM ``Prod.mk #[toExpr (1 : Int), ←  zeroExpr n]
+| n + 1, k + 1 => do mkAppM ``Prod.mk #[toExpr (1 : Int), ← ℤbasisExpr n k]
+
+elab "ℤbasisElem#"  n:term "at" j:term  : term => do
+      let nExp ← elabTerm n (some <| mkConst ``Nat)
+      let jExp ← elabTerm j (some <| mkConst ``Nat)
+      mkAppM ``ℤbasisElem #[nExp, jExp]
+
+elab "ℤbasisExpr#"  n:term "at" j:term  : term => do
+      let nExp ← elabTerm n (some <| mkConst ``Nat)
+      let jExp ← elabTerm j (some <| mkConst ``Nat)
+      let n ← exprNat nExp
+      let j ← exprNat jExp
+      ℤbasisExpr n j
+
+-- #eval ℤbasisElem# 3 at 1
+#eval ℤbasisExpr# 3 at 1
+
 def ℤbasisArrM (n: ℕ): TermElabM (Array Expr) := do
-  return ℤbasis n |>.map toExpr |>.toArray
+  let mut arr := #[]
+  for j in [0:n] do
+    arr := arr.push (← mkAppM ``ℤbasisElem #[toExpr n, toExpr j])
+    -- arr := arr.push (← ℤbasisExpr n j)
+  return arr
+
+-- def ℤbasisArrM (n: ℕ): TermElabM (Array Expr) := do
+--  return ℤbasis n |>.map toExpr |>.toArray
 
 elab "arr#"  n:term "at" j:term  : term => do
       let nExp ← elabTerm n (some <| mkConst ``Nat)
@@ -52,7 +83,7 @@ elab "arr#"  n:term "at" j:term  : term => do
       let arr ← ℤbasisArrM n'
       return arr[j']
 
-#eval arr# 7 at 2
+-- #eval arr# 7 at 2
 
 def toFreeM (e : Expr) : TermElabM Expr := do
   let t ← addTreeM e
@@ -64,10 +95,10 @@ elab "free#" t:term : term => do
   let e ← elabTerm t none
   toFreeM e
 
-def egFree {α : Type u}[AddCommGroup α][Repr α][DecidableEq α][Inhabited α] 
-    (x y : α) := free# (x + y + x - y + x + y)
+-- def egFree {α : Type u}[AddCommGroup α][Repr α][DecidableEq α][Inhabited α]
+--    (x y : α) := free# (x + y + x - y + x + y)
 
-#eval egFree (5 : ℤ) (2 : ℤ )
+-- #eval egFree (5 : ℤ) (2 : ℤ )
 
 def provedLength{α : Type}(l: List α) : PSigma (fun n : ℕ  => l.length = n) := PSigma.mk (l.length) rfl
 
@@ -100,10 +131,10 @@ elab "viafree#" t:term : term => do
   let e ← elabTerm t none
   viaFreeM e
 
-def egViaFree {α : Type}[AddCommGroup α][Repr α][DecidableEq α][Inhabited α] 
-    (x y : α) := viafree# (x + y + x - y + x + y)
+-- def egViaFree {α : Type}[AddCommGroup α][Repr α][DecidableEq α][Inhabited α]
+--    (x y : α) := viafree# (x + y + x - y + x + y)
 
-#eval egViaFree (5 : ℤ) (2 : ℤ )
+-- #eval egViaFree (5 : ℤ) (2 : ℤ )
 
 theorem induced_free_map_at{A : Type _} [AddCommGroup A][Inhabited A] {n : ℕ} (l : List A) (h : l.length = n) (k: ℕ) (hk : k < n) :
  (inducedFreeMap l h) (ℤbasisElem n k hk) = l.get ⟨k, h ▸ hk⟩ := by
@@ -111,6 +142,7 @@ theorem induced_free_map_at{A : Type _} [AddCommGroup A][Inhabited A] {n : ℕ} 
    apply List.get_index_eq
    apply map_basis
 
+/-
 open AddCommGroup.Homomorphism
 theorem egViaFreeEql{α : Type}[AddCommGroup α][Repr α][DecidableEq α][Inhabited α] 
     (x y : α) : x + y + x - y =  viafree# (x + y + x - y)  := by
@@ -121,3 +153,4 @@ theorem egViaFreeEql{α : Type}[AddCommGroup α][Repr α][DecidableEq α][Inhabi
         admit
 
 #print egViaFreeEql
+-/
