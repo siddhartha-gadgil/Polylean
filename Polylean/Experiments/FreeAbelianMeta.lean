@@ -10,8 +10,33 @@ open Lean Meta Elab Nat Term Std ProdSeq ToExpr
 
 instance (n: ℕ) : Inhabited (ℤ ^ n) := ⟨zeros n⟩
 
-def ℤbasisElem(n : ℕ)(j : ℕ) : ℤ ^ n := (ℤbasis n |>.toArray)[j]
+-- def ℤbasisElem (n : ℕ) (j : ℕ) (h : j < n) : ℤ ^ n := ℤbasis n |>.get ⟨j, by simp [h]⟩
+def ℤbasisElem (n : ℕ) (j : ℕ) : ℤ ^ n := ℤbasis n |>.get! j
 
+instance : ToExpr Int where
+  toExpr :=
+    fun
+      | Int.ofNat n => mkApp (mkConst ``Int.ofNat) $ toExpr n
+      | Int.negSucc n => mkApp (mkConst ``Int.negSucc) $ toExpr n
+  toTypeExpr := mkConst ``Int
+
+instance prodToExpr {A B : Type _} [ToExpr A] [ToExpr B] : ToExpr (A × B) := inferInstance
+
+instance : ToExpr Unit where
+  toExpr := fun | Unit.unit => mkConst ``Unit.unit
+  toTypeExpr := mkConst ``Unit
+
+@[instance] def powToExpr {A : Type _} [ToExpr A] : (n : ℕ) → ToExpr (A ^ n)
+  | .zero => inferInstanceAs (ToExpr Unit)
+  | .succ m => @prodToExpr _ _ inferInstance $ powToExpr m
+
+instance {α : Type _} [ToExpr α] : ToExpr (List α) where
+  toExpr :=
+    let rec lstexpr : List α → Expr
+      | .nil => mkConst ``List.nil
+      | .cons h t => mkApp (mkApp (mkConst ``List.cons) $ toExpr h) $ lstexpr t
+    lstexpr
+  toTypeExpr := mkApp (mkConst ``List) $ toTypeExpr α
 
 def zeroIntExpr : TermElabM Expr := do
   let stx ← `(0)
@@ -21,31 +46,16 @@ def oneIntExpr : TermElabM Expr := do
   let stx ← `(1)
   elabTerm stx (some <| mkConst ``Int)
 
-
 def zeroExpr : ℕ → TermElabM Expr
 | 0 => return mkConst ``Unit.unit
 | n + 1 => do mkAppM ``Prod.mk #[← zeroIntExpr, ←  zeroExpr n]
 
+#eval ToExpr.toExpr $ (ℤbasis 5).get! 2
 def ℤbasisExpr : ℕ → ℕ → TermElabM Expr 
 | 0, _ => return mkConst ``Unit.unit
 | n + 1, 0 => do mkAppM ``Prod.mk #[← oneIntExpr, ←  zeroExpr n] 
 | n + 1, k + 1 => 
     do mkAppM ``Prod.mk #[← oneIntExpr, ← ℤbasisExpr n k]
-
-elab "ℤbasisElem#"  n:term "at" j:term  : term => do
-      let nExp ← elabTerm n (some <| mkConst ``Nat)
-      let jExp ← elabTerm j (some <| mkConst ``Nat)
-      mkAppM ``ℤbasisElem #[nExp, jExp]
-
-elab "ℤbasisExpr#"  n:term "at" j:term  : term => do
-      let nExp ← elabTerm n (some <| mkConst ``Nat)
-      let jExp ← elabTerm j (some <| mkConst ``Nat)
-      let n ← exprNat nExp
-      let j ← exprNat jExp
-      ℤbasisExpr n j
-
-#eval ℤbasisElem# 3 at 1
-#eval ℤbasisExpr# 3 at 1
 
 def ℤbasisArrM (n: ℕ): TermElabM (Array Expr) := do
   let mut arr := #[]
