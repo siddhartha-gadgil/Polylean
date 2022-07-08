@@ -52,6 +52,8 @@ def egFree {α : Type u}[AddCommGroup α][Repr α][DecidableEq α][Inhabited α]
 
 #check @inducedFreeMap
 
+#check Eq.refl
+
 @[simp] def inducedFreeMap!{A: Type _}[AddCommGroup A](l: List A) :=
     @inducedFreeMap A _ l.length l rfl
 
@@ -60,11 +62,13 @@ instance ind_hom! {A : Type _} [AddCommGroup A]  (l : List A)  : AddCommGroup.Ho
 def viaFreeM (e: Expr) : TermElabM Expr := do
   let t ← addTreeM e
   let (indTree, lst) ← AddTree.indexTreeM'' t
-  let arr ←  ℤbasisArrM (lst.length)
-  let freeElem ← IndexAddTree.foldMapM indTree arr
   let lstPackPair ←  listToExpr lst
   let (lstPack, α) := lstPackPair
-  let fromFree ← mkAppOptM ``inducedFreeMap! #[some α, none, some lstPack]
+  let pf ← mkAppM ``Eq.refl #[toExpr lst.length]
+  let arr ←  ℤbasisArrM (lst.length)
+  let freeElem ← IndexAddTree.foldMapM indTree arr
+  let fromFree ← mkAppOptM 
+      ``inducedFreeMap #[some α, none, some <| toExpr lst.length, some lstPack, some (pf)]
   mkAppM' fromFree #[freeElem]
 
 elab "viafree#" t:term : term => do
@@ -82,8 +86,8 @@ theorem induced_free_map_at{A : Type _} [AddCommGroup A][Inhabited A] {n : ℕ} 
 theorem egViaFreeEql{α : Type}[AddCommGroup α][Repr α][DecidableEq α][Inhabited α] 
     (x y : α) : x + y + x - y =  viafree# (x + y + x - y)  := by 
         simp
-        have l₀ : (inducedFreeMap [x, y] rfl) (ℤbasisElem 2 0) = x  := induced_free_map_at [x, y] rfl 0
-        have l₁ :  (inducedFreeMap [x, y] rfl) (ℤbasisElem 2 1) = y := induced_free_map_at [x, y] rfl 1
+        have l₀ : (inducedFreeMap [x, y] (rfl: 2 = 2)) (ℤbasisElem 2 0) = x  := induced_free_map_at [x, y] rfl 0
+        have l₁ :  (inducedFreeMap [x, y] (rfl: 2 = 2)) (ℤbasisElem 2 1) = y := induced_free_map_at [x, y] rfl 1
         rw [l₀, l₁]
         
 
