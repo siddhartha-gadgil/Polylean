@@ -12,6 +12,18 @@ instance (n: ℕ) : Inhabited (ℤ ^ n) := ⟨zeros n⟩
 
 def ℤbasisElem (n : ℕ) (j : ℕ) : ℤ ^ n := ℤbasis n |>.get! j
 
+theorem List.get!_of_get [Inhabited α] : (k : ℕ) → (l : List α) → (hk : k < l.length) → l.get! k = l.get ⟨k, hk⟩
+  | _, .nil, _ => by contradiction
+  | .zero, .cons _ _, _ => rfl
+  | .succ _, .cons _ _, _ => by rw [get!, get]; apply get!_of_get
+
+@[simp] theorem induced_free_map_at {A : Type _} [AddCommGroup A] {n : ℕ} (l : List A) (h : l.length = n) (k: ℕ) (hk : k < n) :
+ (inducedFreeMap l h) (ℤbasisElem n k) = l.get ⟨k, h ▸ hk⟩ := by
+   rw [ℤbasisElem, List.get!_of_get, List.mapget (inducedFreeMap l h)]
+   apply List.get_index_eq; apply map_basis
+   · simp [h, hk]
+
+
 section ToExpr
 
 instance : ToExpr Int where
@@ -41,24 +53,6 @@ instance {α : Type _} [ToExpr α] : ToExpr (List α) where
 
 end ToExpr
 
-section Decidable
-
--- Source : https://exlean.org/decidable-propositions-iii/
-
-def asTrue (C : Prop) [Decidable C] : Prop :=
-  if C then True else False
-
-def ofAsTrue {C : Prop} : [Decidable C] → asTrue C → C
-  | .isTrue c => λ _ => c
-  | .isFalse _ => False.elim
-
-notation "decTrivial" => ofAsTrue trivial
-
-example : 2 < 5 := decTrivial
-
-def decideM : MetaM Expr := mkAppM ``ofAsTrue #[mkConst ``trivial]
-
-end Decidable
 
 def zeroExpr : ℕ → TermElabM Expr
 | 0 => return mkConst ``Unit.unit
@@ -88,7 +82,6 @@ def ℤbasisArrM (n: ℕ): TermElabM (Array Expr) := do
   let mut arr := #[]
   for j in [0:n] do
     arr := arr.push (← mkAppM ``ℤbasisElem #[toExpr n, toExpr j])
-    -- arr := arr.push (← ℤbasisExpr n j)
   return arr
 
 -- def ℤbasisArrM (n: ℕ): TermElabM (Array Expr) := do
@@ -155,30 +148,15 @@ def egViaFree {α : Type}[AddCommGroup α][Repr α][DecidableEq α][Inhabited α
 
 #eval egViaFree (5 : ℤ) (2 : ℤ )
 
-theorem List.get!_of_get [Inhabited α] : (k : ℕ) → (l : List α) → (hk : k < l.length) → l.get! k = l.get ⟨k, hk⟩ := by
-  intros k
-  induction k with
-    | zero =>
-      intro l
-      cases l with
-        | nil => intros; contradiction
-        | cons _ _ => intros; rfl
-    | succ _ ihk =>
-      intro l
-      cases l with
-        | nil => intros; contradiction
-        | cons h t => intros; rw [get!, get]; apply ihk
-
-theorem induced_free_map_at{A : Type _} [AddCommGroup A] {n : ℕ} (l : List A) (h : l.length = n) (k: ℕ) (hk : k < n) :
- (inducedFreeMap l h) (ℤbasisElem n k) = l.get ⟨k, h ▸ hk⟩ := by
-   rw [ℤbasisElem, List.get!_of_get, List.mapget (inducedFreeMap l h)]
-   apply List.get_index_eq
-   apply map_basis
-   · simp [h, hk]
-
-open AddCommGroup.Homomorphism
-theorem egViaFreeEql{α : Type}[AddCommGroup α][Repr α][DecidableEq α][Inhabited α] 
-    (x y : α) : x + y + x - y =  viafree# (x + y + x - y)  := by
-        simp only [neg_dist, AddCommGroup.add_distrib, induced_free_map_at, List.get]
+theorem egViaFreeEql{α : Type}[AddCommGroup α][Repr α][DecidableEq α][Inhabited α]
+    (x y z : α) : x + z - y + x - y + z =  viafree# (x + z - y + x - y + z)  := by
+       simp only [AddCommGroup.Homomorphism.neg_dist, AddCommGroup.add_distrib, induced_free_map_at, List.get]
 
 #print egViaFreeEql
+
+def freeGroupEqM (e : Expr) : TermElabM Expr := do
+  let eqn ← mkEq e (← viaFreeM e)
+  let mvar ← mkFreshExprMVar $ some eqn
+  let tac : Syntax ← `(tactic| simp)
+  let (_, _) ← Elab.runTactic mvar.mvarId! tac
+  return mvar
