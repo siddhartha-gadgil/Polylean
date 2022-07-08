@@ -35,16 +35,41 @@ elab "arr#"  n:term "at" j:term  : term => do
 
 #eval arr# 7 at 2
 
-elab "free#" t:term : term => do
-  let e ← elabTerm t none
+def toFreeM (e : Expr) : TermElabM Expr := do
   let t ← addTreeM e
   let (indTree, lst) ← AddTree.indexTreeM'' t
   let arr ←  ℤbasisArrM (lst.length)
-  let exp ← IndexAddTree.foldMapM indTree arr
-  logInfo s!"exp: {exp}"
-  return exp
+  IndexAddTree.foldMapM indTree arr
+
+elab "free#" t:term : term => do
+  let e ← elabTerm t none
+  toFreeM e
 
 def egFree {α : Type u}[AddCommGroup α][Repr α][DecidableEq α][Inhabited α] 
-    (x y : α) := free# (x + y + x - y)
+    (x y : α) := free# (x + y + x - y + x + y)
 
-#eval egFree (3 : ℤ) (1 : ℤ )
+#eval egFree (5 : ℤ) (2 : ℤ )
+
+#check @inducedFreeMap
+
+def inducedFreeMap!{A: Type}[AddCommGroup A](l: List A) :=
+    @inducedFreeMap A _ l.length l rfl
+
+def viaFreeM (e: Expr) : TermElabM Expr := do
+  let t ← addTreeM e
+  let (indTree, lst) ← AddTree.indexTreeM'' t
+  let arr ←  ℤbasisArrM (lst.length)
+  let freeElem ← IndexAddTree.foldMapM indTree arr
+  let lstPackPair ←  listToExpr lst
+  let (lstPack, α) := lstPackPair
+  let fromFree ← mkAppOptM ``inducedFreeMap! #[some α, none, some lstPack]
+  mkAppM' fromFree #[freeElem]
+
+elab "viafree#" t:term : term => do
+  let e ← elabTerm t none
+  viaFreeM e
+
+def egViaFree {α : Type}[AddCommGroup α][Repr α][DecidableEq α][Inhabited α] 
+    (x y : α) := viafree# (x + y + x - y + x + y)
+
+#eval egViaFree (5 : ℤ) (2 : ℤ )

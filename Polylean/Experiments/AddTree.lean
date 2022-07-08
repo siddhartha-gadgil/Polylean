@@ -409,17 +409,23 @@ elab "indexTree#" t:term : term => do
   let res ← mkAppM ``AddTree.indexTree₀ #[t]
   reduce res
 
+def listToExpr (lst: List Expr) : MetaM (Expr × Expr) := do
+    let α ← inferType lst.head!
+    let nilList ←  mkAppOptM ``List.nil #[some α]
+    return (← lst.foldrM (fun l i => do
+      mkAppOptM  ``List.cons #[some α, some l, some i]) nilList,
+      α)
+
+
 def AddTree.indexTreeM' (t : AddTree Expr) : TermElabM Expr :=
   do
     let res ← AddTree.indexTreeM t (mkConst ``Unit.unit)
     let res ← reduce res 
     let (tree, lstIn) := (← split? res).get!
     let lst ← unpack lstIn
-    let α ← inferType lst.head!
-    let nilList ←  mkAppOptM ``List.nil #[some α]
-    let lst ←  lst.foldrM (fun l i => do
-      mkAppOptM  ``List.cons #[some α, some l, some i]) nilList
-    mkAppM ``Prod.mk #[tree, lst]
+    let lstExprPair ←  listToExpr lst
+    let (lstExpr, _) := lstExprPair
+    mkAppM ``Prod.mk #[tree, lstExpr]
 
 def AddTree.indexTreeM'' (t : AddTree Expr) : 
   TermElabM <| Expr × (List Expr) :=
@@ -428,7 +434,6 @@ def AddTree.indexTreeM'' (t : AddTree Expr) :
     let res ← reduce res 
     let (tree, lstIn) := (← split? res).get!
     let lst ← unpack lstIn
-    let α ← inferType lst.head!
     return (tree, lst)
 
 elab "roundtrip#" t:term : term => do
