@@ -107,12 +107,12 @@ elab "free#" t:term : term => do
   let e ← elabTerm t none
   toFreeM e
 
-def egFree {α : Type u}[AddCommGroup α][Repr α][DecidableEq α][Inhabited α]
+def egFree {α : Type _}[AddCommGroup α][Repr α][DecidableEq α][Inhabited α]
     (x y : α) := free# (x + y + x - y + x + y)
 
 #eval egFree (5 : ℤ) (2 : ℤ )
 
-def provedLength{α : Type}(l: List α) : PSigma (fun n : ℕ  => l.length = n) := PSigma.mk (l.length) rfl
+def provedLength{α : Type _}(l: List α) : PSigma (fun n : ℕ  => l.length = n) := PSigma.mk (l.length) rfl
 
 
 @[simp] def inducedFreeMap!{A: Type _}[AddCommGroup A](l: List A) :=
@@ -128,11 +128,11 @@ def viaFreeM (e: Expr) : TermElabM Expr := do
   let pl ← mkAppM ``provedLength #[lstPack]
   let n ← exprNat (← mkAppM ``PSigma.fst #[pl])
   let pf ← mkAppM ``PSigma.snd #[pl]
-  let pf' ← mkAppOptM 
+  let pf' ← mkAppOptM
       ``Eq.trans #[none, none, none, toExpr n, pf, 
         ← mkAppM ``Eq.refl #[toExpr n]]
-  let n := lst.length
-  let pf ← mkAppM ``Eq.refl #[toExpr lst.length]
+  let n := List.length lst
+--  let pf ← mkAppM ``Eq.refl #[toExpr lst.length]
   let arr ←  ℤbasisArrM n
   let freeElem ← IndexAddTree.foldMapM indTree arr
   let fromFree ← mkAppOptM 
@@ -155,8 +155,17 @@ theorem egViaFreeEql{α : Type}[AddCommGroup α][Repr α][DecidableEq α][Inhabi
 #print egViaFreeEql
 
 def freeGroupEqM (e : Expr) : TermElabM Expr := do
-  let eqn ← mkEq e (← viaFreeM e)
+  let freeElemIm ← viaFreeM e
+  let eqn ← mkEq e freeElemIm
   let mvar ← mkFreshExprMVar $ some eqn
-  let tac : Syntax ← `(tactic| simp)
+  let tac : Syntax ← `(tactic| simp only [AddCommGroup.Homomorphism.neg_dist, AddCommGroup.add_distrib, induced_free_map_at, List.get])
   let (_, _) ← Elab.runTactic mvar.mvarId! tac
-  return mvar
+  let freeElemIm ← whnf freeElemIm -- may cause issues with free variables
+  match freeElemIm with
+    | .app ϕ freeElem _ =>
+      let freeElemR ← reduce freeElem
+      let freeElemMvar ← mkFreshExprMVar $ some $ ← mkEq (mkApp ϕ freeElem) (mkApp ϕ freeElemR)
+      assignExprMVar freeElemMvar.mvarId! $ ← mkAppM ``congrArg #[ϕ, mkConst ``rfl]
+      let res ← mkEqTrans mvar freeElemMvar
+      return res
+    | _ => failure
