@@ -52,8 +52,10 @@ def egFree {α : Type u}[AddCommGroup α][Repr α][DecidableEq α][Inhabited α]
 
 #check @inducedFreeMap
 
-def inducedFreeMap!{A: Type}[AddCommGroup A](l: List A) :=
+@[simp] def inducedFreeMap!{A: Type _}[AddCommGroup A](l: List A) :=
     @inducedFreeMap A _ l.length l rfl
+
+instance ind_hom! {A : Type _} [AddCommGroup A]  (l : List A)  : AddCommGroup.Homomorphism (inducedFreeMap! l) := FreeAbelianGroup.induced_hom A _
 
 def viaFreeM (e: Expr) : TermElabM Expr := do
   let t ← addTreeM e
@@ -73,3 +75,17 @@ def egViaFree {α : Type}[AddCommGroup α][Repr α][DecidableEq α][Inhabited α
     (x y : α) := viafree# (x + y + x - y + x + y)
 
 #eval egViaFree (5 : ℤ) (2 : ℤ )
+
+theorem induced_free_map_at{A : Type _} [AddCommGroup A][Inhabited A] {n : ℕ} (l : List A) (h : l.length = n)(k: ℕ) : 
+  (inducedFreeMap l h) (ℤbasisElem n k) = (l.toArray)[k] := sorry
+
+theorem egViaFreeEql{α : Type}[AddCommGroup α][Repr α][DecidableEq α][Inhabited α] 
+    (x y : α) : x + y + x - y =  viafree# (x + y + x - y)  := by 
+        have lenLem : List.length [x, y] = 2 := by rfl
+        simp
+        have l₀ := induced_free_map_at [x, y] lenLem 0
+        have l₁ := induced_free_map_at [x, y] lenLem 1
+        
+        admit
+        
+
