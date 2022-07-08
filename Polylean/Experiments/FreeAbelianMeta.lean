@@ -41,6 +41,25 @@ instance {α : Type _} [ToExpr α] : ToExpr (List α) where
 
 end ToExpr
 
+section Decidable
+
+-- Source : https://exlean.org/decidable-propositions-iii/
+
+def asTrue (C : Prop) [Decidable C] : Prop :=
+  if C then True else False
+
+def ofAsTrue {C : Prop} : [Decidable C] → asTrue C → C
+  | .isTrue c => λ _ => c
+  | .isFalse _ => False.elim
+
+notation "decTrivial" => ofAsTrue trivial
+
+example : 2 < 5 := decTrivial
+
+def decideM : MetaM Expr := mkAppM ``ofAsTrue #[mkConst ``trivial]
+
+end Decidable
+
 def zeroExpr : ℕ → TermElabM Expr
 | 0 => return mkConst ``Unit.unit
 | n + 1 => do mkAppM ``Prod.mk #[toExpr (0 : Int), ←  zeroExpr n]
@@ -53,7 +72,7 @@ def ℤbasisExpr : ℕ → ℕ → TermElabM Expr
 elab "ℤbasisElem#"  n:term "at" j:term  : term => do
       let nExp ← elabTerm n (some <| mkConst ``Nat)
       let jExp ← elabTerm j (some <| mkConst ``Nat)
-      mkAppM ``ℤbasisElem #[nExp, jExp]
+      mkAppM ``ℤbasisElem #[nExp, jExp, ← decideM]
 
 elab "ℤbasisExpr#"  n:term "at" j:term  : term => do
       let nExp ← elabTerm n (some <| mkConst ``Nat)
@@ -68,7 +87,7 @@ elab "ℤbasisExpr#"  n:term "at" j:term  : term => do
 def ℤbasisArrM (n: ℕ): TermElabM (Array Expr) := do
   let mut arr := #[]
   for j in [0:n] do
-    arr := arr.push (← mkAppM ``ℤbasisElem #[toExpr n, toExpr j])
+    arr := arr.push (← mkAppM ``ℤbasisElem #[toExpr n, toExpr j, ← decideM])
     -- arr := arr.push (← ℤbasisExpr n j)
   return arr
 
@@ -136,7 +155,7 @@ elab "viafree#" t:term : term => do
 
 -- #eval egViaFree (5 : ℤ) (2 : ℤ )
 
-theorem induced_free_map_at{A : Type _} [AddCommGroup A][Inhabited A] {n : ℕ} (l : List A) (h : l.length = n) (k: ℕ) (hk : k < n) :
+theorem induced_free_map_at{A : Type _} [AddCommGroup A] {n : ℕ} (l : List A) (h : l.length = n) (k: ℕ) (hk : k < n) :
  (inducedFreeMap l h) (ℤbasisElem n k hk) = l.get ⟨k, h ▸ hk⟩ := by
    rw [ℤbasisElem, List.mapget (inducedFreeMap l h)]
    apply List.get_index_eq
