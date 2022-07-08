@@ -12,17 +12,46 @@ instance (n: ℕ) : Inhabited (ℤ ^ n) := ⟨zeros n⟩
 
 def ℤbasisElem(n : ℕ)(j : ℕ) : ℤ ^ n := (ℤbasis n |>.toArray)[j]
 
+
+def zeroIntExpr : TermElabM Expr := do
+  let stx ← `(0)
+  elabTerm stx (some <| mkConst ``Int)
+
+def oneIntExpr : TermElabM Expr := do
+  let stx ← `(1)
+  elabTerm stx (some <| mkConst ``Int)
+
+
+def zeroExpr : ℕ → TermElabM Expr
+| 0 => return mkConst ``Unit.unit
+| n + 1 => do mkAppM ``Prod.mk #[← zeroIntExpr, ←  zeroExpr n]
+
+def ℤbasisExpr : ℕ → ℕ → TermElabM Expr 
+| 0, _ => return mkConst ``Unit.unit
+| n + 1, 0 => do mkAppM ``Prod.mk #[← oneIntExpr, ←  zeroExpr n] 
+| n + 1, k + 1 => 
+    do mkAppM ``Prod.mk #[← oneIntExpr, ← ℤbasisExpr n k]
+
 elab "ℤbasisElem#"  n:term "at" j:term  : term => do
       let nExp ← elabTerm n (some <| mkConst ``Nat)
       let jExp ← elabTerm j (some <| mkConst ``Nat)
       mkAppM ``ℤbasisElem #[nExp, jExp]
 
-#eval ℤbasisElem# 3 at 1
+elab "ℤbasisExpr#"  n:term "at" j:term  : term => do
+      let nExp ← elabTerm n (some <| mkConst ``Nat)
+      let jExp ← elabTerm j (some <| mkConst ``Nat)
+      let n ← exprNat nExp
+      let j ← exprNat jExp
+      ℤbasisExpr n j
 
-def ℤbasisArrM (n: ℕ): MetaM (Array Expr) := do
+#eval ℤbasisElem# 3 at 1
+#eval ℤbasisExpr# 3 at 1
+
+def ℤbasisArrM (n: ℕ): TermElabM (Array Expr) := do
   let mut arr := #[]
   for j in [0:n] do
     arr := arr.push (← mkAppM ``ℤbasisElem #[toExpr n, toExpr j])
+    -- arr := arr.push (← ℤbasisExpr n j)
   return arr
 
 elab "arr#"  n:term "at" j:term  : term => do
@@ -83,11 +112,12 @@ def egViaFree {α : Type}[AddCommGroup α][Repr α][DecidableEq α][Inhabited α
 theorem induced_free_map_at{A : Type _} [AddCommGroup A][Inhabited A] {n : ℕ} (l : List A) (h : l.length = n)(k: ℕ) : 
   (inducedFreeMap l h) (ℤbasisElem n k) = (l.toArray)[k] := sorry
 
+open AddCommGroup.Homomorphism
 theorem egViaFreeEql{α : Type}[AddCommGroup α][Repr α][DecidableEq α][Inhabited α] 
     (x y : α) : x + y + x - y =  viafree# (x + y + x - y)  := by 
-        simp
+        simp only [neg_dist, AddCommGroup.add_distrib]
         have l₀ : (inducedFreeMap [x, y] (rfl: 2 = 2)) (ℤbasisElem 2 0) = x  := induced_free_map_at [x, y] rfl 0
         have l₁ :  (inducedFreeMap [x, y] (rfl: 2 = 2)) (ℤbasisElem 2 1) = y := induced_free_map_at [x, y] rfl 1
         rw [l₀, l₁]
         
-
+#print egViaFreeEql
