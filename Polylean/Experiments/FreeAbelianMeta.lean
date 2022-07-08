@@ -81,11 +81,9 @@ theorem induced_free_map_at{A : Type _} [AddCommGroup A][Inhabited A] {n : ℕ} 
 
 theorem egViaFreeEql{α : Type}[AddCommGroup α][Repr α][DecidableEq α][Inhabited α] 
     (x y : α) : x + y + x - y =  viafree# (x + y + x - y)  := by 
-        have lenLem : List.length [x, y] = 2 := by rfl
         simp
-        have l₀ := induced_free_map_at [x, y] lenLem 0
-        have l₁ := induced_free_map_at [x, y] lenLem 1
-        
-        admit
+        have l₀ : (inducedFreeMap [x, y] rfl) (ℤbasisElem 2 0) = x  := induced_free_map_at [x, y] rfl 0
+        have l₁ :  (inducedFreeMap [x, y] rfl) (ℤbasisElem 2 1) = y := induced_free_map_at [x, y] rfl 1
+        rw [l₀, l₁]
         
 
