@@ -146,7 +146,7 @@ elab "viafree#" t:term : term => do
 def egViaFree {α : Type}[AddCommGroup α][Repr α][DecidableEq α][Inhabited α]
    (x y : α) := viafree# (x + y + x - y + x + y)
 
-#eval egViaFree (5 : ℤ) (2 : ℤ )
+#eval egViaFree (5 : ℤ) (2 : ℤ)
 
 theorem egViaFreeEql{α : Type}[AddCommGroup α][Repr α][DecidableEq α][Inhabited α]
     (x y z : α) : x + z - y + x - y + z =  viafree# (x + z - y + x - y + z)  := by
@@ -159,13 +159,45 @@ def freeGroupEqM (e : Expr) : TermElabM Expr := do
   let eqn ← mkEq e freeElemIm
   let mvar ← mkFreshExprMVar $ some eqn
   let tac : Syntax ← `(tactic| simp only [AddCommGroup.Homomorphism.neg_dist, AddCommGroup.add_distrib, induced_free_map_at, List.get])
-  let (_, _) ← Elab.runTactic mvar.mvarId! tac
-  let freeElemIm ← whnf freeElemIm -- may cause issues with free variables
+  let (goals, _) ← Elab.runTactic mvar.mvarId! tac
+  guard (goals.isEmpty)
+
+  -- let freeElemIm ← whnf freeElemIm -- may cause issues with free variables
   match freeElemIm with
     | .app ϕ freeElem _ =>
-      let freeElemR ← reduce freeElem
-      let freeElemMvar ← mkFreshExprMVar $ some $ ← mkEq (mkApp ϕ freeElem) (mkApp ϕ freeElemR)
-      assignExprMVar freeElemMvar.mvarId! $ ← mkAppM ``congrArg #[ϕ, mkConst ``rfl]
-      let res ← mkEqTrans mvar freeElemMvar
+      let freeElemR ← reduce freeElem -- the transparency here can be adjusted
+      let res ← mkFreshExprMVar $ some $ ← mkEq e (mkApp ϕ freeElemR)
+      assignExprMVar res.mvarId! mvar
       return res
     | _ => failure
+
+elab "freeGroupEq#" t:term : term => do
+  let e ← elabTerm t none
+  let p ← freeGroupEqM e
+  return p
+
+#check (fun (x y z : ℤ) => freeGroupEq# x + x + y - x - y + z - x)
+
+example {x y z : ℤ} : x + x + y - x - y + z - x = z := by
+    have p := freeGroupEq# (x + x + y - x - y + z - x)
+    rw [p]
+    clear p
+    rw [inducedFreeMap, FreeAbelianGroup.inducedMap]
+    rw [unitBasisMap, unitBasisMap, unitBasisMap, unitBasisMap]
+    rw [ℤfreegrp, ℤpowfreegroup, prodFree]
+    simp only [inducedProdMap]
+    rw [FreeAbelianGroup.inducedMap, FreeAbelianGroup.inducedMap, ℤpowfreegroup, prodFree]
+    simp only [inducedProdMap]
+    rw [FreeAbelianGroup.inducedMap, FreeAbelianGroup.inducedMap, ℤpowfreegroup, prodFree]
+    simp only [inducedProdMap]
+    rw [FreeAbelianGroup.inducedMap]
+    simp only [intFree, Function.comp]
+    rw [FreeAbelianGroup.inducedMap, ℤpowfreegroup]
+    simp
+    show zhom z 1 + (0 : ℤ) = z
+    simp
+    show SubNegMonoid.gsmul (Int.ofNat (Nat.succ Nat.zero)) z = z
+    rw [SubNegMonoid.gsmul_succ']
+    show z + SubNegMonoid.gsmul 0 z = z
+    rw [SubNegMonoid.gsmul_zero']
+    rw [Int.add_zero]
