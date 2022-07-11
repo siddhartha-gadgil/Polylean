@@ -158,11 +158,9 @@ def freeGroupEqM (e : Expr) : TermElabM Expr := do
   let freeElemIm ← viaFreeM e
   let eqn ← mkEq e freeElemIm
   let mvar ← mkFreshExprMVar $ some eqn
-  let tac : Syntax ← `(tactic| simp only [AddCommGroup.Homomorphism.neg_dist, AddCommGroup.add_distrib, induced_free_map_at, List.get])
+  let tac ← `(tactic| simp only [AddCommGroup.Homomorphism.neg_dist, AddCommGroup.add_distrib, induced_free_map_at, List.get])
   let (goals, _) ← Elab.runTactic mvar.mvarId! tac
-  guard (goals.isEmpty)
-
-  -- let freeElemIm ← whnf freeElemIm -- may cause issues with free variables
+  guard goals.isEmpty
   match freeElemIm with
     | .app ϕ freeElem _ =>
       let freeElemR ← reduce freeElem -- the transparency here can be adjusted
@@ -172,9 +170,7 @@ def freeGroupEqM (e : Expr) : TermElabM Expr := do
     | _ => failure
 
 elab "freeGroupEq#" t:term : term => do
-  let e ← elabTerm t none
-  let p ← freeGroupEqM e
-  return p
+  freeGroupEqM $ ← elabTerm t none
 
 #check (fun (x y z : ℤ) => freeGroupEq# x + x + y - x - y + z - x)
 
