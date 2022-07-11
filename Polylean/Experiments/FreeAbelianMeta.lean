@@ -176,24 +176,6 @@ elab "freeGroupEq#" t:term : term => do
 
 example {x y z : ℤ} : x + x + y - x - y + z - x = z := by
     have p := freeGroupEq# (x + x + y - x - y + z - x)
-    rw [p]
-    clear p
-    rw [inducedFreeMap, FreeAbelianGroup.inducedMap]
-    rw [unitBasisMap, unitBasisMap, unitBasisMap, unitBasisMap]
-    rw [ℤfreegrp, ℤpowfreegroup, prodFree]
-    simp only [inducedProdMap]
-    rw [FreeAbelianGroup.inducedMap, FreeAbelianGroup.inducedMap, ℤpowfreegroup, prodFree]
-    simp only [inducedProdMap]
-    rw [FreeAbelianGroup.inducedMap, FreeAbelianGroup.inducedMap, ℤpowfreegroup, prodFree]
-    simp only [inducedProdMap]
-    rw [FreeAbelianGroup.inducedMap]
-    simp only [intFree, Function.comp]
-    rw [FreeAbelianGroup.inducedMap, ℤpowfreegroup]
-    simp
-    show zhom z 1 + (0 : ℤ) = z
-    simp
-    show SubNegMonoid.gsmul (Int.ofNat (Nat.succ Nat.zero)) z = z
-    rw [SubNegMonoid.gsmul_succ']
-    show z + SubNegMonoid.gsmul 0 z = z
-    rw [SubNegMonoid.gsmul_zero']
-    rw [Int.add_zero]
+    rw [p, map_free_elem]
+    simp [List.sum]
+    rw [SubNegMonoid.gsmul_zero', zero_add, SubNegMonoid.gsmul_zero', zero_add, SubNegMonoid.gsmul_one]
