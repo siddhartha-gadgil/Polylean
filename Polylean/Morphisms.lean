@@ -277,6 +277,9 @@ instance : SMul ℕ A where
 @[simp] theorem SubNegMonoid.gsmul_succ'_ (n : ℕ) : SubNegMonoid.gsmul (↑(n) + 1) a = a + SubNegMonoid.gsmul (↑ n) a := by
   rw [← Int.cast_ofNat, Int.cast_id, ← Int.ofNat_succ]; exact SubNegMonoid.gsmul_succ' _ _
 
+theorem SubNegMonoid.gsmul_one : SubNegMonoid.gsmul 1 a = a := by
+  rw [← Int.ofNat_one, gsmul_succ', Int.ofNat_zero, gsmul_zero', add_zero]
+
 end SubNegMonoid
 
 namespace AddCommGroup.Homomorphism

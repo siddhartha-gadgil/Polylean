@@ -59,7 +59,10 @@ theorem List.cons_len_eq_succ : List.length (h :: tl) = Nat.succ m → List.leng
   injection hyp
   assumption
 
-def List.sum {α : Type _} [Add α] [Zero α] : List α → α := List.foldl (· + ·) 0
+-- replaced the `foldl` definition
+def List.sum {α : Type _} [Add α] [Zero α] : List α → α
+  | [] => 0
+  | h :: t => h + sum t
 
 end ArraysAndLists
 
@@ -167,26 +170,6 @@ FreeAbelianGroup.inducedMap A (unitBasisMap l h)
 -- the above map is a group homomorphism
 instance ind_hom {A : Type _} [AddCommGroup A] {n : ℕ} (l : List A) (h : l.length = n) : AddCommGroup.Homomorphism (inducedFreeMap l h) := FreeAbelianGroup.induced_hom A _
 
--- a proof that the above map takes the basis elements to the elements in the list
-theorem map_basis {A : Type _} [AddCommGroup A] : {m : ℕ} → (l : List A) → (h : l.length = m) → (List.map (inducedFreeMap l h) (ℤbasis m)) = l
-| .zero, .nil, _ => rfl
-| .succ m, .cons t l', h' => by
-  simp [List.map]
-  apply And.intro
-  · have : Prod.mk (1 : ℤ) (zeros m) = (ℤfreegrp (Nat.succ m)).i (Sum.inl () : Unit ⊕ (pow_sum Unit m)) := by
-      rw [← zero_zero, FreeAbelianGroup.left_incl]; apply congrArg; rfl
-    rw [this]
-    apply ( congrFun ((ℤfreegrp (Nat.succ m)).induced_extends (unitBasisMap (List.cons t l') h')) (Sum.inl ()) )
-  · have h'' := h'
-    rw [List.length, Nat.add_one, Nat.succ_inj'] at h''
-    have ih := map_basis l' h''
-    have ind_cons : inducedFreeMap (t :: l') h' ∘ ι₂ = inducedFreeMap l' h'' := by
-      rw [inducedFreeMap, inducedFreeMap]
-      have : (unitBasisMap l' h'') = (unitBasisMap (List.cons t l') h') ∘ Sum.inr := by apply funext; intro; simp [unitBasisMap]
-      rw [this, FreeAbelianGroup.induced_right]
-    rw [ind_cons]
-    exact ih
-
 -- a normal form for images of free group elements
 theorem map_free_elem {A : Type _} [AddCommGroup A] : {m : ℕ} → (l : List A) → (h : l.length = m) → (x : ℤ ^ m) → (inducedFreeMap l h) x = (List.sum $ zipWith SubNegMonoid.gsmul x l h)
   | .zero, .([]), .(rfl), .(Unit.unit) => rfl
@@ -197,12 +180,21 @@ theorem map_free_elem {A : Type _} [AddCommGroup A] : {m : ℕ} → (l : List A)
       simp only [zhom, Function.comp]
       let ih := map_free_elem as (List.cons_len_eq_succ h) xs
       rw [inducedFreeMap] at ih
-      rw [ih, zipWith, List.sum, List.foldl]
-      generalize (SubNegMonoid.gsmul x a) = b, (zipWith SubNegMonoid.gsmul xs as _) = tl, (0 : A) = z
-      revert z
-      induction tl with
-        | nil => intro z; show b + z = z + b; rw [add_comm]
-        | cons h _ ih => intro z; rw [List.foldl, List.foldl, add_assoc, add_comm b h, ← add_assoc]; apply ih
+      rw [ih, zipWith, List.sum]
+
+-- a proof that the above map takes the basis elements to the elements in the list
+theorem map_basis {A : Type _} [AddCommGroup A] : {m : ℕ} → (l : List A) → (h : l.length = m) → (List.map (inducedFreeMap l h) (ℤbasis m)) = l
+  | .zero, .([]), .(rfl) => rfl
+  | .succ m, .cons a l', h => by
+    rw [ℤbasis, List.map, map_free_elem, zipWith, List.sum, List.mapcomp]
+    let rec zero_zip_sum : (n : ℕ) → (l : List A) → (hyp : l.length = n) → (List.sum <| zipWith SubNegMonoid.gsmul (zeros n) l hyp) = (0 : A)
+      | .zero, .([]), .(rfl) => rfl
+      | .succ m, a :: l', hyp => by rw [zeros, zipWith, List.sum, SubNegMonoid.gsmul_zero', zero_zip_sum m, add_zero]
+    have ind_cons : inducedFreeMap (a :: l') h ∘ ι₂ = inducedFreeMap l' _ := by
+      rw [inducedFreeMap, inducedFreeMap]
+      have : (unitBasisMap l' $ List.cons_len_eq_succ h) = (unitBasisMap (List.cons a l') h) ∘ Sum.inr := by apply funext; intro; simp [unitBasisMap]
+      rw [this, FreeAbelianGroup.induced_right]
+    rw [zero_zip_sum, ind_cons, add_zero, map_basis, SubNegMonoid.gsmul_one]
 
 end InducedFreeMap
 
