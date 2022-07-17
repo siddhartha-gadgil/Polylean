@@ -1,5 +1,4 @@
 import Polylean.FreeAbelianGroup
-import Polylean.Experiments.AddTree
 import Polylean.Experiments.Vector
 
 section FreeGroupPow

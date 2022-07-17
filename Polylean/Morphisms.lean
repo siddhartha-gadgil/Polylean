@@ -1,5 +1,6 @@
 import Mathlib.Algebra.Group.Defs
 import Mathlib.Algebra.Ring.Basic
+import Aesop
 import Polylean.SMul
 
 /-!
@@ -212,10 +213,12 @@ end subGroup
 
 section Morphisms
 
+declare_aesop_rule_sets [AddCommGroup.Homomorphism]
+
 class AddCommGroup.Homomorphism {A B : Type _} [AddCommGroup A] [AddCommGroup B] (ϕ : A → B) where
   add_dist : ∀ a a' : A, ϕ (a + a') = ϕ a + ϕ a'
 
-@[simp] theorem AddCommGroup.add_distrib {A B : Type _} [AddCommGroup A] [AddCommGroup B]
+@[simp, aesop safe (rule_sets [AddCommGroup.Homomorphism])] theorem AddCommGroup.add_distrib {A B : Type _} [AddCommGroup A] [AddCommGroup B]
 (ϕ : A → B) [AddCommGroup.Homomorphism ϕ] (a a' : A) : ϕ (a + a') = ϕ a + ϕ a' := AddCommGroup.Homomorphism.add_dist a a'
 
 class Monoid.Homomorphism {M N : Type _} [Monoid M] [Monoid N] (ϕ : M → N) where
@@ -275,16 +278,16 @@ namespace AddCommGroup.Homomorphism
 variable {A B : Type _} [AddCommGroup A] [AddCommGroup B]
 variable (ϕ : A → B) [AddCommGroup.Homomorphism ϕ]
 
-@[simp] theorem zero_image : ϕ (0 : A) = (0 : B) := by
+@[simp, aesop safe (rule_sets [AddCommGroup.Homomorphism])] theorem zero_image : ϕ (0 : A) = (0 : B) := by
   have : ϕ 0 + ϕ 0 = ϕ 0 + 0 := by rw [← add_dist]; simp
   exact add_left_cancel this
 
-@[simp] theorem neg_push : ∀ a : A, ϕ (-a) = -ϕ a := by
+@[simp, aesop safe (rule_sets [AddCommGroup.Homomorphism])] theorem neg_push : ∀ a : A, ϕ (-a) = -ϕ a := by
   intro a
   have : ϕ a + ϕ (-a) = ϕ a + - ϕ a := by rw [← add_dist]; simp
   exact add_left_cancel this
 
-@[simp] theorem neg_dist : ∀ a a' : A, ϕ (a - a') = ϕ a - ϕ a' := by
+@[simp, aesop safe (rule_sets [AddCommGroup.Homomorphism])] theorem neg_dist : ∀ a a' : A, ϕ (a - a') = ϕ a - ϕ a' := by
   intros
   repeat (rw [sub_eq_add_neg])
   simp
