@@ -1,60 +1,8 @@
 import Polylean.FreeAbelianGroup
+import Polylean.Experiments.AddTree
+import Polylean.Experiments.Vector
 
-section ArraysAndLists
-
--- a lemma about the `toArrayAux` function needed for the next theorem
-lemma List.aux_append {α : Type _} (l : List α) : ∀ l' : List α, List.toArrayAux l {data := l'} = {data := l' ++ l} := by
-  induction l with
-    | nil =>
-      intro
-      simp [toArrayAux]
-    | cons h t ih =>
-      intro l'
-      simp [toArrayAux, Array.push, concat]
-      rw [ih (concat l' h)]
-      simp
-      let rec concat_append (a : α) (l₁ : List α) (l₂ : List α) : concat l₁ a ++ l₂ = l₁ ++ (a :: l₂)  := by
-        induction l₁ with
-          | nil => simp [concat]
-          | cons h t ih => simp [concat]; assumption
-      apply concat_append
-
--- converting a list to an array and then extracting the data preserves the list
-@[simp] theorem List.arraydata {A : Type _} (l : List A) : l.toArray.data = l := by
-  rw [toArray, Array.mkEmpty, List.aux_append]
-  simp
-
--- the size of a list is preserved when coverted to an array and back
-@[simp] theorem List.arraysize {α : Type _} (l : List α) : l.toArray.size = l.length := by
-  rw [Array.size, arraydata]
-
--- a helper lemma for solving rewriting issues with `Fin`
-theorem List.get_index_eq : {l l' : List α} → (hl : l = l') → (i : ℕ) → (bnd : i < l.length) → l.get ⟨i, bnd⟩ = l'.get ⟨i, hl ▸ bnd⟩
-  | _, _, rfl, _, _ => rfl
-
--- getting the `i`th element of an array is the same as getting the `i`th element of the corresponding list
-@[simp] theorem Array.getfromlist : (l : List T)  → (i : ℕ) → (h : i < l.length) → Array.get (l.toArray) ⟨i, Eq.substr l.arraysize h⟩ = l.get ⟨i, h⟩
-  | List.nil, _, h => by contradiction
-  | List.cons hd tl, Nat.zero, _ => by rw [get, List.get_index_eq (List.arraydata (hd :: tl)), List.get]
-  | List.cons _ _, Nat.succ m, h => by rw [get, List.get_index_eq (List.arraydata _), List.get]
-
-theorem List.maplength {T S : Type _} (ϕ : T → S) : (l : List T) → l.length = (l.map ϕ).length
-  | List.nil => rfl
-  | List.cons h t => by rw [List.length, List.map, List.length, maplength ϕ t]
-
--- the value of a function `ϕ` on the `i`th element of a list `l` is the same as the value of the `i`th element of the list `map ϕ l`
-theorem List.mapget {T S : Type _} (ϕ : T → S) : (l : List T) → (i : ℕ) → (h : i < List.length l) → ϕ (l.get ⟨i, h⟩) = (l.map ϕ).get ⟨i, Eq.subst (maplength ϕ l) h⟩
-  | List.nil, _, _ => by contradiction
-  | List.cons _ _, Nat.zero, _ => by simp [get, map]
-  | List.cons _ _, Nat.succ _, _ => by simp [get, map]; rfl
-
-def List.mapcomp (ϕ : T → S) (ψ : S → R) : (l : List T) → List.map ψ (List.map ϕ l) = List.map (ψ ∘ ϕ) l
-  | nil => rfl
-  | cons _ l' => by simp only [map]; rw [mapcomp _ _ l']; rfl
-
-end ArraysAndLists
-
-section Defs
+section FreeGroupPow
 
 -- iterated product
 def pow_times (T : Type _) : ℕ → Type _
@@ -70,166 +18,78 @@ def pow_sum (T : Type _) : ℕ → Type _
   | Nat.succ n => T ⊕ (pow_sum T n)
 
 
-instance : AddCommGroup Unit :=
-  {
-    add := λ _ _ => Unit.unit
-    add_assoc := λ _ _ _ => rfl
-    zero := Unit.unit
-    add_zero := λ _ => rfl
-    zero_add := λ _ => rfl
-    nsmul_zero' := by intros; rfl
-    nsmul_succ' := by intros; rfl
-    neg := λ _ => Unit.unit
-    sub_eq_add_neg := by intros; rfl
-    gsmul_zero' := by intros; rfl
-    gsmul_succ' := by intros; rfl
-    gsmul_neg' := by intros; rfl
-    add_left_neg := λ _ => rfl
-    add_comm := λ _ _ => rfl
-  }
+def zipWith {α β γ : Type _} (ϕ : α → β → γ) : {n : ℕ} → α ^ n → Vector β n → Vector γ n
+  | .zero, .(Unit.unit), _ => .nil
+  | .succ _, (a, as), .cons b bs => .cons (ϕ a b) (zipWith ϕ as bs)
 
-def ℤpowgroup : (n : ℕ) → AddCommGroup (ℤ ^ n)
+abbrev Vector.sum {α : Type _} [Add α] [Zero α] : Vector α n → α := Vector.foldr (· + ·) 0
+
+
+@[instance] def ℤpowgroup : (n : ℕ) → AddCommGroup (ℤ ^ n)
     | Nat.zero => inferInstanceAs (AddCommGroup Unit)
     | Nat.succ n => @DirectSum.directSum ℤ (pow_times ℤ n) _ (ℤpowgroup n)
 
--- ℤ^n is a group
-instance ℤgrp (n : ℕ) : AddCommGroup (ℤ ^ n) := ℤpowgroup n
+instance (n : ℕ) : AddCommGroup (pow_times ℤ n) := inferInstanceAs (AddCommGroup (ℤ ^ n))
 
-instance (n : ℕ) : AddCommGroup (pow_times ℤ n) := ℤpowgroup n
-
-instance : FreeAbelianGroup Unit Empty :=
-{
-  i := Empty.rec _
-  inducedMap := λ A _ _ _ => (0 : A)
-  induced_extends := λ _ => funext (Empty.rec _)
-  induced_hom := λ _ _ _ => {add_dist := fun | Unit.unit, Unit.unit => by simp}
-  unique_extension := λ _ _ _ _ _ => funext (fun | Unit.unit => by simp)
-}
-
-def ℤpowfreegroup (n : ℕ) : FreeAbelianGroup (ℤ ^ n) (pow_sum Unit n)  :=
+@[instance] def ℤpowfreegroup (n : ℕ) : FreeAbelianGroup (ℤ ^ n) (pow_sum Unit n)  :=
 match n with
-  | Nat.zero => inferInstanceAs (FreeAbelianGroup Unit Empty)
-  | Nat.succ n => @prodFree _ _ _ (inferInstanceAs (AddCommGroup (ℤ ^ n))) _ _ _ (ℤpowfreegroup n)
-
--- ℤ^n is a free Abelian group
-instance ℤfreegrp (n : ℕ) : FreeAbelianGroup (ℤ ^ n) (pow_sum Unit n) := ℤpowfreegroup n
+  | .zero => inferInstanceAs (FreeAbelianGroup Unit Empty)
+  | .succ n => @prodFree _ _ _ (inferInstanceAs (AddCommGroup (ℤ ^ n))) _ _ _ (ℤpowfreegroup n)
 
 instance (n : ℕ) : FreeAbelianGroup (pow_times ℤ n) (pow_sum Unit n) := ℤpowfreegroup n
 
+
 -- takes a list of values in `T` of length `n` and returns a function from `Unit ⊕ Unit ⊕ ... n times ... ⊕ Unit → T`
 -- mapping the elements of `pow_sum Unit n` to the corresponding elements of `T` in order
-def unitBasisMap {T : Type _} {n : ℕ} (l : List T) (h : l.length = n) : pow_sum Unit n → T :=
-match n with
-  | Nat.zero => Empty.rec _
-  | Nat.succ m =>
-    match l with
-      | List.cons t l' => λ s => Sum.casesOn s
-                  (fun | Unit.unit => t)
-                  (unitBasisMap l' (by rw [List.length, ← Nat.succ_eq_add_one] at h; injection h; assumption))
+def unitBasisMap {α : Type _} : {n : ℕ} → Vector α n → pow_sum Unit n → α
+  | Nat.zero, .nil => Empty.rec _
+  | Nat.succ _, .cons a v => λ s => Sum.casesOn s (fun | Unit.unit => a) (unitBasisMap v)
 
 def zeros : (n : ℕ) → ℤ ^ n
-| Nat.zero => ()
-| Nat.succ n => Prod.mk (0 : ℤ) (zeros n)
+| .zero => ()
+| .succ n => Prod.mk (0 : ℤ) (zeros n)
 
 -- returns a basis of `ℤ^n`
-def ℤbasis : (n : ℕ) → List (ℤ ^ n)
-| Nat.zero => List.nil
-| Nat.succ n => List.cons (Prod.mk (1 : ℤ) (zeros n)) (ℤbasis n |>.map ι₂)
+def ℤbasis : (n : ℕ) → Vector (ℤ ^ n) n
+| .zero => .nil
+| .succ n => .cons (Prod.mk (1 : ℤ) (zeros n)) (ℤbasis n |>.map ι₂)
 
-@[simp] def ℤbasislen : ∀ m : ℕ, List.length (ℤbasis m) = m
-    | Nat.zero => rfl
-    | Nat.succ m' => by rw [ℤbasis, List.length, Nat.add_one, ← List.maplength, ℤbasislen m']
-
-theorem zero_zero : (n : ℕ) → (0 : ℤ ^ n) = (zeros n)
-| Nat.zero => rfl
-| Nat.succ m => by rw [zeros, ← zero_zero m]; rfl
-
-
-instance prodrepr (A B : Type _) [Repr A] [Repr B] : Repr (A × B) := inferInstance
-
-def ℤprodrepr : (n : ℕ) → Repr (ℤ ^ n)
-    | Nat.zero => inferInstanceAs (Repr Unit)
-    | Nat.succ m => @prodrepr ℤ (ℤ ^ m) _ (ℤprodrepr m)
-
-instance (n : ℕ) : Repr (ℤ ^ n) := ℤprodrepr n
-
-
--- some useful lemmas to deal with theorems about `Fin`
-lemma Fin.eq_of_eq_of_Nat' : {i m n : ℕ} → (h : m = n) → (hm : m > 0) → Fin.val (Fin.ofNat' i hm) = Fin.val (Fin.ofNat' i (h ▸ hm))
-  | _, _, _, rfl, hm => rfl
-
-lemma Fin.eq_val_bound : {m n : ℕ} → {f : Fin m} → (m = n) → (f.val < n)
-  | _, _, ⟨_, prf⟩, rfl => prf
-
-end Defs
+end FreeGroupPow
 
 
 section InducedFreeMap
 
 -- the unique map `ϕ : ℤ^n → A` taking the basis elements to the given list of values `l`
-def inducedFreeMap {A : Type _} [AddCommGroup A] {n : ℕ} (l : List A) (h : l.length = n) : ℤ^n → A :=
-FreeAbelianGroup.inducedMap A (unitBasisMap l h)
+def inducedFreeMap {A : Type _} [AddCommGroup A] {n : ℕ} (v : Vector A n) : ℤ^n → A :=
+  FreeAbelianGroup.inducedMap A (unitBasisMap v)
 
 -- the above map is a group homomorphism
-instance ind_hom {A : Type _} [AddCommGroup A] {n : ℕ} (l : List A) (h : l.length = n) : AddCommGroup.Homomorphism (inducedFreeMap l h) := FreeAbelianGroup.induced_hom A _
+instance ind_hom {A : Type _} [AddCommGroup A] {n : ℕ} (v : Vector A n) : AddCommGroup.Homomorphism (inducedFreeMap v) := FreeAbelianGroup.induced_hom A _
+
+-- a normal form for images of free group elements
+theorem map_free_elem {A : Type _} [AddCommGroup A] : {m : ℕ} → (v : Vector A m) → (x : ℤ ^ m) → (inducedFreeMap v) x = (zipWith SubNegMonoid.gsmul x v |>.sum)
+  | .zero, .nil, .(Unit.unit) => rfl
+  | .succ m', .cons a as, (x, xs) => by
+      rw [inducedFreeMap, unitBasisMap, FreeAbelianGroup.inducedMap, ℤpowfreegroup, prodFree]
+      simp only [inducedProdMap]
+      rw [FreeAbelianGroup.inducedMap, intFree]
+      simp only [zhom, Function.comp]
+      let ih := map_free_elem as xs
+      rw [inducedFreeMap] at ih
+      rw [ih, zipWith, Vector.sum, Vector.sum, Vector.foldr]
 
 -- a proof that the above map takes the basis elements to the elements in the list
-theorem map_basis {A : Type _} [AddCommGroup A] : {m : ℕ} → (l : List A) → (h : l.length = m) → (List.map (inducedFreeMap l h) (ℤbasis m)) = l
-| Nat.zero, List.nil, _ => rfl
-| Nat.succ m, List.cons t l', h' => by
-  simp [List.map]
-  apply And.intro
-  · have : Prod.mk (1 : ℤ) (zeros m) = (ℤfreegrp (Nat.succ m)).i (Sum.inl () : Unit ⊕ (pow_sum Unit m)) := by
-      rw [← zero_zero, FreeAbelianGroup.left_incl]; apply congrArg; rfl
-    rw [this]
-    apply ( congrFun ((ℤfreegrp (Nat.succ m)).induced_extends (unitBasisMap (List.cons t l') h')) (Sum.inl ()) )
-  · have h'' := h'
-    rw [List.length, Nat.add_one, Nat.succ_inj'] at h''
-    have ih := map_basis l' h''
-    have ind_cons : inducedFreeMap (t :: l') h' ∘ ι₂ = inducedFreeMap l' h'' := by
+theorem map_basis {A : Type _} [AddCommGroup A] : {m : ℕ} → (v : Vector A m) → (ℤbasis m |>.map (inducedFreeMap v)) = v
+  | .zero, .nil => rfl
+  | .succ m, .cons a v => by
+    rw [ℤbasis, Vector.map, map_free_elem, zipWith, Vector.sum, Vector.foldr, Vector.map_comp]
+    let rec zero_zip_sum : (n : Nat) → (v : Vector A n) → (zipWith SubNegMonoid.gsmul (zeros n) v |>.foldr (· + ·) 0) = (0 : A)
+      | .zero, .nil => rfl
+      | .succ m, .cons a v' => by rw [zeros, zipWith, Vector.foldr, SubNegMonoid.gsmul_zero', zero_add]; apply zero_zip_sum
+    have ind_cons : inducedFreeMap (.cons a v) ∘ ι₂ = inducedFreeMap v := by
       rw [inducedFreeMap, inducedFreeMap]
-      have : (unitBasisMap l' h'') = (unitBasisMap (List.cons t l') h') ∘ Sum.inr := by apply funext; intro; simp [unitBasisMap]
+      have : (unitBasisMap v) = (unitBasisMap (.cons a v)) ∘ Sum.inr := by apply funext; intro; simp [unitBasisMap]
       rw [this, FreeAbelianGroup.induced_right]
-    rw [ind_cons]
-    exact ih
+    rw [zero_zip_sum, ind_cons, add_zero, map_basis, SubNegMonoid.gsmul_one]
 
 end InducedFreeMap
-
-/-
-
-section FormalExample
-
-abbrev n : ℕ := 3
-
-open List in
-def ν {A : Type _} [AddCommGroup A] (l : List A) (h : l.length = n) : Prop :=
-    match l, h with
-      | (cons x (cons y (cons z nil))), rfl => x + (y - z) + z - x = y
-
-theorem valid_iff_free_basis : (∀ {A : Type} [AddCommGroup A], ∀ (l : List A) (h : l.length = n), ν l h) ↔ (ν (ℤbasis n) (ℤbasislen n)) := by
-  apply Iff.intro
-  · intro hyp
-    exact hyp (ℤbasis n) (ℤbasislen n)
-  · intro hyp
-    intro A _ l h
-    let ϕ := inducedFreeMap l rfl
-    have basismap := map_basis l rfl
-    sorry
-    /-
-    match l, h with
-      | List.cons a (List.cons b (List.cons c List.nil)), rfl =>
-        simp [ν, ℤbasis] at hyp
-        have ϕmap := congrArg ϕ hyp
-        simp at ϕmap
-        simp only [ι₁, ι₂, zeros] at ϕmap
-        simp [List.map, ℤbasis, ι₁, ι₂, zeros, unit_pow_list, h, map_basis] at basismap
-        let ⟨ha, hb, hc⟩ := basismap
-        simp [ha, hb, hc] at ϕmap
-    -/
-
-theorem eqn_valid {A : Type} [AddCommGroup A] : ∀ (l : List A) (h : l.length = n), ν l h :=
-  (Iff.mpr valid_iff_free_basis) rfl
-
-end FormalExample
-
--/

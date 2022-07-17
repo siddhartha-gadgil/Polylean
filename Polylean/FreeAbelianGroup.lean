@@ -270,6 +270,37 @@ instance decHomsEqual{F: Type}[AddCommGroup F]
 
 end DecideHomsEqual
 
+section UnitFree
+
+instance : AddCommGroup Unit :=
+  {
+    add := λ _ _ => Unit.unit
+    add_assoc := λ _ _ _ => rfl
+    zero := Unit.unit
+    add_zero := λ _ => rfl
+    zero_add := λ _ => rfl
+    nsmul_zero' := by intros; rfl
+    nsmul_succ' := by intros; rfl
+    neg := λ _ => Unit.unit
+    sub_eq_add_neg := by intros; rfl
+    gsmul_zero' := by intros; rfl
+    gsmul_succ' := by intros; rfl
+    gsmul_neg' := by intros; rfl
+    add_left_neg := λ _ => rfl
+    add_comm := λ _ _ => rfl
+  }
+
+instance : FreeAbelianGroup Unit Empty :=
+{
+  i := Empty.rec _
+  inducedMap := λ A _ _ _ => (0 : A)
+  induced_extends := λ _ => funext (Empty.rec _)
+  induced_hom := λ _ _ _ => {add_dist := fun | Unit.unit, Unit.unit => by simp}
+  unique_extension := λ _ _ _ _ _ => funext (fun | Unit.unit => by simp)
+}
+
+end UnitFree
+
 section Examples
 abbrev double : ℤ → ℤ := fromBasis (fun _ : Unit => 2)
 

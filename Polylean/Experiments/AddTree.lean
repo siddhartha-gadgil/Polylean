@@ -1,6 +1,6 @@
 import Lean.Meta 
 import Lean.Elab
-import Polylean.Experiments.FinGenFreeAbGroup
+import Polylean.FreeAbelianGroup
 import Std
 import Lean
 import Aesop
@@ -71,44 +71,6 @@ instance : LawfulMonad AddTree where
 
 end Instances
 
-
-section IndexAddTree
-
-abbrev IndexAddTree := AddTree Nat 
-
-@[simp] def AddTree.indexTree {α : Type u} [DecidableEq α] (t : AddTree α)
-  (accum : Array α := #[]) : 
-      IndexAddTree × (Array α) := 
-  match t with
-  | AddTree.leaf a => 
-    match accum.getIdx? a with
-    | some i => (AddTree.leaf i, accum)
-    | none => (AddTree.leaf (accum.size), accum)
-  | AddTree.node l r =>  
-    let (lIdx, lAccum) := indexTree l accum
-    let (rIdx, rAccum) := indexTree r lAccum
-    (AddTree.node lIdx rIdx, rAccum)
-  | AddTree.negLeaf t =>
-    let (tIdx, accum') := indexTree t accum
-    (AddTree.negLeaf tIdx, accum')
-  | AddTree.subNode l r =>
-    let (lIdx, lAccum) := indexTree l accum
-    let (rIdx, rAccum) := indexTree r lAccum
-    (AddTree.subNode lIdx rIdx, rAccum)
-
-def IndexAddTree.map {α : Type _} [AddCommGroup α] (t : IndexAddTree) (basisImages : List α) : AddTree α :=
-  if h:basisImages.length = 0 then
-    AddTree.leaf (0 : α)
-  else
-    match t with
-    | AddTree.leaf i => AddTree.leaf (basisImages.get $ Fin.ofNat' i $ Nat.pos_of_ne_zero h)
-    | AddTree.negLeaf τ => AddTree.negLeaf (map τ basisImages)
-    | AddTree.node l r => AddTree.node (map l basisImages) (map r basisImages)
-    | AddTree.subNode l r => AddTree.subNode (map l basisImages) (map r basisImages)
-
-end IndexAddTree
-
-
 section Reflection
 
 def hOp (fname : Name) : Expr → MetaM (Expr × Expr)
@@ -138,26 +100,22 @@ elab "tree#" s:term : term => do
 
 #eval tree# -((2 + -3) - 1)
 
-
+-- this is an alternative approach that directly analyses the syntax
 partial def addtreeM : TermElab :=
   fun stx typ? => do
   match stx with
   | `(HAdd.hAdd _ _ _ _ $a:term $b:term) =>
-    dbg_trace "Addition"
     let l ← addtreeM a typ?
     let r ← addtreeM b typ?
     return mkApp2 (mkConst `AddTree.node) l r
   | `(HSub.hSub _ _ _ _ $a:term $b:term) =>
-    dbg_trace "Subtraction"
     let l ← addtreeM a typ?
     let r ← addtreeM b typ?
     return mkApp2 (mkConst `AddTree.subNode) l r
   | `(Neg.neg _ _ $a:term) =>
-    dbg_trace "Negation"
     let t ← addtreeM a typ?
     return mkApp (mkConst `AddTree.negLeaf) t
   | `($a:term) =>
-    dbg_trace "Leaf"
     return mkApp (mkConst `AddTree.leaf) (← Term.elabTerm a typ?) -- this leads to an infinite recursion. Maybe creating a new syntax category will help
 
 end Reflection
@@ -170,49 +128,3 @@ theorem AddTree.fold_tree_map_eq {A B : Type _} [AddCommGroup A] [AddCommGroup B
       | negLeaf t ih => rw [map, fold, fold, Homφ.neg_push, ih]
       | node l r ihl ihr => rw [map, fold, fold, Homφ.add_dist, ihl, ihr]
       | subNode l r ihl ihr => rw [map, fold, fold, Homφ.neg_dist, ihl, ihr]
-
-inductive Hidden
-  | conceal : {α : Sort _} → (a : α) → Hidden
-
-def extractHidden (e : Expr) : MetaM Expr := do
-  guard $ e.isAppOf ``Hidden.conceal
-  match e with
-  | .app _ v _ => return v
-  | _ => failure
-
-def AddTree.reduceTreeEqElm {α : Type} [DecidableEq α] [AddCommGroup α] (t : AddTree α) : α :=
-  let ⟨it, ⟨l⟩⟩ := t.indexTree
-  let n := l.length
-  let ϕ : ℤ ^ n → α := inducedFreeMap l rfl
-  let τ : AddTree (ℤ ^ n) := it.map (ℤbasis n)
-  τ |>.map ϕ |> fold
-
-def AddTree.reduceTreeEqn {α : Type _} [DecidableEq α] [AddCommGroup α] (t : AddTree α) : Hidden :=
-  let ⟨it, ⟨l⟩⟩ := t.indexTree
-  let n := l.length
-  let ϕ : ℤ ^ n → α := inducedFreeMap l rfl
-  let τ : AddTree (ℤ ^ n) := it.map (ℤbasis n)
-  Hidden.conceal $ AddTree.fold_tree_map_eq ϕ τ
-
-def AddTree.reduceProof (e : Expr) : MetaM Expr := do
-  let t ← treeM e
-  let prf ← extractHidden $ ← whnf $ ← mkAppM ``AddTree.reduceTreeEqn #[t]
-  let eqn ← inferType prf
-  guard $ eqn.isEq -- checking that the equation is indeed an equation
-  match eqn with
-  | .app (.app _ lhs _) rhs _ => -- extracting the lhs and rhs of the equation
-    -- showing that `rhs` and `e` are definitionally equal
-    let rhs_eq_e ← mkFreshExprMVar (some $ ← mkEq rhs e)
-    assignExprMVar rhs_eq_e.mvarId! (mkConst ``rfl)
-    -- composing `lhs = rhs` and `rhs = e` by transitivity of equality
-    let lhs_eq_e ← mkFreshExprMVar (some $ ← mkEq lhs e)
-    assignExprMVar lhs_eq_e.mvarId! $ ← mkEqTrans prf rhs_eq_e
-    -- reducing both sides of the equation and returning the expression
-    return lhs_eq_e
-  | _ => failure
-
-elab "reduceProof# " s:term : term => do
-  let e ← Term.elabTerm s none
-  AddTree.reduceProof e
-
-#check reduceProof# ((1 : ℤ) + 2 + ((-3) + 5))
