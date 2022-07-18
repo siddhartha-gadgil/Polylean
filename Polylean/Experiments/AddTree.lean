@@ -122,7 +122,7 @@ end Reflection
 
 
 theorem AddTree.fold_tree_map_eq {A B : Type _} [AddCommGroup A] [AddCommGroup B]
-  (φ : A → B) [Homφ : AddCommGroup.Homomorphism φ] (t : AddTree A) : φ t.fold = (t.map φ).fold := by
+  (φ : A → B) [Homφ : AddCommGroup.Homomorphism φ] (t : AddTree A) : (t.map φ).fold = φ t.fold := by
     induction t with
       | leaf a => rw [map, fold, fold] 
       | negLeaf t ih => rw [map, fold, fold, Homφ.neg_push, ih]
