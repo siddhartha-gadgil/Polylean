@@ -270,37 +270,6 @@ instance decHomsEqual{F: Type}[AddCommGroup F]
 
 end DecideHomsEqual
 
-section UnitFree
-
-instance : AddCommGroup Unit :=
-  {
-    add := λ _ _ => Unit.unit
-    add_assoc := λ _ _ _ => rfl
-    zero := Unit.unit
-    add_zero := λ _ => rfl
-    zero_add := λ _ => rfl
-    nsmul_zero' := by intros; rfl
-    nsmul_succ' := by intros; rfl
-    neg := λ _ => Unit.unit
-    sub_eq_add_neg := by intros; rfl
-    gsmul_zero' := by intros; rfl
-    gsmul_succ' := by intros; rfl
-    gsmul_neg' := by intros; rfl
-    add_left_neg := λ _ => rfl
-    add_comm := λ _ _ => rfl
-  }
-
-instance : FreeAbelianGroup Unit Empty :=
-{
-  i := Empty.rec _
-  inducedMap := λ A _ _ _ => (0 : A)
-  induced_extends := λ _ => funext (Empty.rec _)
-  induced_hom := λ _ _ _ => {add_dist := fun | Unit.unit, Unit.unit => by simp}
-  unique_extension := λ _ _ _ _ _ => funext (fun | Unit.unit => by simp)
-}
-
-end UnitFree
-
 section Examples
 abbrev double : ℤ → ℤ := fromBasis (fun _ : Unit => 2)
 
@@ -416,3 +385,21 @@ theorem FreeAbelianGroup.left_incl (xa : X_A) : FreeAbelianGroup.i ((Sum.inl xa)
 theorem FreeAbelianGroup.right_incl (xb : X_B) : FreeAbelianGroup.i ((Sum.inr xb) : X_A ⊕ X_B) = ((0 : A), FAb_B.i xb) := by simp [i, ι]
 
 end Product
+
+namespace Z3
+
+-- elements in the basis `X` of Z3 ; to be mapped by inclusion
+def  ex : Unit ⊕ Unit ⊕ Unit := Sum.inl ()
+def  ey : Unit ⊕ Unit ⊕ Unit := Sum.inr (Sum.inl ())
+def  ez : Unit ⊕ Unit ⊕ Unit := Sum.inr (Sum.inr ())
+
+def onX {α : Type _} : α × α × α →   Unit ⊕ Unit ⊕ Unit → α 
+| (a, _, _), (Sum.inl _) => a
+| (_, b, _), (Sum.inr (Sum.inl _)) => b
+| (_, _, c), (Sum.inr (Sum.inr _)) => c
+
+
+instance free : FreeAbelianGroup (ℤ × ℤ × ℤ) (Unit ⊕ Unit ⊕ Unit) :=
+        inferInstance
+
+end Z3
