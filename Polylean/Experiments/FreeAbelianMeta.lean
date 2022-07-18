@@ -12,10 +12,17 @@ instance (n: ℕ) : Inhabited (ℤ ^ n) := ⟨zeros n⟩
 
 def ℤbasisElem (n : ℕ) (j : ℕ) : ℤ ^ n := ℤbasis n |>.get! j
 
-@[simp] theorem induced_free_map_at {A : Type _} [AddCommGroup A] {n : ℕ} (v : Vector A n) (k: ℕ) (hk : k < n) :
- (inducedFreeMap v) (ℤbasisElem n k) = v.get k hk := by
-   rw [ℤbasisElem, Vector.get!_of_get, Vector.map_get (inducedFreeMap v)]
-   apply Vector.get_index_eq; apply map_basis
+theorem List.get!_of_get [Inhabited α] : (k : ℕ) → (l : List α) → (hk : k < l.length) → l.get! k = l.get ⟨k, hk⟩
+  | _, .nil, _ => by contradiction
+  | .zero, .cons _ _, _ => rfl
+  | .succ _, .cons _ _, _ => by rw [get!, get]; apply get!_of_get
+
+@[simp] theorem induced_free_map_at {A : Type _} [AddCommGroup A] {n : ℕ} (l : List A) (h : l.length = n) (k: ℕ) (hk : k < n) :
+ (inducedFreeMap l h) (ℤbasisElem n k) = l.get ⟨k, h ▸ hk⟩ := by
+   rw [ℤbasisElem, List.get!_of_get, List.mapget (inducedFreeMap l h)]
+   apply List.get_index_eq; apply map_basis
+   · simp [h, hk]
+
 
 section ToExpr
 
