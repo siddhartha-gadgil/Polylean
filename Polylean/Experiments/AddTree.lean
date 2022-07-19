@@ -11,8 +11,8 @@ declare_aesop_rule_sets [AddTree]
 @[aesop safe (rule_sets [AddTree]) [constructors, cases]] inductive AddTree (α : Type _) where
   | leaf : α → AddTree α 
   | negLeaf : AddTree α → AddTree α
-  | node : AddTree α  → AddTree α  → AddTree α 
-  | subNode: AddTree α  → AddTree α  → AddTree α
+  | node : AddTree α → AddTree α → AddTree α
+  | subNode: AddTree α → AddTree α → AddTree α
   deriving Repr
 
 @[aesop norm (rule_sets [AddTree]) [unfold]] def AddTree.fold {α : Type u} [AddCommGroup α] : AddTree α → α
@@ -32,6 +32,12 @@ declare_aesop_rule_sets [AddTree]
   | AddTree.negLeaf adt => AddTree.negLeaf (reduce adt)
   | AddTree.node lt rt => AddTree.node (reduce lt) (reduce rt)
   | AddTree.subNode lt rt => AddTree.subNode (reduce lt) (reduce rt)
+
+@[aesop norm (rule_sets [AddTree]) [unfold]] def AddTree.leaves {α : Type _} : AddTree α → List α
+  | AddTree.leaf l => [l]
+  | AddTree.negLeaf t => t.leaves
+  | AddTree.node l r => l.leaves ++ r.leaves
+  | AddTree.subNode l r => l.leaves ++ r.leaves
 
 section Instances
 /-
@@ -84,7 +90,6 @@ def hOp (fname : Name) : Expr → MetaM (Expr × Expr)
 def invOp (fname : Name) : Expr → MetaM Expr
  | e@(.app _ a _) => do
     guard $ e.isAppOf fname
-    guard $ ← isDefEq (← inferType a) (← inferType e)
     return a
  | _ => failure
 
@@ -99,6 +104,17 @@ elab "tree#" s:term : term => do
   treeM e
 
 #eval tree# -((2 + -3) - 1)
+
+-- Extracts the leaves from an expression representing an `AddTree`
+-- TODO: Check if it will be easier to use the term-level `AddTree.leaves` for this purpose
+partial def AddTree.leavesM (e : Expr) : MetaM (List Expr) :=
+  hOp ``AddTree.node e >>= (λ (l, r) => appendM (leavesM l) (leavesM r)) <|>
+  hOp ``AddTree.subNode e >>= (λ (l, r) => appendM (leavesM l) (leavesM r)) <|>
+  invOp ``AddTree.negLeaf e >>= leavesM <|>
+  invOp ``AddTree.leaf e >>= (λ l => return [l])
+  where
+    appendM : MetaM (List Expr) → MetaM (List Expr) → MetaM (List Expr) := (λ ml₁ ml₂ => return (← ml₁) ++ (← ml₂))
+
 
 -- this is an alternative approach that directly analyses the syntax
 partial def addtreeM : TermElab :=
