@@ -10,12 +10,13 @@ def kabstractVars (e : Expr) : List Expr → MetaM Expr
     let f := mkLambda Name.anonymous BinderInfo.default (← inferType v) e'
     kabstractVars f vars
 
-def AddTree.toLambdaTree (adt : Expr) : MetaM Expr := do kabstractVars adt (← leavesM adt)
+def AddTree.toLambdaTree (adt : Expr) : MetaM Expr := do kabstractVars adt (List.eraseDups $ ← leavesM adt)
 
 elab "LambdaTree#" a:term : term => do
   let e ← Term.elabTerm a none
   let adt ← treeM e
-  let vrs ← AddTree.leavesM adt
   AddTree.toLambdaTree adt
 
-#eval LambdaTree# (2 + (3 : ℤ))
+#reduce (fun x y : ℤ => LambdaTree# (x + (y + x) - y)) 0 0
+-- Output:
+-- fun a a_1 => AddTree.subNode (AddTree.node (AddTree.leaf a_1) (AddTree.node (AddTree.leaf a) (AddTree.leaf a_1))) (AddTree.leaf a)
