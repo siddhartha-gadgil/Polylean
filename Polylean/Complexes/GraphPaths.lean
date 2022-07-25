@@ -4,7 +4,7 @@ structure Graph(V: Type) (E: Type) where
   bar : E → E
   barInv : bar ∘ bar = id
   barNoFP : ∀ e: E, bar e ≠ e
-  
+
 variable {V: Type}{E: Type}[DecidableEq V][DecidableEq E]{x₁ x₂ : V} 
 
 
@@ -33,7 +33,7 @@ match p with
 
 
 --proves that the endpoint of the reverse of an edge is the start point of the edge
-theorem lemma1 {G : Graph V E} {x : V}{e : E}: G.init e = x → (term G (G.bar e) = x) :=
+theorem term_bar_equals_init {G : Graph V E} {x : V}{e : E}: G.init e = x → (term G (G.bar e) = x) :=
 by
 intro h
 have h₁ : G.bar (G.bar e) = e := congr G.barInv (Eq.refl e) 
@@ -41,7 +41,7 @@ have h₂ : G.init (G.bar (G.bar e)) = G.init e := congrArg G.init h₁
 apply Eq.trans h₂ h
 
 --proves that initial vertex of reversed edge is the terminal vertex of the original edge
-theorem lemma1' {G : Graph V E} {x :V} {e : E}: (term G e = x) → G.init (G.bar e) = x:= by
+theorem init_bar_equals_term {G : Graph V E} {x :V} {e : E}: (term G e = x) → G.init (G.bar e) = x:= by
 intro hyp
 have : G.init (G.bar e) = term G e := by rfl
 exact Eq.trans this hyp 
@@ -63,7 +63,7 @@ theorem mult_const {G : Graph V E} {p : EdgePath G x y} :
 -- reverses an edgepath
 def inverse {G : Graph V E} {x y : V}: (EdgePath G x y) → (EdgePath G y x)
 | single x => single x 
-| cons ex h₁ h₂ exy => multiply (inverse exy) (cons (G.bar (ex)) h₂ (lemma1 h₁) (single x)) 
+| cons ex h₁ h₂ exy => multiply (inverse exy) (cons (G.bar (ex)) h₂ (term_bar_equals_init h₁) (single x)) 
 
 
 --helper function for reducePath, that reduces the first two edges of the path
@@ -109,7 +109,7 @@ inductive basicht {G : Graph V E} : EdgePath G x y → EdgePath G x y → Sort w
   | consht : (x : V) → (basicht (single x) (single x)) -- constant homotopy
   | cancel : (ex ex' : E) → { x w y : V} → (p : EdgePath G x y) → -- cancelling consecutive opposite edges from a path
             (h : G.init ex = x) → (h' : term G ex = w) → (t : G.bar ex = ex') → 
-            basicht p (cons ex h h' (cons ex' (t ▸ lemma1' h') (t ▸ lemma1 h) p))
+            basicht p (cons ex h h' (cons ex' (t ▸ init_bar_equals_term h') (t ▸ term_bar_equals_init h) p))
   | mult : {x y z : V} → {p q : EdgePath G y z} →   -- adding an edge to homotopic paths
           basicht p q → (ex : E) →(h' : G.init ex = x) → ( h : term G ex = y)→ 
           basicht (cons ex h' h p) (cons ex h' h q)
@@ -120,7 +120,7 @@ def ht (G : Graph V E) (x y : V) := Quot (@basicht V E G x y )
 
 def htclass {G : Graph V E} {x y : V} ( p : EdgePath G x y) : ht G x y :=
   Quot.mk (@basicht V E G x y ) p  
- 
+
 def homotopy {G : Graph V E} {x y : V} ( p' q' : EdgePath G x y) : Prop := 
   htclass p' = htclass q'
 
@@ -162,11 +162,6 @@ theorem homotopy_left_mult {G : Graph V E} {x y z : V} (p1 p2 : EdgePath G y z) 
           simp[homotopy_left_mult_edge, c]
 
 
--- proves that homotopy is right multiplicative
-theorem homotopy_right_mult {G : Graph V E} {x y z : V} (p1 p2 : EdgePath G x y) (q : EdgePath G y z) (h :homotopy p1 p2):
-         (homotopy (multiply p1 q) (multiply p2 q)) := by sorry
-
-
 --defines multiplication of homotopy class with a path to its left
 def homotopy_left_multiplication {G :Graph V E} {x y z : V} (p₁ : EdgePath G x y) : ht G y z →  ht G x z := by
   let func: EdgePath G y z → ht G x z := by intro p ; exact htclass (multiply p₁ p) 
@@ -177,33 +172,11 @@ def homotopy_left_multiplication {G :Graph V E} {x y z : V} (p₁ : EdgePath G x
           apply homotopy_left_mult q₁ q₂ p₁ h'
   apply Quot.lift func g
 
+
 --proves that the multiplication defined above equals homotopy class of multiplied paths 
-theorem help {G :Graph V E} {x y z : V} (p₁ : EdgePath G x y) (p₂ : EdgePath G y z): homotopy_left_multiplication p₁ (htclass p₂) = htclass (multiply p₁ p₂) := by 
+theorem homotopy_left_multiplication_class {G :Graph V E} {x y z : V} (p₁ : EdgePath G x y) (p₂ : EdgePath G y z): homotopy_left_multiplication p₁ (htclass p₂) = htclass (multiply p₁ p₂) := by 
   simp[htclass, homotopy_left_multiplication]
 
-
---defines nultiplication of homotopy classes
-def homotopy_multiplication : ht G x y → ht G y z → ht G x z := by 
-  intro p₁ p₂
-  let func (p : EdgePath G x y) : ht G x z := homotopy_left_multiplication p p₂
-  have g : (q₁ q₂ : EdgePath G x y) → basicht q₁ q₂ → func q₁ = func q₂  := by 
-      intro q₁ q₂ h 
-      let f (p : ht G y z) : Prop := homotopy_left_multiplication q₁ p = homotopy_left_multiplication q₂ p
-      have g' : (p : ht G y z) → f p := by 
-        intro p 
-        have g'' : (p' : EdgePath G y z) → f (htclass p') := by 
-          intro p'
-          have h' : homotopy q₁ q₂ := by simp[homotopy, htclass, Quot.sound h]
-          have : htclass (multiply q₁ p') = htclass (multiply q₂ p') := by 
-            let prop := homotopy_right_mult q₁ q₂ p' h'
-            rw[prop]
-          simp[help, this]
-        apply Quot.ind g''
-      let hh := g' p₂
-      have : homotopy_left_multiplication q₁ p₂ = homotopy_left_multiplication q₂ p₂ := by simp[hh]
-      simp[this]
-  let k := (Quot.lift (fun x => func x) g) 
-  apply k p₁
 
 
 --proves that reducePath0 preserves the homotopy class
@@ -227,7 +200,7 @@ cases exy with
   else by
     have : reducePath0 ex h₁ h₂ (cons ey h₃ h₄ eyz) = cons ex h₁ h₂ (cons ey h₃ h₄ (eyz)) := by simp[reducePath0, c]
     simp [this]
- 
+
 --proves that reducePath preserves the homotopy class
 theorem homotopy_reducePath {G : Graph V E} {x y : V} (p₁ : EdgePath G x y): homotopy p₁ (reducePath p₁) := by
         induction p₁ with
@@ -246,6 +219,4 @@ theorem homotopy_reducePath {G : Graph V E} {x y : V} (p₁ : EdgePath G x y): h
           have t₂ : homotopy exy q := by apply ih'
           have t₃ : homotopy (cons ex h₁ h₂ exy) (cons ex h₁ h₂ q) := by apply homotopy_left_mult_edge exy q t₂ ex h₁ h₂
           apply homotopy_trans (cons ex h₁ h₂ exy) (cons ex h₁ h₂ q) (reducePath (cons ex h₁ h₂ exy)) t₃ (this ▸ t₁)
-
-
 
