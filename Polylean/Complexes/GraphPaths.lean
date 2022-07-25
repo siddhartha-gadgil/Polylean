@@ -67,7 +67,7 @@ def inverse {G : Graph V E} {x y : V}: (EdgePath G x y) → (EdgePath G y x)
 
 
 --helper function for reducePath, that reduces the first two edges of the path
-def reducePath0 {G : Graph V E} {x y z : V} (ex : E) (h₁ : G.init ex = x) (h₂ : term G ex = y) (exy : EdgePath G y z) : { rp : EdgePath G x z // rp.length ≤ (cons ex h₁ h₂ exy).length} := by
+def reducePathAux {G : Graph V E} {x y z : V} (ex : E) (h₁ : G.init ex = x) (h₂ : term G ex = y) (exy : EdgePath G y z) : { rp : EdgePath G x z // rp.length ≤ (cons ex h₁ h₂ exy).length} := by
 cases exy with
  | single x => exact ⟨cons ex h₁ h₂ (single y), by simp⟩ 
  | cons ey h₃ h₄ eyz => 
@@ -91,7 +91,7 @@ def reducePath {G : Graph V E} : (p : EdgePath G x y ) →
 | cons ex h₁ h₂ ey'y => 
  -- have h5': length ey'y < length (cons ex h1 h2 ey'y) := by simp[EdgePath.length, Nat.lt_succ_self]
   let ⟨ey'z, ih1⟩ := reducePath ey'y 
-  let ⟨ ez, ih⟩ := reducePath0 ex h₁ h₂ ey'z 
+  let ⟨ ez, ih⟩ := reducePathAux ex h₁ h₂ ey'z 
   ⟨ ez , by 
           have : length (cons ex h₁ h₂ ey'z) = length ey'z + 1 := by simp[length]
           let k := this ▸ ih
@@ -179,12 +179,12 @@ theorem homotopy_left_multiplication_class {G :Graph V E} {x y z : V} (p₁ : Ed
 
 
 
---proves that reducePath0 preserves the homotopy class
-theorem homotopy_reducePath0 {G : Graph V E} {x y z : V} (ex : E) (h₁ : G.init ex = x) (h₂ : term G ex = y) (exy : EdgePath G y z) : homotopy (cons ex h₁ h₂ exy) (reducePath0 ex h₁ h₂ exy) := by
+--proves that reducePathAux preserves the homotopy class
+theorem homotopy_reducePathAux {G : Graph V E} {x y z : V} (ex : E) (h₁ : G.init ex = x) (h₂ : term G ex = y) (exy : EdgePath G y z) : homotopy (cons ex h₁ h₂ exy) (reducePathAux ex h₁ h₂ exy) := by
 simp[homotopy, htclass]
 cases exy with
 | single y => 
-    have : reducePath0 ex h₁ h₂ (single y) = cons ex h₁ h₂ (single y) := by rfl
+    have : reducePathAux ex h₁ h₂ (single y) = cons ex h₁ h₂ (single y) := by rfl
     rfl
 | cons ey h₃ h₄ eyz => apply
   if c : (x = term G ey) ∧ (ey = G.bar (ex)) then by
@@ -194,11 +194,11 @@ cases exy with
         have : basicht (ih ▸ eyz)  (cons ex h₁ h₂ (cons ey h₃ h₄ eyz))  := by 
           let j := @basicht.cancel V E G ex ey x y _ (ih ▸ eyz) h₁ h₂ (Eq.symm c.2)
           apply j
-        have pr : (reducePath0 ex h₁ h₂ (cons ey h₃ h₄ eyz)).1 = (ih ▸ eyz) := by simp[reducePath0, c]
+        have pr : (reducePathAux ex h₁ h₂ (cons ey h₃ h₄ eyz)).1 = (ih ▸ eyz) := by simp[reducePathAux, c]
         let k := Quot.sound (Eq.symm pr ▸ this) 
         exact (Eq.symm k)
   else by
-    have : reducePath0 ex h₁ h₂ (cons ey h₃ h₄ eyz) = cons ex h₁ h₂ (cons ey h₃ h₄ (eyz)) := by simp[reducePath0, c]
+    have : reducePathAux ex h₁ h₂ (cons ey h₃ h₄ eyz) = cons ex h₁ h₂ (cons ey h₃ h₄ (eyz)) := by simp[reducePathAux, c]
     simp [this]
 
 --proves that reducePath preserves the homotopy class
@@ -213,9 +213,9 @@ theorem homotopy_reducePath {G : Graph V E} {x y : V} (p₁ : EdgePath G x y): h
         | cons ex h₁ h₂ exy ih' => 
           let p₃ := reducePath exy
           let q := p₃.1
-          let p₄ := reducePath0 ex h₁ h₂ q
+          let p₄ := reducePathAux ex h₁ h₂ q
           have : p₄.1 = (reducePath (cons ex h₁ h₂ exy)).1 := by rfl
-          have t₁ : homotopy (cons ex h₁ h₂ q) (p₄.1) := by apply homotopy_reducePath0 ex h₁ h₂ q
+          have t₁ : homotopy (cons ex h₁ h₂ q) (p₄.1) := by apply homotopy_reducePathAux ex h₁ h₂ q
           have t₂ : homotopy exy q := by apply ih'
           have t₃ : homotopy (cons ex h₁ h₂ exy) (cons ex h₁ h₂ q) := by apply homotopy_left_mult_edge exy q t₂ ex h₁ h₂
           apply homotopy_trans (cons ex h₁ h₂ exy) (cons ex h₁ h₂ q) (reducePath (cons ex h₁ h₂ exy)) t₃ (this ▸ t₁)
