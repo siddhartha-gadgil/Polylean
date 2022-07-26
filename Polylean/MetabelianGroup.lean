@@ -79,16 +79,7 @@ theorem left_id : ∀ (g : K × Q), mul c e g = g
   | (k, q) => by simp [e, mul]
 
 theorem right_id : ∀ (g : K × Q), mul c g e = g
-  | (k, q) => by 
-        rw [e, mul]
-        show (k + q • 0 + c q 0, q + 0) = (k, q)
-        have cq0 : c q 0 = 0 := by apply Cocycle.rightId
-        rw [cq0]
-        have q0 : q • (0 : K) = 0 := 
-          by apply AutAction.act_zero
-        rw[q0]
-        repeat (rw [add_zero])
-
+  | (k, q) => by simp [e, mul]
 
 theorem left_inv : ∀ (g : K × Q), mul c (inv c g) g = e
   | (k , q) => by

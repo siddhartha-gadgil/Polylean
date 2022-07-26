@@ -142,7 +142,7 @@ def subType (P: T → Prop) := {a : T // P a}
 
 theorem subType.eq_of_val_eq (P : T → Prop)  :
     ∀ {a b : subType P}, Eq a.val b.val → Eq a b
-  | ⟨v, prf⟩, ⟨_, _⟩, rfl => rfl
+  | ⟨_, _⟩, ⟨_, _⟩, rfl => rfl
 
 end subType
 

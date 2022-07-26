@@ -35,11 +35,11 @@ abbrev ab : Q := (⟨1, by decide⟩, ⟨1, by decide⟩)
 
 -- the action of `Q` on `K` by automorphisms
 -- `id` and `neg` are the identity and negation homomorphisms
-@[reducible] def action : Q → K → K
-  | (⟨0, _⟩, ⟨0, _⟩) => id × id × id
-  | (⟨0, _⟩, ⟨1, _⟩) => neg × id × neg
-  | (⟨1, _⟩, ⟨0, _⟩) => id × neg × neg
-  | (⟨1, _⟩, ⟨1, _⟩) => neg × neg × id
+@[reducible] def action : Q → (K → K)
+  | (0, 0) => id × id × id
+  | (0, 1) => neg × id × neg
+  | (1, 0) => id × neg × neg
+  | (1, 1) => neg × neg × id
 
 -- a helper function to easily prove theorems about Q by cases
 def Q.rec (P : Q → Sort _) :
@@ -51,14 +51,14 @@ def Q.rec (P : Q → Sort _) :
   ∀ (q : Q), P q :=
     λ p00 p01 p10 p11 q =>
       match q with
-        | (⟨0, _⟩, ⟨0, _⟩) => p00
-        | (⟨0, _⟩, ⟨1, _⟩) => p01
-        | (⟨1, _⟩, ⟨0, _⟩) => p10
-        | (⟨1, _⟩, ⟨1, _⟩) => p11
+        | (0, 0) => p00
+        | (0, 1) => p01
+        | (1, 0) => p10
+        | (1, 1) => p11
 
 
-instance (q : Q) : AddCommGroup.Homomorphism (action q) := by
-  revert q; apply Q.rec <;> rw [action] <;> exact inferInstance
+instance : (q : Q) → AddCommGroup.Homomorphism (action q) := by
+  apply Q.rec <;> rw [action] <;> exact inferInstance
 
 -- confirm that the above action is an action by automorphisms
 -- this is done automatically with the machinery of decidable equality of homomorphisms on free groups
@@ -72,22 +72,22 @@ instance : AutAction Q K action :=
 
 -- the cocycle in the construction
 @[reducible] def cocycle : Q → Q → K
-  | (⟨0, _⟩, ⟨0, _⟩) , (⟨0, _⟩, ⟨0, _⟩)  => 0
-  | (⟨0, _⟩, ⟨0, _⟩) , (⟨0, _⟩, ⟨1, _⟩)  => 0
-  | (⟨0, _⟩, ⟨0, _⟩) , (⟨1, _⟩, ⟨0, _⟩)  => 0
-  | (⟨0, _⟩, ⟨0, _⟩) , (⟨1, _⟩, ⟨1, _⟩)  => 0
-  | (⟨0, _⟩, ⟨1, _⟩) , (⟨0, _⟩, ⟨0, _⟩)  => 0
-  | (⟨0, _⟩, ⟨1, _⟩) , (⟨0, _⟩, ⟨1, _⟩)  => y
-  | (⟨0, _⟩, ⟨1, _⟩) , (⟨1, _⟩, ⟨0, _⟩)  => -x + y + -z
-  | (⟨0, _⟩, ⟨1, _⟩) , (⟨1, _⟩, ⟨1, _⟩)  => -x + -z
-  | (⟨1, _⟩, ⟨0, _⟩) , (⟨0, _⟩, ⟨0, _⟩)  => 0
-  | (⟨1, _⟩, ⟨0, _⟩) , (⟨0, _⟩, ⟨1, _⟩)  => 0
-  | (⟨1, _⟩, ⟨0, _⟩) , (⟨1, _⟩, ⟨0, _⟩)  => x
-  | (⟨1, _⟩, ⟨0, _⟩) , (⟨1, _⟩, ⟨1, _⟩)  => x
-  | (⟨1, _⟩, ⟨1, _⟩) , (⟨0, _⟩, ⟨0, _⟩)  => 0
-  | (⟨1, _⟩, ⟨1, _⟩) , (⟨0, _⟩, ⟨1, _⟩)  => -y
-  | (⟨1, _⟩, ⟨1, _⟩) , (⟨1, _⟩, ⟨0, _⟩)  => -y + z
-  | (⟨1, _⟩, ⟨1, _⟩) , (⟨1, _⟩, ⟨1, _⟩)  => z
+  | (0, 0) , (0, 0)  => 0
+  | (0, 0) , (0, 1)  => 0
+  | (0, 0) , (1, 0)  => 0
+  | (0, 0) , (1, 1)  => 0
+  | (0, 1) , (0, 0)  => 0
+  | (0, 1) , (0, 1)  => y
+  | (0, 1) , (1, 0)  => -x + y + -z
+  | (0, 1) , (1, 1)  => -x + -z
+  | (1, 0) , (0, 0)  => 0
+  | (1, 0) , (0, 1)  => 0
+  | (1, 0) , (1, 0)  => x
+  | (1, 0) , (1, 1)  => x
+  | (1, 1) , (0, 0)  => 0
+  | (1, 1) , (0, 1)  => -y
+  | (1, 1) , (1, 0)  => -y + z
+  | (1, 1) , (1, 1)  => z
 
 -- confirm that the above function indeed satisfies the cocycle condition
 -- this is done fully automatically by previously defined decision procedures
