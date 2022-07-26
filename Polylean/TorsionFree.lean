@@ -1,7 +1,7 @@
 import Polylean.GardamGroup
 import Polylean.IntDomain
 import Polylean.ModArith
-import Polylean.Experiments.Tactics
+import Polylean.Tactics.ReduceGoal
 
 /-
 This file contains a proof that the group `P` defined is in fact torsion-free.
