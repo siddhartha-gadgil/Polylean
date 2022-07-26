@@ -174,7 +174,7 @@ instance subGroup.Group (P : G → Prop) [H : subGroup P] : Group (subType P) :=
     inv := λ ⟨g, prf⟩ => ⟨g⁻¹, H.inv_closure prf⟩
     mul_left_inv := by
                         intro ⟨a, prf⟩
-                        simp [Inv.inv]
+                        simp only [Inv.inv]
                         apply subType.eq_of_val_eq
                         apply mul_left_inv
 
