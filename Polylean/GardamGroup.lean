@@ -28,18 +28,18 @@ abbrev x : K := (1, 0, 0)
 abbrev y : K := (0, 1, 0)
 abbrev z : K := (0, 0, 1)
 
-abbrev e  : Q := (⟨0, by decide⟩, ⟨0, by decide⟩)
-abbrev a  : Q := (⟨1, by decide⟩, ⟨0, by decide⟩)
-abbrev b  : Q := (⟨0, by decide⟩, ⟨1, by decide⟩)
-abbrev ab : Q := (⟨1, by decide⟩, ⟨1, by decide⟩)
+@[matchPattern] abbrev e  : Q := (0, 0)
+@[matchPattern] abbrev a  : Q := (1, 0)
+@[matchPattern] abbrev b  : Q := (0, 1)
+@[matchPattern] abbrev ab : Q := (1, 1)
 
 -- the action of `Q` on `K` by automorphisms
 -- `id` and `neg` are the identity and negation homomorphisms
 @[reducible] def action : Q → (K → K)
-  | (0, 0) => id × id × id
-  | (0, 1) => neg × id × neg
-  | (1, 0) => id × neg × neg
-  | (1, 1) => neg × neg × id
+  | e => id × id × id
+  | a => id × neg × neg
+  | b => neg × id × neg
+  | ab => neg × neg × id
 
 -- a helper function to easily prove theorems about Q by cases
 def Q.rec (P : Q → Sort _) :
@@ -72,22 +72,15 @@ instance : AutAction Q K action :=
 
 -- the cocycle in the construction
 @[reducible] def cocycle : Q → Q → K
-  | (0, 0) , (0, 0)  => 0
-  | (0, 0) , (0, 1)  => 0
-  | (0, 0) , (1, 0)  => 0
-  | (0, 0) , (1, 1)  => 0
-  | (0, 1) , (0, 0)  => 0
-  | (0, 1) , (0, 1)  => y
-  | (0, 1) , (1, 0)  => -x + y + -z
-  | (0, 1) , (1, 1)  => -x + -z
-  | (1, 0) , (0, 0)  => 0
-  | (1, 0) , (0, 1)  => 0
-  | (1, 0) , (1, 0)  => x
-  | (1, 0) , (1, 1)  => x
-  | (1, 1) , (0, 0)  => 0
-  | (1, 1) , (0, 1)  => -y
-  | (1, 1) , (1, 0)  => -y + z
-  | (1, 1) , (1, 1)  => z
+  | a , a  => x
+  | a , ab => x
+  | b , b  => y
+  | ab, b  => -y
+  | ab, ab => z
+  | b , ab => -x + -z
+  | ab, a  => -y + z
+  | b , a  => -x + y + -z
+  | _ , _  => 0
 
 -- confirm that the above function indeed satisfies the cocycle condition
 -- this is done fully automatically by previously defined decision procedures
@@ -108,7 +101,6 @@ instance PGrp : Group P := MetabelianGroup.metabeliangroup cocycle
 
 instance : DecidableEq P := inferInstanceAs (DecidableEq (K × Q))
 
--- a handy theorem for describing the group multiplication
 @[simp] theorem Pmul : ∀ k k' : K, ∀ q q' : Q, (k, q) * (k', q') = (k + action q k' + cocycle q q', q + q') :=
   λ k k' q q' => by
     show MetabelianGroup.mul cocycle (k, q) (k', q') = _
