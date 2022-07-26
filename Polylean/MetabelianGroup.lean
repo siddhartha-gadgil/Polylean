@@ -124,10 +124,6 @@ instance metabeliangroup : Group (K × Q) :=
     gpow_neg' := by intros; rfl,
   }
 
-def mult (k k' : K) (q q' : Q) : (k, q) * (k', q') =  (k + (q • k') + c q q', q + q') := rfl
-
-def inverse (k : K) (q : Q) : (k, q)⁻¹ = (- ((-q) • (k  + c q (-q))), -q) := rfl
-
 end MetabelianGroup
 
 
@@ -176,9 +172,8 @@ instance kernel_inclusion : Group.Homomorphism (subType.val (λ ((_, q) : K × Q
 theorem Metabelian.Kernel.mul_comm : ∀ k k' : Metabelian.Kernel Q K, k * k' = k' * k := by
   intro ⟨⟨ka, 0⟩, rfl⟩; intro ⟨⟨kb, 0⟩, rfl⟩
   apply subType.eq_of_val_eq
-  show (ka, (0 : Q)) * (kb, 0) = (kb, 0) * (ka, 0)
-  repeat (rw [MetabelianGroup.mult])
-  simp only [add_zero, Cocycle.cocycleId, AddCommGroup.Action.id_action, add_comm]
+  show MetabelianGroup.mul c (ka, 0) (kb, 0) = MetabelianGroup.mul c (kb, 0) (ka, 0)
+  simp only [MetabelianGroup.mul, add_zero, Cocycle.cocycleId, AddCommGroup.Action.id_action, add_comm]
 
 instance kernel_addgroup : AddCommGroup (Metabelian.Kernel Q K) :=
   Group.to_additive (Metabelian.Kernel.mul_comm Q K c)
@@ -188,9 +183,8 @@ instance : AddCommGroup.Homomorphism (Metabelian.Kernel.inclusion Q K) where
     intro k k'
     show _ = ⟨(k, 0) * (k', 0), _⟩
     apply subType.eq_of_val_eq
-    show ((k + k'), (0 : Q)) = (k, (0 : Q)) * (k', (0 : Q))
-    rw [MetabelianGroup.mult]
-    simp
+    show ((k + k'), (0 : Q)) = MetabelianGroup.mul c (k, (0 : Q)) (k', (0 : Q))
+    simp [MetabelianGroup.mul]
 
 instance : AddCommGroup.Homomorphism (Metabelian.Kernel.projection Q K) where
   add_dist := by

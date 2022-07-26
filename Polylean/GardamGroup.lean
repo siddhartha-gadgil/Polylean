@@ -111,7 +111,7 @@ instance : DecidableEq P := inferInstanceAs (DecidableEq (K × Q))
 -- a handy theorem for describing the group multiplication
 @[simp] theorem Pmul : ∀ k k' : K, ∀ q q' : Q, (k, q) * (k', q') = (k + action q k' + cocycle q q', q + q') :=
   λ k k' q q' => by
-    rw [MetabelianGroup.mult]
+    show MetabelianGroup.mul cocycle (k, q) (k', q') = _
     rfl
 
 end P
