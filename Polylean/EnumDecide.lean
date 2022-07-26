@@ -133,8 +133,8 @@ example : ∀ x : Fin 3, x + 0 = x := by decide
 
 example : ∀ x y : Fin 3, x + y = y + x := by decide
 
-theorem Zmod3.assoc {n: Nat} :
-  ∀ x y z : Fin 2, (x + y) + z = x + (y + z) := by decide
+theorem Zmod3.assoc :
+  ∀ x y z : Fin 3, (x + y) + z = x + (y + z) := by decide
 end Examples
 
 section CompositeEnumeration

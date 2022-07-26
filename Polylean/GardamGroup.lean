@@ -12,12 +12,12 @@ This is done via the cocycle construction, using the explicit action and cocycle
 
 namespace P
 
--- the "kernel" group
+/-- the "kernel" group -/
 abbrev K := ℤ × ℤ × ℤ
 
 instance KGrp : AddCommGroup K := inferInstance
 
--- the "quotient" group
+/-- the "quotient" group -/
 abbrev Q := Fin 2 × Fin 2
 
 instance QGrp : AddCommGroup Q := inferInstance
@@ -33,15 +33,15 @@ abbrev z : K := (0, 0, 1)
 @[matchPattern] abbrev b  : Q := (0, 1)
 @[matchPattern] abbrev ab : Q := (1, 1)
 
--- the action of `Q` on `K` by automorphisms
--- `id` and `neg` are the identity and negation homomorphisms
+/-- the action of `Q` on `K` by automorphisms
+-- `id` and `neg` are the identity and negation homomorphisms -/
 @[reducible] def action : Q → (K → K)
   | e => id × id × id
   | a => id × neg × neg
   | b => neg × id × neg
   | ab => neg × neg × id
 
--- a helper function to easily prove theorems about Q by cases
+/-- a helper function to easily prove theorems about Q by cases -/
 def Q.rec (P : Q → Sort _) :
   P (⟨0, by decide⟩, ⟨0, by decide⟩) →
   P (⟨0, by decide⟩, ⟨1, by decide⟩) →
@@ -60,8 +60,8 @@ def Q.rec (P : Q → Sort _) :
 instance : (q : Q) → AddCommGroup.Homomorphism (action q) := by
   apply Q.rec <;> rw [action] <;> exact inferInstance
 
--- confirm that the above action is an action by automorphisms
--- this is done automatically with the machinery of decidable equality of homomorphisms on free groups
+/-- confirm that the above action is an action by automorphisms
+- this is done automatically with the machinery of decidable equality of homomorphisms on free groups -/
 instance : AutAction Q K action :=
   {
     aut_action := inferInstance
@@ -70,7 +70,7 @@ instance : AutAction Q K action :=
   }
 
 
--- the cocycle in the construction
+/-- the cocycle in the construction -/
 @[reducible] def cocycle : Q → Q → K
   | a , a  => x
   | a , ab => x
@@ -82,8 +82,8 @@ instance : AutAction Q K action :=
   | b , a  => -x + y + -z
   | _ , _  => 0
 
--- confirm that the above function indeed satisfies the cocycle condition
--- this is done fully automatically by previously defined decision procedures
+/-- confirm that the above function indeed satisfies the cocycle condition
+-- this is done fully automatically by previously defined decision procedures -/
 instance P_cocycle : Cocycle cocycle :=
   {
     α := action
@@ -93,7 +93,7 @@ instance P_cocycle : Cocycle cocycle :=
   }
 
 
--- the group `P` constructed via the cocycle construction
+/-- the group `P` constructed via the cocycle construction -/
 
 abbrev P := K × Q
 
