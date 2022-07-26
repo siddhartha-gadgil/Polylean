@@ -288,8 +288,6 @@ theorem first_arg_invariant (s₁ s₂ t : FormalSum R G) (rel : ElementaryMove 
         simp
         conv =>
           lhs 
-          congr
-          congr
           rw [add_comm]    
         
 /-- multiplication for free modules -/
@@ -342,9 +340,6 @@ instance : Ring (FreeModule R G) :=
         intro x
         let l := FreeModule.coeffs_distrib (-1 : R) (1 : R) x
         simp at l
-        have lc : (-1 : R) + 1 = 0 := by 
-            apply add_left_neg
-        rw [lc] at l
         rw [FreeModule.unit_coeffs] at l
         rw [FreeModule.zero_coeffs] at l
         exact l
@@ -401,13 +396,11 @@ instance : Ring (FreeModule R G) :=
           simp [add_assoc, add_left_cancel]
           conv =>
             lhs
-            arg 2
             rw [← add_assoc]
             arg 1
             rw [add_comm]
           conv =>
             rhs
-            arg 2
             rw [← add_assoc]
 
     zero_mul := by

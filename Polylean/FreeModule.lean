@@ -637,9 +637,6 @@ instance : AddCommGroup (FreeModule R X) :=
         intro x
         let l := FreeModule.coeffs_distrib (-1 : R) (1 : R) x
         simp at l
-        have lc : (-1 : R) + 1 = 0 := by 
-            apply add_left_neg
-        rw [lc] at l
         rw [FreeModule.unit_coeffs] at l
         rw [FreeModule.zero_coeffs] at l
         exact l
