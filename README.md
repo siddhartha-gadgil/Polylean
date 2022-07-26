@@ -5,3 +5,5 @@ So far this repository contains the following:
 
 * Formalization of Gardam's disproof of the unit conjecture.
 * A replication in __lean 4__ of some of the __scala__ code used in the _PolyMath 14_ project. 
+
+However the branch `unit-conjecture` (whose README this is) has only the formalization of Gardam's disproof of the unit conjecture.
