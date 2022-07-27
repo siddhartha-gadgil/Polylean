@@ -14,12 +14,12 @@ This is done via the cocycle construction, using the explicit action and cocycle
 
 namespace P
 
-/-! The "kernel" group -/
+/-! The *kernel* group -/
 abbrev K := ℤ × ℤ × ℤ
 
 instance KGrp : AddCommGroup K := inferInstance
 
-/-! The "quotient" group -/
+/-! The *quotient* group -/
 abbrev Q := Fin 2 × Fin 2
 
 instance QGrp : AddCommGroup Q := inferInstance
