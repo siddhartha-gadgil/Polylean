@@ -1,4 +1,6 @@
 /-!
+## Lifting Decidability by Enumeration
+
 Automatically decide statements of the form `∀ x : X, P x` on an effectively finite type `X` by enumeration.
 
 More precisely, we instroduce a typeclass `DecideForall` so that if `X` has an instance of this class then we can lift `Decidable (P x)` for `P: X → Prop` to `Decidable (∀ x : X, P x)`. We construct instances of the typecall `DecideForall` for the following types:

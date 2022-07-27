@@ -6,7 +6,7 @@ import Polylean.EnumDecide
 open SubNegMonoid
 
 /-!
-# Free Abelian groups
+## Free Abelian groups
 
 We define free abelian groups in terms of having a basis and an inclusion with approprtiate universal properties. Typeclass inference gives us such structures on products. 
 

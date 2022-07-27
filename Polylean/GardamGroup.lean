@@ -5,6 +5,8 @@ import Polylean.EnumDecide
 import Polylean.FreeAbelianGroup
 
 /-!
+## The Group `P`
+
 We construct the group `P` (the *Promislow* or *Hantzsche–Wendt* group) as a Metabelian group.
 
 This is done via the cocycle construction, using the explicit action and cocycle described in Section 3.1 of [Gardam's paper](https://arxiv.org/abs/2102.11818).

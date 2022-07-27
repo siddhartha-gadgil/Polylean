@@ -1,8 +1,10 @@
 import Polylean.Morphisms
 import Polylean.SMul
 
-/-
-Define group actions. This is done as a typeclass representing the property of being a group action.
+/-!
+## Group Actions
+
+We define group actions. This is done as a typeclass representing the property of being a group action.
 -/
 
 

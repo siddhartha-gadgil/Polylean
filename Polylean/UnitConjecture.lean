@@ -3,6 +3,8 @@ import Polylean.GroupRing
 
 
 /-!
+## Units in the group `P`
+
 The proof of the theorem `𝔽₂[P]` has non-trivial units. Together with the main result of `TorsionFree` -- that `P` is torsion-free, this completes the formal proof of Gardam's theorem that Kaplansky's Unit Conjecture is false.
 -/
 
