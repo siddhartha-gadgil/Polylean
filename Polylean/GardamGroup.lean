@@ -109,4 +109,6 @@ instance : DecidableEq P := inferInstanceAs (DecidableEq (K × Q))
 /- A confirmation that multiplication in `P` is as expected -/
 @[reducible, simp] theorem Pmul (k k' : K) (q q' : Q) : (k, q) * (k', q') = (k + action q k' + cocycle q q', q + q') := rfl
 
+theorem one : (1 : P) = ((0, 0, 0), P.e) := rfl
+
 end P

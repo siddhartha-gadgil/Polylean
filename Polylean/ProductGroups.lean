@@ -90,6 +90,16 @@ theorem zero_pair : (0 : A × B) = ((0 : A), (0 : B)) := rfl
   assumption
 -/
 
+lemma scal_mul_pair (a : A) (b : B) : ∀ m : ℕ, m • (a, b) = (m • a, m • b) := by
+  intro m
+  induction m with
+    | zero =>
+      repeat (rw [smul_zero])
+      rw [DirectSum.zero_pair]
+    | succ m ih =>
+      repeat (rw [smul_succ])
+      rw [ih, DirectSum.add]
+
 end DirectSum
 
 

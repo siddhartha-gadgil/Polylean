@@ -59,4 +59,11 @@ theorem Int.mod2_add_dist : ∀ m n : ℤ, Int.mod2 (m + n) = Int.mod2 m + Int.m
 instance : AddCommGroup.Homomorphism (Int.mod2) where
   add_dist := Int.mod2_add_dist
 
+/-- Every odd integer is non-zero -/
+lemma odd_ne_zero : {a : ℤ} → ¬(a + a + 1 = 0) := by
+  intro a h
+  have hyp := congrArg Int.mod2 h
+  have : ∀ x : Fin 2, x + x = (0 : Fin 2) := fun | ⟨0, _⟩ => rfl | ⟨1, _⟩ => rfl
+  simp [this] at hyp
+
 end Mod2

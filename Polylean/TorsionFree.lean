@@ -24,7 +24,7 @@ class TorsionFree (G : Type _) [Group G] where
   torsion_free : ∀ g : G, ∀ n : ℕ, g ^ n.succ = 1 → g = 1
 
 /-- A typeclass for torsion-free *additive* groups -/
-class   TorsionFreeAdditive (A : Type _) [AddCommGroup A] where
+class TorsionFreeAdditive (A : Type _) [AddCommGroup A] where
   torsion_free : ∀ a : A, ∀ n : ℕ, n.succ • a = 0 → a = 0
 
 /-- ℤ is torsion-free, since it is an integral domain -/
@@ -44,16 +44,7 @@ instance {A B : Type _} [AddCommGroup A] [AddCommGroup B] [TorsionFreeAdditive A
   TorsionFreeAdditive (A × B) where
   torsion_free := by
     intro (a, b) n
-    have scal_mul_pair : ∀ m : ℕ, m • (a, b) = (m • a, m • b) := by
-      intro m
-      induction m with
-        | zero =>
-          repeat (rw [smul_zero])
-          rw [DirectSum.zero_pair]
-        | succ m ih =>
-          repeat (rw [smul_succ])
-          rw [ih, DirectSum.add]
-    rw [scal_mul_pair, DirectSum.zero_pair, prod_eq, prod_eq]
+    rw [DirectSum.scal_mul_pair a b (Nat.succ n), DirectSum.zero_pair, prod_eq, prod_eq]
     intro ⟨_, _⟩; apply And.intro <;> (apply TorsionFreeAdditive.torsion_free; assumption)
 
 /-- A group isomorphic to a torsion-free group is torsion-free -/
@@ -73,17 +64,21 @@ open P
 
 /-- The function taking an element of the group `P` to its square, which lies in the kernel `K` -/
 def s : P → (Metabelian.Kernel Q K)
-  | ((p, q, r), (⟨0, _⟩, ⟨0, _⟩)) => ⟨((p + p, q + q, r + r), (⟨0, _⟩, ⟨0, _⟩)), rfl⟩
-  | ((p, q, r), (⟨0, _⟩, ⟨1, _⟩)) => ⟨((0, q + q + 1, 0), (⟨0, _⟩, ⟨0, _⟩)), rfl⟩
-  | ((p, q, r), (⟨1, _⟩, ⟨0, _⟩)) => ⟨((p + p + 1, 0, 0), (⟨0, _⟩, ⟨0, _⟩)), rfl⟩
-  | ((p, q, r), (⟨1, _⟩, ⟨1, _⟩)) => ⟨((0, 0, r + r + 1), (⟨0, _⟩, ⟨0, _⟩)), rfl⟩
+  | ((p, q, r), e ) => ⟨((p + p, q + q, r + r), e), rfl⟩
+  | ((p, q, r), a ) => ⟨((p + p + 1, 0, 0), e), rfl⟩
+  | ((p, q, r), b ) => ⟨((0, q + q + 1, 0), e), rfl⟩
+  | ((p, q, r), ab) => ⟨((0, 0, r + r + 1), e), rfl⟩
+
+
+lemma square_mul {G : Type} [Group G] (g : G) : g ^ 2 = g * g := by
+  show g ^ (Nat.succ 1) = g * g; rw [pow_succ, pow_one]
 
 /-- A proof that the function `s` takes an element of `P` to its square -/
 theorem s_square : ∀ g : P, g ^ 2 = (s g).val := by
   intro ((p, q, r), x)
-  have square_mul {G : Type} [Group G] (g : G) : g ^ 2 = g * g := by
-    show g ^ (Nat.succ 1) = g * g; rw [pow_succ, pow_one]
-  cases x using Q.rec <;> rw [s, square_mul, Pmul] <;> reduceGoal <;> simp only [id, DirectSum.add, add_zero, add_neg_self] <;> rfl
+  cases x using Q.rec <;>
+  rw [s, square_mul, Pmul] <;> reduceGoal <;> simp only [id, DirectSum.add, add_zero, add_neg_self] <;> rfl
+
 
 /-- ℤ³ is torsion-free -/
 instance torsionfreeℤ3 : TorsionFreeAdditive K := inferInstance
@@ -96,25 +91,12 @@ instance kernel_torsion_free : TorsionFreeAdditive (Metabelian.Kernel Q K) := in
 -- @iso_torsion_free (ℤ × ℤ × ℤ) (Metabelian.Kernel Q K) _ _ isoℤ3kernel torsionfreeℤ3
 
 
-/-- Every odd integer is non-zero -/
-lemma odd_ne_zero : {a : ℤ} → ¬(a + a + 1 = 0) := by
-  intro a h
-  have hyp := congrArg Int.mod2 h
-  have : ∀ x : Fin 2, x + x = (0 : Fin 2) := fun | ⟨0, _⟩ => rfl | ⟨1, _⟩ => rfl
-  simp [this] at hyp
-
 /-- The only element of `P` with order dividing `2` is the identity -/
 theorem square_free : ∀ g : P, g ^ 2 = 1 → g = 1 := by
   intro ⟨(p, q, r), x⟩
-  have zero_of_double_zero : ∀ m : ℤ, m + m = 0 ↔ m = 0 := by
-    intro m; apply Iff.intro
-    · have : m + m = SubNegMonoid.gsmul (Int.ofNat Nat.zero.succ.succ) m := by rw [SubNegMonoid.gsmul_succ', add_left_cancel_iff, SubNegMonoid.gsmul_succ', Int.ofNat_zero, SubNegMonoid.gsmul_zero', add_zero]
-      rw [this]; apply TorsionFreeAdditive.torsion_free
-    · intro h; rw [h, add_zero]
-  have P.one : (1 : P) = ((0, 0, 0), P.e) := rfl
-  cases x using Q.rec
-  <;> rw [P.one, s_square, s] <;> simp only [subType.val, prod_eq, zero_of_double_zero, and_false, and_true, true_and] <;> try (apply odd_ne_zero)
-  . exact id
+  cases x using Q.rec <;>
+  rw [P.one, s_square, s] <;> simp only [subType.val, prod_eq, zero_of_double_zero, and_false, and_true, true_and]
+  <;> try (first | apply odd_ne_zero | apply id)
 
 /-- If `g` is a torsion element, so is `g ^ 2` -/
 theorem torsion_implies_square_torsion : ∀ g : P, ∀ n : ℕ, g ^ n = 1 → (g ^ 2) ^ n = 1 :=
@@ -135,14 +117,8 @@ instance P_torsion_free : TorsionFree P where
     rw [s_square] at square_tor
     -- since `g ^ 2 = s g`, we have that `s g` is a torsion element
     have s_tor : (s g) ^ n.succ = 1 := by
-      apply subType.eq_of_val_eq
-      have subType_hom_pow {G : Type _} [Group G] (P : G → Prop) [subGroup P] (a : subType P) (n : ℕ) : (subType.val P a) ^ n = subType.val P (a ^ n) :=
-        Group.Homomorphism.hom_pow
-      rw [← subType_hom_pow, square_tor]
-    -- converting from multiplicative to additive notation
-    have mul_to_add (a : Metabelian.Kernel Q K) (n : ℕ) : a ^ n = n • a := by
-      induction n with | zero => rfl | succ m ih => simp only [SMul.sMul] at *; simp only [pow_succ', ih]; rfl
-    rw [mul_to_add] at s_tor
+      apply subType.eq_of_val_eq; rw [← subType.hom_pow, square_tor]
+    rw [mul_to_add] at s_tor -- converting from multiplicative to additive notation
     -- since `s g` lies in the kernel and the kernel is torsion-free, `s g = 0`
     have square_zero : (s g).val = (0 : Metabelian.Kernel Q K).val := congrArg _ (kernel_torsion_free.torsion_free _ n s_tor)
     rw [← s_square] at square_zero

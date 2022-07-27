@@ -222,4 +222,10 @@ instance : AddCommGroup.Isomorphism K (Metabelian.Kernel Q K) :=
               rw [Metabelian.Kernel.projection, Metabelian.Kernel.inclusion]
   }
 
+-- Converting from multiplicative to additive notation
+lemma mul_to_add (a : Metabelian.Kernel Q K) (n : ℕ) : a ^ n = n • a := by
+  induction n with
+    | zero => rfl
+    | succ m ih => simp only [SMul.sMul] at *; simp only [pow_succ', ih]; rfl
+
 end Exactness
