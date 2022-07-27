@@ -7,7 +7,7 @@ import Polylean.Tactics.ReduceGoal
 ## Torsion-freeness of `P`
 
 This file contains a proof that the group `P` defined is in fact torsion-free.
- .
+
 Roughly, the steps are as follows (further details can be found in the corresponding `.md` file):
 1. Define a function `s : Q -> K -> K` taking a group element `(q, k)` to its square `(s q k, 0)`. This element lies in the kernel as the group `ℤ₂ × ℤ₂` is annihilated by `2`.
 2. Show that elements of the form `((a, b, c), (0, 0))` do not have torsion. This argument requires proving (something very close to) the fact that `ℤ` is an integral domain.
