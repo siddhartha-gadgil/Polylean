@@ -3,6 +3,8 @@ import Mathlib.Algebra.Group.Defs
 import Polylean.SMul
 
 /-!
+## Free Modules
+
 Free module over a ring `R` over a set `X`. It is assumed that both `R` and `X` have decidable equality. This is to obtain decidable equality for the elements of the module, which we do. We choose our definition to allow both such computations and to prove results.
 
 The definition is as a quotient of *Formal Sums*, which are simply lists of pairs `(a,x)` where `a` is a coefficient in `R` and `x` is a term in `X`. We associate to such a formal sum a coordinate function `X → R`. We see that having the same coordinate functions gives an equivalence relation on the formal sums. The free module is then defined as the corresponding quotient of such formal sums.
@@ -14,7 +16,8 @@ variable {R : Type} [Ring R] [DecidableEq R]
 
 variable {X : Type} [DecidableEq X]
 
-/-! I. Formal sums and coordinate functions 
+/-! 
+### I. Formal sums and coordinate functions 
   * define formal sums as List (R × X)
   * define coordinate functions X → R for formal sums
   * define (weak) support, relate non-zero coordinates and decide equality 
@@ -166,7 +169,8 @@ instance {X : Type} [DecidableEq X] {R : Type} [DecidableEq R] {l : List X} {f g
 
 end FormalSumCoords
 
-/-! II. Quotient Free Module 
+/-! 
+### II. Quotient Free Module 
   * define relation by having equal coordinates
   * show this is an equivalence relation and take quotient -/
 section QuotientFreeModule
@@ -219,7 +223,8 @@ notation "⟦" a "⟧" => Quotient.mk' a
 
 end QuotientFreeModule
 
-/-! III. Decidable equality on quotient free modules
+/-! 
+### III. Decidable equality on quotient free modules
   * need to relate to Boolean equality to lift to quotient -/
 section DecidableEqQuotFreeModule
 
@@ -382,7 +387,7 @@ def coordinates (x₀ : X) : FreeModule R X →  R := by
 end FreeModule
 end DecidableEqQuotFreeModule
 
-/-! IV. Module structure  -/
+/-! ### IV. Module structure  -/
 section ModuleStruture
 
 
@@ -648,7 +653,8 @@ end FreeModule
 
 end ModuleStruture
 
-/-! V. Equivalent definition of the relation via moves 
+/-! 
+### V. Equivalent definition of the relation via moves 
   * define elementary moves on formal sums 
   * show coordinates equal if and only if related by elementary moves
   * hence can define map on Free Module when invariant under elementary moves 
@@ -992,7 +998,7 @@ end ElementaryMoves
 section NormRepr
 
 /-! 
-VI. Basic `Repr`
+### VI. Basic `Repr`
 
 A basic `Repr` on Free Modules, mainly for debugging. This is implemented by constructing a norm ball containing all the non-zero coordinates, and then making a list of non-zero coordinates
 -/
