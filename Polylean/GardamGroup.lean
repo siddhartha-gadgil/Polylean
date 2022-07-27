@@ -14,12 +14,12 @@ This is done via the cocycle construction, using the explicit action and cocycle
 
 namespace P
 
-/--! The "kernel" group -/
+/-! The "kernel" group -/
 abbrev K := ℤ × ℤ × ℤ
 
 instance KGrp : AddCommGroup K := inferInstance
 
-/--! The "quotient" group -/
+/-! The "quotient" group -/
 abbrev Q := Fin 2 × Fin 2
 
 instance QGrp : AddCommGroup Q := inferInstance
@@ -35,7 +35,7 @@ abbrev z : K := (0, 0, 1)
 @[matchPattern] abbrev b  : Q := (0, 1)
 @[matchPattern] abbrev ab : Q := (1, 1)
 
-/--!
+/-!
 ### The action of `Q` on `K` by automorphisms
 Here `id` and `neg` are the identity and negation homomorphisms
 -/
@@ -75,7 +75,7 @@ instance : AutAction Q K action :=
   }
 
 
-/--! ### The cocycle in the construction -/
+/-! ### The cocycle in the construction -/
 @[reducible] def cocycle : Q → Q → K
   | a , a  => x
   | a , ab => x
@@ -98,7 +98,7 @@ instance P_cocycle : Cocycle cocycle :=
   }
 
 
-/-- ### The group `P`, constructed via the cocycle construction on the underlying set `ℤ³ × (ℤ₂ × ℤ₂)` -/
+/-- The group `P`, constructed via the cocycle construction on the underlying set `ℤ³ × (ℤ₂ × ℤ₂)` -/
 abbrev P := K × Q
 
 /- A group structure on the type `P` coming from the explicit action and cocycle -/
