@@ -62,8 +62,8 @@ def Q.rec (P : Q → Sort _) :
         | (1, 1) => p11
 
 /-- The outputs of the `action` are are automorphisms -/
-instance : (q : Q) → AddCommGroup.Homomorphism (action q) := by
-  apply Q.rec <;> rw [action] <;> exact inferInstance
+instance (q : Q) : AddCommGroup.Homomorphism (action q) := by
+  cases q using Q.rec <;> exact inferInstance
 
 /-- A verification that the action is indeed an action by automorphisms,
 done automatically with the machinery of decidable equality of homomorphisms on free groups -/

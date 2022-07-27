@@ -80,10 +80,10 @@ def s : P → (Metabelian.Kernel Q K)
 
 /-- A proof that the function `s` takes an element of `P` to its square -/
 theorem s_square : ∀ g : P, g ^ 2 = (s g).val := by
-  intro ((p, q, r), x); revert x
+  intro ((p, q, r), x)
   have square_mul {G : Type} [Group G] (g : G) : g ^ 2 = g * g := by
     show g ^ (Nat.succ 1) = g * g; rw [pow_succ, pow_one]
-  apply Q.rec <;> rw [s, square_mul, Pmul] <;> reduceGoal <;> simp only [id, DirectSum.add, add_zero, add_neg_self] <;> rfl
+  cases x using Q.rec <;> rw [s, square_mul, Pmul] <;> reduceGoal <;> simp only [id, DirectSum.add, add_zero, add_neg_self] <;> rfl
 
 /-- ℤ³ is torsion-free -/
 instance torsionfreeℤ3 : TorsionFreeAdditive K := inferInstance
@@ -111,8 +111,9 @@ theorem square_free : ∀ g : P, g ^ 2 = 1 → g = 1 := by
     · have : m + m = SubNegMonoid.gsmul (Int.ofNat Nat.zero.succ.succ) m := by rw [SubNegMonoid.gsmul_succ', add_left_cancel_iff, SubNegMonoid.gsmul_succ', Int.ofNat_zero, SubNegMonoid.gsmul_zero', add_zero]
       rw [this]; apply TorsionFreeAdditive.torsion_free
     · intro h; rw [h, add_zero]
-  apply Q.rec (λ x => ((p, q, r), x) ^ 2 = ((0, 0, 0), (⟨0, _⟩, ⟨0, _⟩)) → ((p, q, r), x) = ((0, 0, 0), (⟨0, _⟩, ⟨0, _⟩)))
-  <;> rw [s_square, s] <;> simp only [subType.val, prod_eq, zero_of_double_zero, and_false, and_true, true_and] <;> try (apply odd_ne_zero)
+  have P.one : (1 : P) = ((0, 0, 0), P.e) := rfl
+  cases x using Q.rec
+  <;> rw [P.one, s_square, s] <;> simp only [subType.val, prod_eq, zero_of_double_zero, and_false, and_true, true_and] <;> try (apply odd_ne_zero)
   . exact id
 
 /-- If `g` is a torsion element, so is `g ^ 2` -/
