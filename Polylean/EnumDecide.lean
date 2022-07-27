@@ -1,9 +1,18 @@
-/-
-Automatically decide statements of the form `∀ x : X, P x` on a finite type `X` by enumeration.
+/-!
+## Lifting Decidability by Enumeration
+
+Automatically decide statements of the form `∀ x : X, P x` on an effectively finite type `X` by enumeration.
+
+More precisely, we instroduce a typeclass `DecideForall` so that if `X` has an instance of this class then we can lift `Decidable (P x)` for `P: X → Prop` to `Decidable (∀ x : X, P x)`. We construct instances of the typecall `DecideForall` for the following types:
+
+- `Fin n`
+- Products of types with instances
+- Sums of types with instances
 -/
 
 namespace EnumDecide
 
+/-- An example, not used -/
 def decideBelow (p:Nat → Prop)[DecidablePred p](bound: Nat): Decidable (∀ n : Nat, n < bound → p n) := 
     match bound with
     | 0 => by
@@ -49,6 +58,7 @@ def decideBelow (p:Nat → Prop)[DecidablePred p](bound: Nat): Decidable (∀ n 
           exact contra n bd'
         contradiction
 
+/-- Auxiliary decision procedure for forall with respect to `Fin n` -/
 def decideBelowFin {m: Nat}(p:Fin m → Prop)[DecidablePred p](bound: Nat): Decidable (∀ n : Fin m, n < bound → p n) := 
     match bound with
     | 0 => by
@@ -88,7 +98,7 @@ def decideBelowFin {m: Nat}(p:Fin m → Prop)[DecidablePred p](bound: Nat): Deci
         else
           by 
           apply Decidable.isTrue
-          intro ⟨n, nbd⟩ bd
+          intro ⟨n, nbd⟩ _
           have ineq' : m ≤ k := by
             apply Nat.le_of_succ_le_succ
             apply Nat.gt_of_not_le ineq 
@@ -105,6 +115,7 @@ def decideBelowFin {m: Nat}(p:Fin m → Prop)[DecidablePred p](bound: Nat): Deci
           exact contra n bd'
         contradiction
 
+/-- Lifting decision procedures to forall with respect to `Fin n`-/
 def decideFin {m: Nat}(p:Fin m → Prop)[DecidablePred p]: Decidable (∀ n : Fin m, p n) := 
   match decideBelowFin p m with 
   | Decidable.isTrue hyp => 
@@ -116,28 +127,37 @@ def decideFin {m: Nat}(p:Fin m → Prop)[DecidablePred p]: Decidable (∀ n : Fi
     apply Decidable.isFalse
     intro contra
     apply hyp
-    intro ⟨n, ineq⟩ bd
+    intro ⟨n, ineq⟩ _
     exact contra ⟨n, ineq⟩   
 
+/-- Typeclass for ability to lift decision procedures for each `α : A`
+to forall with respect to `α : A` -/
 class DecideForall (α : Type) where
   decideForall (p : α → Prop) [DecidablePred p]: 
     Decidable (∀ x : α, p x)  
 
+/-- instance of `DecideForall` for `Fin k` -/
 instance {k: Nat} : DecideForall (Fin k) := 
   ⟨by apply decideFin⟩
 
+/-- Decidability by lifting using `DecideForall` -/
 instance {α : Type}[dfa: DecideForall α]{p : α → Prop}[DecidablePred p]: Decidable (∀ x : α, p x) := dfa.decideForall p
 
+/-!
+Some examples of using `DecideForall`, partly for testing.
+-/
 section Examples
 example : ∀ x : Fin 3, x + 0 = x := by decide
 
 example : ∀ x y : Fin 3, x + y = y + x := by decide
 
+/-- Associativity of `ℤ/3` by enumeration as a tset/illustration. -/
 theorem Zmod3.assoc :
   ∀ x y z : Fin 3, (x + y) + z = x + (y + z) := by decide
 end Examples
 
 section CompositeEnumeration
+/-- Decisions for products -/
 def decideProd {α β : Type}[dfa : DecideForall α][dfb : DecideForall β] (p:α × β → Prop)[DecidablePred p] : Decidable (∀ xy :α × β, p xy) := 
     if c: (∀ x: α, ∀ y : β, p (x, y)) 
     then
@@ -153,10 +173,12 @@ def decideProd {α β : Type}[dfa : DecideForall α][dfb : DecideForall β] (p:�
       intro x y
       exact contra (x, y)
 
+/-- `DecideForall` for products -/
 instance {α β : Type}[dfa : DecideForall α][dfb : DecideForall β] :
   DecideForall (α × β) := 
   ⟨by apply decideProd⟩
 
+/-- Decisions for `Unit` -/
 def decideUnit (p: Unit → Prop)[DecidablePred p] : Decidable (∀ x : Unit, p x) := 
    if c : p (()) then by 
       apply Decidable.isTrue
@@ -170,9 +192,11 @@ def decideUnit (p: Unit → Prop)[DecidablePred p] : Decidable (∀ x : Unit, p 
       apply c
       exact contra ()
 
+/-- `DecideForall` for `Unit` -/
 instance : DecideForall Unit := 
   ⟨by apply decideUnit⟩
 
+/-- Decisions for sums -/
 def decideSum {α β : Type}[dfa : DecideForall α][dfb : DecideForall β](p:α ⊕ β → Prop)[DecidablePred p] : Decidable (∀ x :α ⊕ β, p x) := 
     if c: ∀x: α, p (Sum.inl x) then 
        if c': ∀y: β , p (Sum.inr y) then 
@@ -194,11 +218,14 @@ def decideSum {α β : Type}[dfa : DecideForall α][dfb : DecideForall β](p:α 
       apply c
       intro x
       exact contra (Sum.inl x) 
-      
+
+/-- `DecideForall` for sums -/      
 instance {α β : Type}[dfa : DecideForall α][dfb : DecideForall β] :
   DecideForall (α ⊕ β) := 
   ⟨by apply decideSum⟩
 
+/-- Decidable equality for functions with domain having an instance of 
+`DecideForall` by enumeration and function extensionality -/
 instance funEnum {α β : Type}[dfa : DecideForall α][dfb : DecidableEq β] : DecidableEq (α → β) := fun f g => 
       if c:∀ x:α, f x = g x then
         by

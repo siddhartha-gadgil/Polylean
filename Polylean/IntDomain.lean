@@ -1,6 +1,9 @@
 import Mathlib.Algebra.Ring.Basic
 
-/-! Proof that if the product of two integers (or natural numbers) is `0`, one of them is `0`. This is a rather low-level proof, using definitions of `Int` and the operations -/
+/-! 
+## `ℤ` as an integral domain
+
+Proof that if the product of two integers (or natural numbers) is `0`, one of them is `0`. This is a rather low-level proof, using definitions of `Int` and the operations -/
 open Nat Int
 
 #check Nat.mul

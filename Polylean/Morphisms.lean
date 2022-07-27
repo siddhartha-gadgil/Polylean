@@ -3,6 +3,8 @@ import Mathlib.Algebra.Ring.Basic
 import Polylean.SMul
 
 /-!
+## Homomorphisms
+
 It appears that mathlib4 does not yet have homomorphisms. We need:
 
 * Homomorophisms for Abelian (additive) groups.
