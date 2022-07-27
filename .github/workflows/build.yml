@@ -20,4 +20,6 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: build Polylean
-        run: lake build && cd ./lean_packages/mathlib && lake build && cd ../../ && lake build
+        run: |
+          lake build mathlib 
+          lake build
