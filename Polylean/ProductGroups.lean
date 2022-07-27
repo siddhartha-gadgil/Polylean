@@ -1,7 +1,7 @@
 import Polylean.MetabelianGroup
 import Polylean.Tactics.ReduceGoal
 
-/-
+/-!
 Define the product of two groups and related concepts.
 
 Product groups are defined as a special case of the Metabelian construction with trivial action and trivial cocycle.

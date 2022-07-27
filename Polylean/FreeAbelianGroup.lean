@@ -6,6 +6,12 @@ import Polylean.EnumDecide
 open SubNegMonoid
 
 /-!
+# Free Abelian groups
+
+We define free abelian groups in terms of having a basis and an inclusion with approprtiate universal properties. Typeclass inference gives us such structures on products. 
+
+We show that we can decide equality of homomorphisms if the basis `X` has an instance of `DecideForall` and the codomain has decidable equality.
+
 The section `Zhom` consists of results related to the scalar integer multiplication homomorphism of additive groups.
 
 The later part contains the theory of free Abelian groups, with `ℤ` as an example, as well as a proof that the product of free Abelian groups is free.

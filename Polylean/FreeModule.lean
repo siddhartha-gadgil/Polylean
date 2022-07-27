@@ -21,7 +21,7 @@ variable {X : Type} [DecidableEq X]
 -/
 section FormalSumCoords
 
-
+/-- Formal Sums -/
 abbrev FormalSum (R X : Type) [Ring R] [DecidableEq R][DecidableEq X] :=
   List (R × X)
 

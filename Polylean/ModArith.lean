@@ -1,11 +1,11 @@
 import Mathlib.Data.Fin.Basic
 import Polylean.Morphisms
 
-section Mod2
-
-/-
-This section sets up the `modulo 2` homomorphism `ℤ → ℤ/2ℤ`.
+/-!
+We set up the `modulo 2` homomorphism `ℤ → ℤ/2ℤ`.
 -/
+
+section Mod2
 
 def Nat.mod2 : ℕ → Fin 2
   | Nat.zero => ⟨0, by decide⟩
