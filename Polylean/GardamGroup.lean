@@ -41,9 +41,9 @@ Here `id` and `neg` are the identity and negation homomorphisms
 -/
 
 @[reducible] def action : Q → (K → K)
-  | e => id × id × id
-  | a => id × neg × neg
-  | b => neg × id × neg
+  | e  =>  id × id × id
+  | a  => id × neg × neg
+  | b  => neg × id × neg
   | ab => neg × neg × id
 
 /-- A helper function to easily prove theorems about `Q` by cases -/
