@@ -9,10 +9,10 @@ The proof of the theorem `𝔽₂[P]` has non-trivial units. Together with the m
 
 section preliminaries
 
-/-- definition of a unit -/
+/-- The definition of a unit -/
 def unit {R : Type _} [Ring R] (u : R) := ∃ v : R, v * u = (1 : R)
 
-/-- definition of being trivial, i.e., of the form `a⬝g` for `g` a group element and `a ≠ 0`-/
+/-- The definition of a group ring element being trivial, i.e., of the form `a⬝g` for `g` a group element and `a ≠ 0`-/
 def trivial_element {R G : Type _} [CommRing R] [DecidableEq R] [Group G] [DecidableEq G] (x : FreeModule R G) : Prop :=
   ∃ g : G, ¬(FreeModule.coordinates g x = 0) ∧ (∀ h : G, ¬(FreeModule.coordinates h x = 0) → h = g)
 
@@ -44,7 +44,7 @@ def q : RP := (x⁻¹*y⁻¹ : RP) + x + y⁻¹*z + z
 def r: RP := one + x + y⁻¹*z + x*y*z
 def s : RP  := one + x*z⁻¹ + x⁻¹*z⁻¹ + y*z⁻¹ + y⁻¹*z⁻¹
 
-/-- the non-trivial unit `α` -/
+/-- The non-trivial unit `α` -/
 def α := p + (q * a) + (r * b) + (s * a * b)
  
 /-! The components of the inverse `α'` of the non-trivial unit `α` -/
@@ -58,7 +58,7 @@ end constants
 
 section verification
 
-/-- the inverse `α'` of the non-trivial unit `α` -/
+/-- The inverse `α'` of the non-trivial unit `α` -/
 def α' := p' + (q' * a) + (r' * b) + (s' * a * b)
 
 
@@ -79,7 +79,7 @@ theorem α_non_trivial : ¬ (trivial_element α) := by
     rw [← eq₂] at eq₁
     contradiction
 
-/-- the existence of a non-trivial unit in `𝔽₂[P]` -/
+/-- A proof of the existence of a non-trivial unit in `𝔽₂[P]` -/
 theorem Gardam : ∃ g : RP, unit g ∧ ¬ (trivial_element g) := 
   ⟨α, And.intro α_is_unit α_non_trivial⟩
 
