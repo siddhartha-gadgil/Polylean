@@ -6,7 +6,7 @@ import Polylean.TorsionFree
 
 This module contains the formalization of the [disproof](https://arxiv.org/abs/2102.11818) of the Kaplansky Unit Conjecture by Giles Gardam in a paper in the Annals of Mathematics.
 
-Below is an outline of the code. To navigate to a file follow `Imports`.
+Below is an outline of the code. To navigate to a file follow `Imports` or look at files within the `Polylean` package (expand menu on the left).
 
 ## The Proof
 
