@@ -27,8 +27,8 @@ class Cocycle {Q K : Type _} [AddCommGroup Q] [AddCommGroup K] (c : Q → Q → 
 
 namespace Cocycle
 
-/-
-A few deductions from the cocycle condition.
+/-!
+### A few deductions from the cocycle condition.
 -/
 
 variable {Q K : Type _} [AddCommGroup Q] [AddCommGroup K]
@@ -65,6 +65,10 @@ namespace MetabelianGroup
 variable {Q K : Type _} [AddCommGroup Q] [AddCommGroup K]
 variable (c : Q → Q → K) [ccl : Cocycle c]
 
+/-!
+### Construction of Metabelian group from the action and cocycle.
+-/
+
 /-
 The multiplication operation defined using the cocycle.
 The cocycle condition is crucially used in showing associativity and other properties.
@@ -72,8 +76,10 @@ The cocycle condition is crucially used in showing associativity and other prope
 @[reducible] def mul : (K × Q) → (K × Q) → (K × Q)
   | (k, q), (k', q') => (k + (q • k') + c q q', q + q')
 
+/- The identity element -/
 def e : K × Q := (0, 0)
 
+/- The inverse of an element -/
 @[reducible] def inv : K × Q → K × Q
   | (k, q) => (- ((-q) • (k  + c q (-q))), -q)
 
@@ -95,6 +101,7 @@ theorem right_inv : ∀ (g : K × Q), mul c g (inv c g) = e
     repeat (rw [← AddCommGroup.Action.compatibility])
     simp; rw [← add_assoc]; simp
 
+/- A proof that multiplication of group elements is associative. This crucially uses the cocycle condition -/
 theorem mul_assoc : ∀ (g g' g'' : K × Q), mul c (mul c g g') g'' =  mul c g (mul c g' g'')
   | (k, q), (k', q'), (k'', q'') => by
     simp [mul]
@@ -104,7 +111,7 @@ theorem mul_assoc : ∀ (g g' g'' : K × Q), mul c (mul c g g') g'' =  mul c g (
       exact ccl.cocycleCondition q q' q'' -- the cocycle condition implies associativity
     · rw [add_assoc]
 
--- A proof that `K × Q` can be given a group structure using the above multiplication operation
+/- A proof that `K × Q` can be given a group structure using the above multiplication operation -/
 instance metabeliangroup : Group (K × Q) :=
   {
     mul := mul c,
@@ -131,9 +138,10 @@ end MetabelianGroup
 
 section Exactness
 
-/-
+/-!
+## Exactness
 The Metabelian construction gives a group `M` that is an extension of `Q` by `K`, i.e., one that fits in the short exact sequence
-1 -> K -> M -> Q -> 1
+1 -> K -> M -> Q -> 1.
 This section describes the inclusion of `K` into `M` and shows that it is an isomorphism onto the subgroup of elements `(k, 0)` of `M (= K × Q)`.
 This isomorphism is later used in proving that `P` is torsion-free from the fact that `ℤ³` is torsion-free.
 -/
@@ -143,8 +151,7 @@ variable (c : Q → Q → K) [ccl : Cocycle c]
 
 instance G : Group (K × Q) := MetabelianGroup.metabeliangroup c
 
--- this is the subgroup of the metabelian group that occurs as
--- the image of the inclusion of `K` and the kernel of the projection onto `Q`.
+/- The subgroup of the metabelian group that occurs as the image of the inclusion of `K` and the kernel of the projection onto `Q`. -/
 def Metabelian.Kernel := subType (λ ((_, q) : K × Q) => q = (0 : Q))
 
 def Metabelian.Kernel.inclusion : K → (Metabelian.Kernel Q K)
