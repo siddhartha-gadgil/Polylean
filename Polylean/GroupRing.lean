@@ -122,7 +122,7 @@ theorem mul_zero_cons (s t : FormalSum R G)(g: G):  mul s ((0, h) :: t) ≈  mul
     case nil =>
       simp [mul, mulMonom]
       apply eqlCoords.refl
-    case cons head tail ih =>
+    case cons head tail _ =>
       simp [mul, mulMonom]
       apply funext ; intro x₀
       simp [coords]
@@ -161,7 +161,7 @@ def mulAux : FormalSum R G → FreeModule R G → FreeModule R G := by
     repeat (rw [← append_coords])
     simp
     simp [mul_monom_add, add_assoc]    
-  | cons a x s₁ s₂ r step =>
+  | cons a x s₁ s₂ _ step =>
     apply Quotient.sound
     apply funext ; intro x₀
     simp [mul]
@@ -194,7 +194,7 @@ theorem mul_monom_invariant (b : R)(h x₀ : G)(s₁ s₂ : FormalSum R G) (rel 
       | addCoeffs a₁ a₂ x tail => 
         simp [mulMonom, coords, right_distrib, monom_coords_hom, add_assoc]
         
-      | cons a x t₁ t₂ r step => 
+      | cons a x t₁ t₂ _ step => 
         simp [mulMonom, coords, step]
       | swap a₁ a₂ x₁ x₂ tail => 
         simp [mulMonom, coords]
@@ -246,7 +246,7 @@ theorem first_arg_invariant (s₁ s₂ t : FormalSum R G) (rel : ElementaryMove 
         let pl := congrFun prev x₀
         rw [pl]
         simp [add_assoc] 
-      | cons a x s₁ s₂ r step => 
+      | cons a x s₁ s₂ r _ => 
         simp [mul]
         apply funext; intro x₀
         rw [← append_coords]
@@ -507,7 +507,7 @@ instance : Ring (FreeModule R G) :=
         simp [ih, mulMonom, coords]
     npow_zero' := by
       apply Quotient.ind
-      intro x
+      intro _
       apply Quotient.sound
       apply eqlCoords.refl
     npow_succ' := by

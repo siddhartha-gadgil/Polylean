@@ -131,11 +131,13 @@ theorem mem_of_equal_on_support  (l : List X) (f g : X → R) (x : X)(mhyp : x �
     intro hyp
     simp [equalOnSupport] at hyp
     cases mhyp
-    exact hyp.left
-    have inTail : x ∈ t := by
-      assumption
-    have step := mem_of_equal_on_support t f g x inTail hyp.right
-    exact step
+    case head => 
+      exact hyp.left
+    case tail=>
+      have inTail : x ∈ t := by
+        assumption
+      have step := mem_of_equal_on_support t f g x inTail hyp.right
+      exact step
 
 /-- decidability of equality on support-/
 def decideEqualOnSupport  (l : List X) (f g : X → R) : Decidable (equalOnSupport l f g) :=
@@ -694,7 +696,7 @@ theorem coords_move_invariant (x₀ : X) (s₁ s₂ : FormalSum R X) (h : Elemen
     simp [coords, hyp, monom_coords_at_zero]
   | addCoeffs a b x tail =>
     simp [coords, monom_coords_at_zero, ← add_assoc, monom_coords_hom]
-  | cons a x s₁ s₂ r step =>
+  | cons a x s₁ s₂ _ step =>
     simp [coords, step]
   | swap a₁ a₂ x₁ x₂ tail =>
     simp [coords, ← add_assoc, add_comm]
@@ -830,7 +832,7 @@ theorem equiv_e_of_zero_coeffs  (s : FormalSum R X) (hyp : ∀ x : X, s.coords x
               rw [lf] at hx
               simp [zero_add] at hx
               assumption
-        have dec : t.length < (h :: t).length := by
+        have _ : t.length < (h :: t).length := by
           simp [List.length_cons]
         let step : t ≃ [] := by
           apply equiv_e_of_zero_coeffs
@@ -871,7 +873,7 @@ theorem equiv_e_of_zero_coeffs  (s : FormalSum R X) (hyp : ∀ x : X, s.coords x
               simp [coords, monomCoeff, lf] at ceq
               rw [hx] at ceq
               exact ceq
-        have d : ys.length < (h :: t).length := by
+        have _ : ys.length < (h :: t).length := by
           simp [List.length_cons]
           apply Nat.le_trans lIneqStep
           apply Nat.le_succ
@@ -899,7 +901,7 @@ theorem equiv_of_equal_coeffs  (s₁ s₂ : FormalSum R X) (hyp : ∀ x : X, s�
   let canc : IsAddLeftCancel R :=
     ⟨fun a b c h => by
       rw [← neg_add_cancel_left a b, h, neg_add_cancel_left]⟩
-  match mt : s₁ with
+  match s₁ with
   | [] =>
     have coeffs : ∀ x : X, s₂.coords x = 0 := by
       intro x
@@ -918,7 +920,7 @@ theorem equiv_of_equal_coeffs  (s₁ s₂ : FormalSum R X) (hyp : ∀ x : X, s�
           apply ElementaryMove.zeroCoeff
           apply Eq.symm
           assumption
-        have dec : t.length < (h :: t).length := by
+        have _ : t.length < (h :: t).length := by
           simp [List.length_cons]
         have eq₂ : t ≃ s₂ := by
           apply equiv_of_equal_coeffs t s₂
@@ -933,7 +935,7 @@ theorem equiv_of_equal_coeffs  (s₁ s₂ : FormalSum R X) (hyp : ∀ x : X, s�
             have cf₂ : s₂.coords x₀ = a₀ := by
               rw [← hyp]
               simp [coords, ← p₁, Nat.add_zero, monomCoeff]
-            let ⟨ys, eqn, ineqn⟩ :=
+            let ⟨ys, eqn, _⟩ :=
               nonzero_coeff_has_complement x₀ s₂
                 (by
                   rw [cf₂]
@@ -942,7 +944,7 @@ theorem equiv_of_equal_coeffs  (s₁ s₂ : FormalSum R X) (hyp : ∀ x : X, s�
             rw [cf₂] at cfs
             let cfs' := fun (x : X) => Eq.trans (hyp x) (Eq.symm (cfs x))
             simp [coords] at cfs'
-            have dec : t.length < (h :: t).length := by
+            have _ : t.length < (h :: t).length := by
               simp [List.length_cons]
             let step := equiv_of_equal_coeffs t ys cfs'
             let step' := cons_equiv_of_equiv t ys a₀ x₀ step
@@ -959,7 +961,7 @@ theorem equiv_of_equal_coeffs  (s₁ s₂ : FormalSum R X) (hyp : ∀ x : X, s�
               apply cons_equiv_of_equiv
               assumption
             have eq₃ : s₃ ≃ s₂ := by
-              have bd : ys.length + 1 < t.length + 1 := by
+              have _ : ys.length + 1 < t.length + 1 := by
                 apply Nat.succ_lt_succ
                 exact ineqn
               apply equiv_of_equal_coeffs
@@ -976,7 +978,7 @@ theorem equiv_of_equal_coeffs  (s₁ s₂ : FormalSum R X) (hyp : ∀ x : X, s�
   assumption
 
 /-- lifting functions to the move induced quotient -/
-theorem func_eql_of_move_equiv  {β : Sort u} (f : FormalSum R X → β) : (∀ s₁ s₂ : FormalSum R X, ∀ mv : ElementaryMove R X s₁ s₂, f s₁ = f s₂) → (∀ s₁ s₂ : FormalSum R X, s₁ ≈ s₂ → f s₁ = f s₂) :=
+theorem func_eql_of_move_equiv  {β : Sort u} (f : FormalSum R X → β) : (∀ s₁ s₂ : FormalSum R X, ∀ _ : ElementaryMove R X s₁ s₂, f s₁ = f s₂) → (∀ s₁ s₂ : FormalSum R X, s₁ ≈ s₂ → f s₁ = f s₂) :=
   by
   intro hyp
   let fbar : FreeModuleAux R X → β := Quot.lift f hyp
@@ -1094,7 +1096,7 @@ theorem supp_zero_of_max_zero(norm: X → Nat)(crds : X → R)(s: List X) : maxN
         simp
         let l := supp_below_max norm crds s x hm c 
         rw [hyp] at l
-        let l' := Nat.zero_lt_succ (norm x)
+        have _ := Nat.zero_lt_succ (norm x)
         contradiction
 
 def FormalSum.normSucc (norm : X → Nat)(s: FormalSum R X) : Nat :=
@@ -1179,7 +1181,7 @@ def FreeModule.coeffList (x: FreeModule R X)[nx : NormCube X] : List (R × X) :=
       if a =0 then none else some (a, x₀)
 
 -- basic repr 
-instance basicRepr [nx : NormCube X][Repr X][Repr R]: Repr (FreeModule R X) := 
+instance basicRepr [NormCube X][Repr X][Repr R]: Repr (FreeModule R X) := 
   ⟨fun x _ => reprStr (x.coeffList)⟩
 
 end NormRepr

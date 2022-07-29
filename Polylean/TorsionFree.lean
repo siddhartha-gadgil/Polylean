@@ -65,9 +65,9 @@ open P
 /-- The function taking an element of the group `P` to its square, which lies in the kernel `K` -/
 def s : P → (Metabelian.Kernel Q K)
   | ((p, q, r), e ) => ⟨((p + p, q + q, r + r), e), rfl⟩
-  | ((p, q, r), a ) => ⟨((p + p + 1, 0, 0), e), rfl⟩
-  | ((p, q, r), b ) => ⟨((0, q + q + 1, 0), e), rfl⟩
-  | ((p, q, r), ab) => ⟨((0, 0, r + r + 1), e), rfl⟩
+  | ((p, _, _), a ) => ⟨((p + p + 1, 0, 0), e), rfl⟩
+  | ((_, q, _), b ) => ⟨((0, q + q + 1, 0), e), rfl⟩
+  | ((_, _, r), ab) => ⟨((0, 0, r + r + 1), e), rfl⟩
 
 
 lemma square_mul {G : Type} [Group G] (g : G) : g ^ 2 = g * g := by
@@ -124,3 +124,4 @@ instance P_torsion_free : TorsionFree P where
     rw [← s_square] at square_zero
     -- this means `g ^ 2 = e`, and also `g = e` because `P` has no order 2 elements
     exact square_free g square_zero
+

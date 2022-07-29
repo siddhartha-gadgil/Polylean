@@ -213,7 +213,7 @@ instance : subGroup (λ h : H => ∃ g : G, ϕ g = h) where
 instance : Group (image ϕ) := subGroup.Group _
 
 instance inclusion (P : G → Prop) [subGroup P] : Group.Homomorphism (subType.val P) where
-  mul_dist := λ ⟨g, pg⟩ ⟨g', pg'⟩ => rfl
+  mul_dist := λ _ _ => rfl
 
 theorem subType.hom_pow {G : Type _} [Group G] (P : G → Prop) [subGroup P] (a : subType P) (n : ℕ) :
   (subType.val P a) ^ n = subType.val P (a ^ n) := Group.Homomorphism.hom_pow
