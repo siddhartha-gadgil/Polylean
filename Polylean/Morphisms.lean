@@ -161,8 +161,8 @@ class subGroup (P : G → Prop) where
 -- defines a group structure on the subtype, using the closure properties
 instance subGroup.Group (P : G → Prop) [H : subGroup P] : Group (subType P) :=
    {
-    mul := λ ⟨g₁, prf₁⟩ ⟨g₂, prf₂⟩ => ⟨g₁ * g₂, H.mul_closure prf₁ prf₂⟩
-    mul_assoc := λ ⟨a, _⟩ ⟨b, _⟩ ⟨c, _⟩ => by
+    mul := fun ⟨g₁, prf₁⟩ ⟨g₂, prf₂⟩ => ⟨g₁ * g₂, H.mul_closure prf₁ prf₂⟩
+    mul_assoc := fun ⟨a, _⟩ ⟨b, _⟩ ⟨c, _⟩ => by
       apply subType.eq_of_val_eq; apply mul_assoc
 
     one := ⟨1, H.id_closure⟩
@@ -173,7 +173,7 @@ instance subGroup.Group (P : G → Prop) [H : subGroup P] : Group (subType P) :=
                   apply subType.eq_of_val_eq
                   apply one_mul
 
-    inv := λ ⟨g, prf⟩ => ⟨g⁻¹, H.inv_closure prf⟩
+    inv := fun ⟨g, prf⟩ => ⟨g⁻¹, H.inv_closure prf⟩
     mul_left_inv := by
                         intro ⟨a, prf⟩
                         simp only [Inv.inv]
@@ -190,11 +190,11 @@ instance subGroup.Group (P : G → Prop) [H : subGroup P] : Group (subType P) :=
   }
 
 /- Kernel of a group homomorphism-/
-def kernel (ϕ : G → H) [Group.Homomorphism ϕ] := subType (λ g : G => ϕ g = 1)
+def kernel (ϕ : G → H) [Group.Homomorphism ϕ] := subType (fun g : G => ϕ g = 1)
 
-instance : subGroup (λ g : G => ϕ g = 1) where
+instance : subGroup (fun g : G => ϕ g = 1) where
   mul_closure := by intro a b ka kb; rw [Homϕ.mul_dist, ka, kb, mul_one]
-  inv_closure := (λ {a} ka =>
+  inv_closure := (fun {a} ka =>
     calc ϕ a⁻¹ = (ϕ a)⁻¹ := Eq.symm Group.Homomorphism.hom_inv
           _    = (1 : H)⁻¹ := by rw [ka]
           _    = (1 : H) := one_inv)
@@ -203,17 +203,17 @@ instance : subGroup (λ g : G => ϕ g = 1) where
 instance : Group (kernel ϕ) := subGroup.Group _
 
 /- Image of a group homomorphism-/
-def image (ϕ : G → H) [Group.Homomorphism ϕ] := subType (λ h : H => ∃ g : G, ϕ g = h)
+def image (ϕ : G → H) [Group.Homomorphism ϕ] := subType (fun h : H => ∃ g : G, ϕ g = h)
 
-instance : subGroup (λ h : H => ∃ g : G, ϕ g = h) where
-  mul_closure := (λ {α β} ⟨a, im_a⟩ ⟨b, im_b⟩ => ⟨a * b, by rw [Homϕ.mul_dist, im_a, im_b]⟩)
-  inv_closure := (λ {α} ⟨a, im_a⟩ => ⟨a⁻¹, by rw [← im_a, Group.Homomorphism.hom_inv]⟩)
+instance : subGroup (fun h : H => ∃ g : G, ϕ g = h) where
+  mul_closure := (fun {α β} ⟨a, im_a⟩ ⟨b, im_b⟩ => ⟨a * b, by rw [Homϕ.mul_dist, im_a, im_b]⟩)
+  inv_closure := (fun {α} ⟨a, im_a⟩ => ⟨a⁻¹, by rw [← im_a, Group.Homomorphism.hom_inv]⟩)
   id_closure := (⟨1, Group.Homomorphism.one_image⟩)
 
 instance : Group (image ϕ) := subGroup.Group _
 
 instance inclusion (P : G → Prop) [subGroup P] : Group.Homomorphism (subType.val P) where
-  mul_dist := λ _ _ => rfl
+  mul_dist := fun _ _ => rfl
 
 theorem subType.hom_pow {G : Type _} [Group G] (P : G → Prop) [subGroup P] (a : subType P) (n : ℕ) :
   (subType.val P a) ^ n = subType.val P (a ^ n) := Group.Homomorphism.hom_pow
@@ -354,7 +354,7 @@ instance : AddCommGroup.Homomorphism (neg : A → A) where
   add_dist := neg_hom
 
 instance : AddCommGroup.Homomorphism (id : A → A) where
-  add_dist := λ _ _ => rfl
+  add_dist := fun _ _ => rfl
 
 end mul_hom
 
