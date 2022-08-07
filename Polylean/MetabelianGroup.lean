@@ -152,7 +152,7 @@ variable (c : Q → Q → K) [ccl : Cocycle c]
 instance G : Group (K × Q) := MetabelianGroup.metabeliangroup c
 
 /- The subgroup of the metabelian group that occurs as the image of the inclusion of `K` and the kernel of the projection onto `Q`. -/
-def Metabelian.Kernel := subType (λ ((_, q) : K × Q) => q = (0 : Q))
+def Metabelian.Kernel := subType (fun ((_, q) : K × Q) => q = (0 : Q))
 
 def Metabelian.Kernel.inclusion : K → (Metabelian.Kernel Q K)
   | k => ⟨(k, 0), rfl⟩
@@ -160,7 +160,7 @@ def Metabelian.Kernel.inclusion : K → (Metabelian.Kernel Q K)
 def Metabelian.Kernel.projection : (Metabelian.Kernel Q K) → K
   | ⟨(k, _), _⟩ => k
 
-instance : subGroup (λ ((_, q) : K × Q) => q = (0 : Q)) where
+instance : subGroup (fun ((_, q) : K × Q) => q = (0 : Q)) where
   mul_closure := by
     intro ⟨ka, qa⟩ ⟨kb, qb⟩; intro (hqa : qa = 0) (hqb : qb = 0)
     subst hqa hqb
@@ -176,7 +176,7 @@ instance : subGroup (λ ((_, q) : K × Q) => q = (0 : Q)) where
 instance kernel_group : Group (Metabelian.Kernel Q K) :=
   subGroup.Group _
 
-instance kernel_inclusion : Group.Homomorphism (subType.val (λ ((_, q) : K × Q) => q = (0 : Q))) := inferInstance
+instance kernel_inclusion : Group.Homomorphism (subType.val (fun ((_, q) : K × Q) => q = (0 : Q))) := inferInstance
 
 theorem Metabelian.Kernel.mul_comm : ∀ k k' : Metabelian.Kernel Q K, k * k' = k' * k := by
   intro ⟨⟨ka, 0⟩, rfl⟩; intro ⟨⟨kb, 0⟩, rfl⟩

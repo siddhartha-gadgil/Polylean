@@ -54,7 +54,7 @@ def Q.rec (P : Q → Sort _) :
   P (⟨1, by decide⟩, ⟨1, by decide⟩) →
   ------------------------------------
   ∀ (q : Q), P q :=
-    λ p00 p01 p10 p11 q =>
+    fun p00 p01 p10 p11 q =>
       match q with
         | (0, 0) => p00
         | (0, 1) => p01

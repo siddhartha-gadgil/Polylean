@@ -100,7 +100,7 @@ theorem square_free : ∀ g : P, g ^ 2 = 1 → g = 1 := by
 
 /-- If `g` is a torsion element, so is `g ^ 2` -/
 theorem torsion_implies_square_torsion : ∀ g : P, ∀ n : ℕ, g ^ n = 1 → (g ^ 2) ^ n = 1 :=
-  λ g n g_tor =>
+  fun g n g_tor =>
     calc (g ^ 2) ^ n = g ^ (2 * n) := by rw [← pow_mul]
               _      = g ^ (n * 2) := by rw [mul_comm]
               _      = (g ^ n) ^ 2 := by rw [pow_mul]

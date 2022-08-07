@@ -36,8 +36,8 @@ attribute [simp] id_action
 attribute [simp] compatibility
 
 instance : AddCommGroup.Action A B where
-    id_action := λ {x : B} => congrFun AA.id_action x
-    compatibility := λ {a a' : A} {x : B} => congrFun (AA.compatibility a a') x
+    id_action := fun {x : B} => congrFun AA.id_action x
+    compatibility := fun {a a' : A} {x : B} => congrFun (AA.compatibility a a') x
 
 instance (a : A) : AddCommGroup.Homomorphism (α a) := aut_action a
 

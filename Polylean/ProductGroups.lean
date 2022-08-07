@@ -21,8 +21,8 @@ def trivial_action : Q → K → K
 instance : AutAction Q K trivial_action :=
   {
     id_action := rfl
-    compatibility := λ _ _ => rfl
-    aut_action := λ _ => inferInstanceAs (AddCommGroup.Homomorphism id)
+    compatibility := fun _ _ => rfl
+    aut_action := fun _ => inferInstanceAs (AddCommGroup.Homomorphism id)
   }
 
 -- the trivial cocycle
@@ -34,7 +34,7 @@ instance : @Cocycle Q K _ _ trivial_cocycle :=
     α := trivial_action
     autaction := inferInstance
     cocycleId := rfl
-    cocycleCondition := λ _ _ _ => rfl
+    cocycleCondition := fun _ _ _ => rfl
   }
 
 theorem product_comm : ∀ g h : K × Q, MetabelianGroup.mul trivial_cocycle g h = MetabelianGroup.mul trivial_cocycle h g := by
@@ -124,9 +124,9 @@ instance (ϕ : A → C) [ϕHom : AddCommGroup.Homomorphism ϕ] (ψ : B → D) [�
                 rw [DirectSum.add]
                 rw [ϕHom.add_dist, ψHom.add_dist]
 
-abbrev ι₁ [Zero A] [Zero B] : A → A × B := λ a => (a, 0)
+abbrev ι₁ [Zero A] [Zero B] : A → A × B := fun a => (a, 0)
 
-abbrev ι₂ [Zero A] [Zero B] : B → A × B := λ b => (0, b)
+abbrev ι₂ [Zero A] [Zero B] : B → A × B := fun b => (0, b)
 
 /-
 instance {A B : Type _} [AddCommGroup A] [AddCommGroup B] : AddCommGroup.Homomorphism (@ι₁ A B _ _) where
