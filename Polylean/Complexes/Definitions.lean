@@ -144,20 +144,57 @@ def append : {A B C : V} → Path A B → Path B C → Path A C
       apply congrArg
       assumption
 
-theorem comp_assoc (p : Path A B) (q : Path B C) (r : Path C D) : append (append p q) r = append p (append q r) := by
-  induction p
-  · case nil => simp
-  · case cons ih => 
-      simp [append]
-      apply ih
+theorem snoc_cons (e : A ⟶ B) (p : Path B C) (e' : C ⟶ D) : 
+  snoc (cons e p) e' = cons e (snoc p e') := by cases p <;> simp [snoc, cons]
 
-end Path
+theorem append_snoc (p : Path A B) (p' : Path B C) (e : C ⟶ D) : 
+    append p (snoc p' e) = snoc (append p p') e := by
+  induction p
+  · case nil => rfl
+  · case cons ih => simp [append, ih p', snoc_cons]
+
+theorem append_cons (p : Path A B) (e : B ⟶ C) (p' : Path C D) : 
+    append p (cons e p') = append (snoc p e) p' := by
+  induction p
+  · case nil => rfl
+  · case cons ih => dsimp [append]; rw [ih]
+
+theorem comp_assoc (p : Path A B) (q : Path B C) (r : Path C D) : 
+    append (append p q) r = append p (append q r) := by
+  induction p
+  · case nil => rfl
+  · case cons ih => simp [append]; apply ih
 
 /-- The inverse of a path in a Serre graph. -/
-def Path.inverse {V : Type _} [SerreGraph V] : {A B : V} → Path A B → Path B A
+def inverse {V : Type _} [SerreGraph V] : {A B : V} → Path A B → Path B A
   | _, _, .nil => .nil
   | _, _, .cons e p => .snoc (inverse p) (SerreGraph.op e)
 
+@[simp] theorem inverse_snoc {V : Type _} [G : SerreGraph V] {A B C : V} : 
+  (p : @Path V G.toQuiver A B) → (e : B ⟶ C) → 
+  inverse (.snoc p e) = .cons (SerreGraph.op e) (inverse p)
+  | .nil, e => rfl
+  | .cons e' p', e => by
+      dsimp [snoc, inverse]
+      rw [inverse_snoc p' e]
+      dsimp [snoc]
+
+@[simp] theorem inverse_inv {V : Type _} [G : SerreGraph V] {A B : V} : 
+  (p : @Path V G.toQuiver A B) → p.inverse.inverse = p
+  | .nil => rfl
+  | .cons e p' => by simp [inverse]; apply inverse_inv
+
+@[simp] theorem inverse_append {V : Type _} [G : SerreGraph V] {A B C : V} : 
+  (p : @Path V G.toQuiver A B) → (q : @Path V G.toQuiver B C) → 
+  inverse (append p q) = .append (inverse q) (inverse p)
+  | .nil, q => by simp [inverse]
+  | p, .nil => by simp [inverse]
+  | .cons e p', .cons f q' => by
+    dsimp [inverse]
+    rw [inverse_append p' _, append_snoc]
+    rfl
+
+end Path
 
 section Instances
 
@@ -189,8 +226,6 @@ instance {V : Type _} [Quiver V] : PreFunctor V V :=
 
 end Instances
 
-#print Category.Functor
-
 /-! A 2-complex on a type `V` is represented here by three pieces of data:
   - A Serre graph `G` on `V` representing the underlying 1-complex
   - A groupoid `H` on `V` representing the paths in `G` up to homotopy
@@ -206,10 +241,13 @@ instance (priority := low) TwoComplex.SerreGraph {V : Type _} [CV : TwoComplex V
 
 instance (priority := low) TwoComplex.Groupoid {V : Type _} [CV : TwoComplex V] : Groupoid V := CV.H
 
+/-
 /-- A continuous map between 2-complexes. -/
 structure ContinuousMap {V W : Type _} [CV : TwoComplex V] [CW : TwoComplex W] where
   -- Alternative version: Construct a map between the two Serre graphs 
   graphMap : @Invertegory.Functor V W (@Invertegraph V TwoComplex.SerreGraph) (@Invertegraph W TwoComplex.SerreGraph)
   homotopyMap : @Invertegory.Functor V W CV.H.toInvertegory CW.H.toInvertegory
 
+  -- TODO Fix this
   -- mapCommute : Invertegory.Functor.comp graphMap CW.collapse = Invertegory.Functor.comp CV.collapse homotopyMap
+-/
