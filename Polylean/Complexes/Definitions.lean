@@ -11,10 +11,16 @@ infixr:10 " ⟶ " => Quiver.hom -- type using `\-->` or `\hom`
 class SerreGraph (V : Type _) extends Quiver V where
   op : {A B : V} → (A ⟶ B) → (B ⟶ A)
   opInv : {A B : V} → (e : A ⟶ B) → op (op e) = e
-  opFree : {A : V} → {e : A ⟶ A} → op e ≠ e
+  opFree : {A : V} → (e : A ⟶ A) → op e ≠ e
 
 attribute [reducible] SerreGraph.op
 attribute [simp] SerreGraph.opInv
+
+def Quiver.symmetrize {V : Type _} [Q : Quiver V] : SerreGraph V :=
+{ hom := λ A B => Q.hom A B ⊕ Q.hom B A,
+  op := fun | .inl e => .inr e | .inr e => .inl e,
+  opInv := fun | .inl e => rfl | .inr e => rfl,
+  opFree := fun | .inl e => by simp | .inr e => by simp }
 
 /-- The definition of a `CategoryStruct`, a barebones structure for a category containing none of the axioms (following `mathlib`). -/
 class CategoryStruct (Obj : Type _) extends Quiver Obj where
@@ -112,27 +118,48 @@ inductive Path {V : Type _} [Quiver V] : V → V → Sort _
   | nil : {A : V} → Path A A
   | cons : {A B C : V} → (A ⟶ B) → Path B C → Path A C
 
+abbrev Loop {V : Type _} [Quiver V] (A : V) := Path A A
+
 namespace Path
 
 variable {V : Type _} [Quiver V] {A B C D : V}
 
-@[matchPattern] def nil' (A : V) : Path A A := Path.nil
-@[matchPattern] def cons' (A B C : V) : 
+@[matchPattern] abbrev nil' (A : V) : Path A A := Path.nil
+@[matchPattern] abbrev cons' (A B C : V) : 
   (A ⟶ B) → Path B C → Path A C := Path.cons
 
 /-- Concatenate an edge to the end of a path. -/
--- @[matchPattern]
-def snoc : {A B C : V} → Path A B → (B ⟶ C) → Path A C
+@[matchPattern]
+abbrev snoc : {A B C : V} → Path A B → (B ⟶ C) → Path A C
   | _, _, _, .nil, e => .cons e .nil
   | _, _, _, .cons e p', e' => .cons e (snoc p' e')
 
--- @[matchPattern]
-def snoc' (A B C : V) : Path A B → (B ⟶ C) → Path A C := Path.snoc
+@[matchPattern]
+abbrev snoc' (A B C : V) : Path A B → (B ⟶ C) → Path A C := Path.snoc
+
+noncomputable def Path.rec' {V : Type _} [Quiver V] :
+  {motive : (X Y : V) → Path X Y → Sort _} →
+  ({A : V} → motive A A .nil) →
+  ({A B C : V} → (p : Path A B) → (e : B ⟶ C) → motive A B p → motive A C (.snoc p e)) →
+  ({A B : V} → (p : Path A B) → motive A B p)
+  | motive, hnil, hsnoc => by
+    intro p
+    induction p
+    · case nil => exact hnil
+    · case cons e' p' ih =>
+      revert e'
+      revert p'
+      sorry -- use `Path.rec'` recursively
 
 /-- Concatenation of paths. -/
 def append : {A B C : V} → Path A B → Path B C → Path A C
   | _, _, _, .nil, p => p
   | _, _, _, .cons e p', p => cons e (append p' p)
+
+/-- The length of a path. -/
+def length : {A B : V} → Path A B → Nat
+  | _, _, .nil => .zero
+  | _, _, .cons _ p => .succ (length p)
 
 @[simp] theorem nil_append (p : Path A B) : .append .nil p = p := rfl
 
@@ -145,7 +172,7 @@ def append : {A B C : V} → Path A B → Path B C → Path A C
       assumption
 
 theorem snoc_cons (e : A ⟶ B) (p : Path B C) (e' : C ⟶ D) : 
-  snoc (cons e p) e' = cons e (snoc p e') := by cases p <;> simp [snoc, cons]
+  snoc (cons e p) e' = cons e (snoc p e') := by cases p <;> simp
 
 theorem append_snoc (p : Path A B) (p' : Path B C) (e : C ⟶ D) : 
     append p (snoc p' e) = snoc (append p p') e := by
@@ -165,6 +192,38 @@ theorem comp_assoc (p : Path A B) (q : Path B C) (r : Path C D) :
   · case nil => rfl
   · case cons ih => simp [append]; apply ih
 
+-- TODO Rephrase this to work for general paths, not just loops
+theorem nil_length {A : V} : (p : Path A A) → p.length = .zero ↔ p = .nil' A
+  | .nil => ⟨λ _ => rfl, λ _ => rfl⟩
+  | .cons _ p => by apply Iff.intro <;> (intro; simp [length] at *)
+
+theorem snoc_length {A B C : V} : (p : Path A B) → (e : B ⟶ C) → length (.snoc p e) = .succ (length p)
+  | .nil, e => rfl
+  | .cons _ p', e => by
+    rw [snoc_cons]
+    dsimp only [length]
+    apply congrArg
+    apply snoc_length
+
+theorem length_append {A B C : V} : (p : Path A B) → (q : Path B C) → (append p q).length = p.length + q.length
+  | .nil, q => by rw [Nat.add_comm]; rfl
+  | .cons _ p', q => by
+    dsimp [append, length]
+    rw [Nat.succ_add]
+    apply congrArg
+    apply length_append
+
+/-- The end-point of the first edge in the path. -/
+def first : Path A B → V
+  | .nil' v => v
+  | .cons' _ v _ _ _ => v
+
+/-- The source of the last end in the path. -/
+def last : {A B : V} → Path A B → V
+  | _, _, .nil' v => v
+  | .(v), _, .cons' v _ _ _ .nil => v
+  | _, _, .cons' _ _ _ _ (.cons e p) => last (.cons e p)
+
 /-- The inverse of a path in a Serre graph. -/
 def inverse {V : Type _} [SerreGraph V] : {A B : V} → Path A B → Path B A
   | _, _, .nil => .nil
@@ -174,10 +233,7 @@ def inverse {V : Type _} [SerreGraph V] : {A B : V} → Path A B → Path B A
   (p : @Path V G.toQuiver A B) → (e : B ⟶ C) → 
   inverse (.snoc p e) = .cons (SerreGraph.op e) (inverse p)
   | .nil, e => rfl
-  | .cons e' p', e => by
-      dsimp [snoc, inverse]
-      rw [inverse_snoc p' e]
-      dsimp [snoc]
+  | .cons e' p', e => by dsimp [inverse]; rw [inverse_snoc p' e]
 
 @[simp] theorem inverse_inv {V : Type _} [G : SerreGraph V] {A B : V} : 
   (p : @Path V G.toQuiver A B) → p.inverse.inverse = p
@@ -189,12 +245,65 @@ def inverse {V : Type _} [SerreGraph V] : {A B : V} → Path A B → Path B A
   inverse (append p q) = .append (inverse q) (inverse p)
   | .nil, q => by simp [inverse]
   | p, .nil => by simp [inverse]
-  | .cons e p', .cons f q' => by
+  | .cons _ p', .cons _ q' => by
     dsimp [inverse]
     rw [inverse_append p' _, append_snoc]
     rfl
 
+theorem length_inverse {V : Type _} [G : SerreGraph V] {A B : V} :
+  (p : @Path V G.toQuiver A B) → p.inverse.length = p.length
+  | .nil => rfl
+  | .cons _ p' => by
+    dsimp [inverse, length]
+    rw [snoc_length]
+    apply congrArg
+    apply length_inverse
+
+theorem first_cons (A B C : V) (e : A ⟶ B) (p : Path B C) : first (cons e p) = B := rfl
+
+theorem last_snoc : (A B C : V) → (p : Path A B) → (e : B ⟶ C) → last (snoc p e) = B
+  | _, _, _, .nil, _ => rfl
+  | _, _, _, .cons' _ _ _ _ .nil, _ => by rw [snoc_cons]; rfl
+  | _, _, _, .cons' _ _ _ _ (.cons _ _), _ => by rw [snoc_cons, snoc, last, ← snoc_cons]; apply last_snoc
+
+theorem first_eq_inv_last {V : Type _} [G : SerreGraph V] : {A B : V} →
+    (p : @Path V G.toQuiver A B) → p.first = p.inverse.last
+  | _, _, .nil => rfl
+  | _, _, .cons e p' => by simp [first, last, inverse, snoc, last_snoc]
+
+theorem last_eq_inv_first {V : Type _} [G : SerreGraph V] {A B : V} :
+    (p : @Path V G.toQuiver A B) → p.last = p.inverse.first := by
+    intro p
+    let p' := p.inverse
+    have pinv : p = p'.inverse := by simp
+    rw [pinv, inverse_inv p']
+    apply Eq.symm
+    apply first_eq_inv_last
+
 end Path
+
+namespace Loop
+
+variable {V : Type _} (A : V)
+
+abbrev next [Quiver V] : Loop A → V := Path.first
+
+abbrev prev [Quiver V] : Loop A → V := Path.last
+
+abbrev concat [Quiver V] : Loop A → Loop A → Loop A := Path.append
+
+abbrev inv [SerreGraph V] : Loop A → Loop A := Path.inverse
+
+def rotate [Quiver V] : (l : Loop A) → Loop (l.next A)
+  | .nil' A => .nil' A
+  | .cons' _ _ _ e p => p.snoc e
+
+-- TODO: Define this function
+def rotate' [Quiver V] {A : V} : (l : Loop A) → Loop (l.prev A)
+  | .nil => .nil
+  | .cons e p => sorry
+
+end Loop
 
 section Instances
 
@@ -231,15 +340,15 @@ end Instances
   - A groupoid `H` on `V` representing the paths in `G` up to homotopy
   - A map taking each path in `G` to a morphism in `H` representing its path-homotopy class, satisfying a few consistency conditions
  -/
-class TwoComplex (V : Type _) where
+class AbstractTwoComplex (V : Type _) where
   G : SerreGraph V
   H : Groupoid V
   collapse : @Invertegory.Functor V V Invertegraph H.toInvertegory
   collapseId : obj = (@id V)
 
-instance (priority := low) TwoComplex.SerreGraph {V : Type _} [CV : TwoComplex V] : SerreGraph V := CV.G
+instance (priority := low) AbstractTwoComplex.SerreGraph {V : Type _} [CV : AbstractTwoComplex V] : SerreGraph V := CV.G
 
-instance (priority := low) TwoComplex.Groupoid {V : Type _} [CV : TwoComplex V] : Groupoid V := CV.H
+instance (priority := low) AbstractTwoComplex.Groupoid {V : Type _} [CV : AbstractTwoComplex V] : Groupoid V := CV.H
 
 /-
 /-- A continuous map between 2-complexes. -/
