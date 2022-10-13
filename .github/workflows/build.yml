@@ -13,11 +13,13 @@ jobs:
         run: |
           set -o pipefail
           curl -sSfL https://github.com/leanprover/elan/releases/download/v1.4.1/elan-x86_64-unknown-linux-gnu.tar.gz | tar xz
-          ./elan-init -y
+          ./elan-init -y --default-toolchain none
           echo "$HOME/.elan/bin" >> $GITHUB_PATH
-          echo "short_lean_version=$(~/.elan/bin/lean --run scripts/lean_version.lean)" >> $GITHUB_ENV
+          echo | source $HOME/.profile && $HOME/.elan/bin/elan --version
 
       - uses: actions/checkout@v2
 
       - name: build Polylean
-        run: lake build
+        run: |
+          lake build mathlib 
+          lake build

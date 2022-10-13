@@ -1,7 +1,7 @@
 import Polylean.GardamGroup
 import Polylean.IntDomain
 import Polylean.ModArith
-import Polylean.Experiments.Tactics
+import Polylean.Tactics.ReduceGoal
 
 /-
 This file contains a proof that the group `P` defined is in fact torsion-free.
@@ -17,15 +17,15 @@ Roughly, the steps are as follows (further details can be found in the correspon
 
 section TorsionFree
 
--- the definition of a torsion-free group
+/-- the definition of a torsion-free group -/
 class TorsionFree (G : Type _) [Group G] where
   torsion_free : ∀ g : G, ∀ n : ℕ, g ^ n.succ = 1 → g = 1
 
--- the same definition for additive groups
-class TorsionFreeAdditive (A : Type _) [AddCommGroup A] where
+/-- the definition of torsion free additive groups -/
+class   TorsionFreeAdditive (A : Type _) [AddCommGroup A] where
   torsion_free : ∀ a : A, ∀ n : ℕ, n.succ • a = 0 → a = 0
 
--- ℤ is torsion-free, since it is an integral domain
+/-- ℤ is torsion-free, since it is an integral domain -/
 instance : TorsionFreeAdditive ℤ where
   torsion_free := by
     intro a n
@@ -37,7 +37,7 @@ instance : TorsionFreeAdditive ℤ where
         contradiction
       | inr _ => assumption
 
--- the product of torsion-free groups is torsion-free
+/-- the product of torsion-free groups is torsion-free -/
 instance {A B : Type _} [AddCommGroup A] [AddCommGroup B] [TorsionFreeAdditive A] [TorsionFreeAdditive B] :
   TorsionFreeAdditive (A × B) where
   torsion_free := by
@@ -54,7 +54,7 @@ instance {A B : Type _} [AddCommGroup A] [AddCommGroup B] [TorsionFreeAdditive A
     rw [scal_mul_pair, DirectSum.zero_pair, prod_eq, prod_eq]
     intro ⟨_, _⟩; apply And.intro <;> (apply TorsionFreeAdditive.torsion_free; assumption)
 
--- a group isomorphic to a torsion-free group is torsion-free
+/-- a group isomorphic to a torsion-free group is torsion-free -/
 instance iso_torsion_free {A B : Type _} [AddCommGroup A] [AddCommGroup B] [IsoAB : AddCommGroup.Isomorphism A B] [TorsionFreeAdditive A] : TorsionFreeAdditive B where
   torsion_free := by
     intro b n h
@@ -69,39 +69,39 @@ end TorsionFree
 open P
 
 
--- the function taking an element of `P` to its square, which lies in the kernel `K`
+/-- the function taking an element of `P` to its square, which lies in the kernel `K` -/
 def s : P → (Metabelian.Kernel Q K)
   | ((p, q, r), (⟨0, _⟩, ⟨0, _⟩)) => ⟨((p + p, q + q, r + r), (⟨0, _⟩, ⟨0, _⟩)), rfl⟩
   | ((p, q, r), (⟨0, _⟩, ⟨1, _⟩)) => ⟨((0, q + q + 1, 0), (⟨0, _⟩, ⟨0, _⟩)), rfl⟩
   | ((p, q, r), (⟨1, _⟩, ⟨0, _⟩)) => ⟨((p + p + 1, 0, 0), (⟨0, _⟩, ⟨0, _⟩)), rfl⟩
   | ((p, q, r), (⟨1, _⟩, ⟨1, _⟩)) => ⟨((0, 0, r + r + 1), (⟨0, _⟩, ⟨0, _⟩)), rfl⟩
 
--- proof that the above function satsifies the property of taking an element to its square
+/-- proof that the above function satsifies the property of taking an element to its square -/
 theorem s_square : ∀ g : P, g ^ 2 = (s g).val := by
   intro ((p, q, r), x); revert x
   have square_mul {G : Type} [Group G] (g : G) : g ^ 2 = g * g := by
     show g ^ (Nat.succ 1) = g * g; rw [pow_succ, pow_one]
   apply Q.rec <;> rw [s, square_mul, Pmul] <;> reduceGoal <;> simp only [id, DirectSum.add, add_zero, add_neg_self] <;> rfl
 
--- ℤ³ is torsion-free
+/-- ℤ³ is torsion-free -/
 instance torsionfreeℤ3 : TorsionFreeAdditive K := inferInstance
 
--- The kernel subgroup of `P` is isomorphic to `ℤ³`
+/-- The kernel subgroup of `P` is isomorphic to `ℤ³`-/
 instance isoℤ3kernel : AddCommGroup.Isomorphism K (Metabelian.Kernel Q K) := inferInstance
 
--- the kernel is torsion-free, as a corollary
+/-- the kernel is torsion-free, as a corollary -/
 instance kernel_torsion_free : TorsionFreeAdditive (Metabelian.Kernel Q K) := inferInstance
 -- @iso_torsion_free (ℤ × ℤ × ℤ) (Metabelian.Kernel Q K) _ _ isoℤ3kernel torsionfreeℤ3
 
 
--- a proof that an odd integer must be non-zero
+/-- a proof that an odd integer must be non-zero -/
 lemma odd_ne_zero : {a : ℤ} → ¬(a + a + 1 = 0) := by
   intro a h
   have hyp := congrArg Int.mod2 h
   have : ∀ x : Fin 2, x + x = (0 : Fin 2) := fun | ⟨0, _⟩ => rfl | ⟨1, _⟩ => rfl
   simp [this] at hyp
 
--- the only element of `P` with order dividing `2` is the identity
+/-- the only element of `P` with order dividing `2` is the identity -/
 theorem square_free : ∀ g : P, g ^ 2 = 1 → g = 1 := by
   intro ⟨(p, q, r), x⟩
   have zero_of_double_zero : ∀ m : ℤ, m + m = 0 ↔ m = 0 := by
@@ -113,7 +113,7 @@ theorem square_free : ∀ g : P, g ^ 2 = 1 → g = 1 := by
   <;> rw [s_square, s] <;> simp only [subType.val, prod_eq, zero_of_double_zero, and_false, and_true, true_and] <;> try (apply odd_ne_zero)
   . exact id
 
--- if `g` is a torsion element, so is `g ^ 2`
+/-- if `g` is a torsion element, so is `g ^ 2` -/
 theorem torsion_implies_square_torsion : ∀ g : P, ∀ n : ℕ, g ^ n = 1 → (g ^ 2) ^ n = 1 :=
   λ g n g_tor =>
     calc (g ^ 2) ^ n = g ^ (2 * n) := by rw [← pow_mul]
@@ -123,7 +123,7 @@ theorem torsion_implies_square_torsion : ∀ g : P, ∀ n : ℕ, g ^ n = 1 → (
               _      = (1 : P)     := rfl
 
 
--- `P` is torsion-free
+/-- `P` is torsion-free -/
 instance P_torsion_free : TorsionFree P where
   torsion_free := by
     intros g n g_tor -- assume `g` is a torsion element
