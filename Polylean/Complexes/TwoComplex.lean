@@ -18,7 +18,7 @@ abbrev inv {A : V} : Loop A → Loop A := Path.inverse
 
 @[simp] theorem inv_inv (l : Loop A) : l.inv.inv = l := by simp
 
--- temporary substitute for `Path.last`
+-- alternative to using `Path.last`
 abbrev prev : Loop A → V := λ l => (l.inv).next
 
 def rotate : (l : Loop A) → Loop (l.next A)
@@ -33,6 +33,8 @@ def rotate' : (l : Loop A) → Loop (l.prev A) :=
   (rotate A l.inv).inv = rotate' A l := by simp [rotate']
 
 @[simp] theorem prev_inv (l : Loop A) : (prev A l.inv) = next A l := by simp [prev]
+
+@[simp] theorem next_inv (l : Loop A) : (next A l.inv) = prev A l := by simp
 
 @[simp] theorem rotate_prev : (l : Loop A) → (l.rotate A).prev _ = A
   | .nil' _ => rfl
@@ -53,12 +55,14 @@ def rotate' : (l : Loop A) → Loop (l.prev A) :=
   | .nil' _ => rfl
   | .cons' _ _ _ e p => sorry
 
+/-
 theorem inv_rotate_heq (l : Loop A) : HEq (rotate A l).inv (rotate' A l.inv) := by
   rw [← inv_rotate_inv A l.inv]
-  congr 2 <;> rw [inv_inv]
- 
+  congr 2 <;> rw [inv_inv] -/
+
 theorem inv_rotate (l : Loop A) : (rotate A l).inv = (prev_inv A l) ▸ (rotate' A l.inv) := sorry
-  
+
+theorem inv_rotate' (l : Loop A) : (rotate' A l).inv = (next_inv A l) ▸ (rotate A l.inv) := sorry  
 
 end Loop
 
@@ -73,13 +77,15 @@ class TwoComplex (V : Type _) extends SerreGraph V where
   flipInv : {v : V} → {l : Loop v} → (r : rel l) → (Eq.subst l.inverse_inv $ flip (flip r)) = r
 
 inductive Relator {V : Type _} [TwoComplex V] : (v : V) → (ℓ : Loop v) → Sort _
+  | nil : {v : V} → Relator v (.nil v)
   | disc : {v : V} → {l : Loop v} → TwoComplex.rel l → Relator v l
   | concat : {v : V} → {l l' : Loop v} → Relator v l → Relator v l' → Relator v (.append l l')
-  | delete : {v : V} → {l l' : Loop v} → TwoComplex.rel l → Relator v (.append l l') → Relator v l'
+  | delete : {v : V} → {l l' : Loop v} → Relator v l → Relator v (.append l l') → Relator v l'
   | rotate : {v : V} → {l : Loop v} → Relator v l → Relator (l.next v) l.rotate
+  | rotate' : {v : V} → {l : Loop v} → Relator v l → Relator (l.prev v) l.rotate'
 
 inductive Path.Homotopy {V : Type _} [TwoComplex V] : {v w : V} → (p q : Path v w) → Prop
-  | rel : {v w : V} → (p q : Path v w) → Relator v (.append p q.inverse) → Homotopy p q
+  | rel : {v w : V} → {p q : Path v w} → Relator v (.append p q.inverse) → Homotopy p q
 
 
 namespace Relator
@@ -89,10 +95,10 @@ variable {V : Type _} [C : TwoComplex V] {u v w : V} (l l' : Loop v)
 def cast : {u v : V} → (h : u = v) → (l : Loop u) → Relator u l → Relator v (h ▸ l)
   | _, _, rfl, _ => id
 
-def subst : {u v : V} → (h : u = v) → (l : Loop u) → (l' : Loop v) → (H : h ▸ l = l') → Relator u l → Relator v l'
+def subst : {u v : V} → (h : u = v) → (l : Loop u) → (l' : Loop v) → (H : l' = h ▸ l) → Relator u l → Relator v l'
   | _, _, rfl, _, _, rfl => id
 
-def swap {u v : V} : (p : Path u v) → (q : Path v u) → Relator u (.append p q) → Relator v (.append q p)
+def swap {u v : V} : {p : Path u v} → {q : Path v u} → Relator u (.append p q) → Relator v (.append q p)
   | .nil, _ => by rw [Path.append_nil]; exact id
   | .cons _ _, _ => by
     dsimp [Path.append]
@@ -104,26 +110,18 @@ def swap {u v : V} : (p : Path u v) → (q : Path v u) → Relator u (.append p 
     rw [Path.append_snoc]
     exact r'
 
-def delete' {v : V} {l l' : Loop v} (d : TwoComplex.rel l) (r : Relator v (.append l' l)) : Relator v l' :=
-  let r' := swap l' l r
-  Relator.delete d r'
+def delete' {v : V} {l l' : Loop v} (r : Relator v l) (r' : Relator v (.append l' l)) : Relator v l' :=
+  Relator.delete r $ swap r'
 
-def rotate' {v : V} {l : Loop v} (r : Relator v l) : Relator (l.prev v) l.rotate' := by
-  dsimp [Loop.rotate']
-  let l' := l.inv
-  have : l = l'.inv := by simp
-  rw [this]
-  apply subst (Eq.symm $ Loop.prev_inv v l')
-  · sorry
-  · sorry -- unable to proceed
-  · sorry
+def contract {u v : V} {p : Path u v} {l : Loop v} (rel : Relator v l) {q : Path v u} : Relator u (.append p (.append l q)) → Relator u (.append p q) := by
+  intro r
+  let r' := swap r
+  rw [Path.append_assoc] at r'
+  let r'' := delete rel r'
+  exact swap r''
 
-def nil {v : V} {l : Loop v} (d : TwoComplex.rel l) : Relator v (.nil v) :=
-  let r : Relator v (.append .nil l) := Relator.disc d
-  Relator.delete' d r
-
-def trivial {u v : V} {l : Loop u} (d : TwoComplex.rel l) : (p : Path u v) → Relator u (.append p p.inverse)
-  | .nil => nil d
+def trivial {u v : V} : (p : Path u v) → Relator u (.append p p.inverse)
+  | .nil => .nil
   | .cons e p' => by
     rename_i x
     dsimp [Path.append, Path.inverse]
@@ -137,41 +135,48 @@ def trivial {u v : V} {l : Loop u} (d : TwoComplex.rel l) : (p : Path u v) → R
     · apply Relator.disc
       apply TwoComplex.inv
     · apply trivial
-      apply TwoComplex.inv
-      exact e
 
 def inv {v : V} {l : Loop v} : Relator v l → Relator v l.inv
+  | .nil => .nil
   | .disc d => .disc $ TwoComplex.flip d
   | .concat r r' => by
       rw [Loop.inv, Path.inverse_append]
       apply Relator.concat
       · exact inv r'
       · exact inv r
-  | .delete d r => by
-      let r' := inv r
-      rw [Loop.inv, Path.inverse_append] at r'
-      apply Relator.delete'
-      · exact TwoComplex.flip d
-      · exact r'
+  | .delete r r' => by
+      let r'' := inv r'
+      rw [Loop.inv, Path.inverse_append] at r''
+      exact Relator.delete' (inv r) r''
   | .rotate r => by
-      let r' := inv r
       apply subst (Loop.prev_inv _ _)
-      · apply Eq.symm
-        apply Loop.inv_rotate
-      · apply rotate'
-        exact inv r
+      · apply Loop.inv_rotate
+      · exact rotate' <| inv r
+  | .rotate' r => by
+      apply subst (Loop.next_inv _ _)
+      · apply Loop.inv_rotate'
+      · exact rotate <| inv r
 
 end Relator
 
 
 namespace Path.Homotopy
 
-variable {V : Type _} [TwoComplex V] {u v w : V} (p q r : Path u v)
+variable {V : Type _} [C : TwoComplex V] {u v w : V} (p q r : Path u v)
 
-theorem refl : Path.Homotopy p p := sorry
+theorem refl : (p : Path u v) → Path.Homotopy p p := (.rel $ Relator.trivial ·)
 
-theorem symm : Path.Homotopy p q → Path.Homotopy q p := sorry
+theorem symm : Path.Homotopy p q → Path.Homotopy q p
+  | .rel h => by
+    let h' := h.inv
+    rw [Loop.inv, Path.inverse_append, Path.inverse_inv] at h'
+    exact .rel h'
 
-theorem trans : Path.Homotopy p q → Path.Homotopy q r → Path.Homotopy p r := sorry
+theorem trans : Path.Homotopy p q → Path.Homotopy q r → Path.Homotopy p r
+  |.rel h, .rel h' => by
+    let H := Relator.concat h h'
+    rw [Path.append_assoc p _ _, ← Path.append_assoc _ q _] at H
+    let H' := Relator.contract (.swap $ .trivial _) H
+    exact .rel H'
 
 end Path.Homotopy
