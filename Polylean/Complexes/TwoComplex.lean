@@ -125,6 +125,14 @@ def contract {u v : V} {p : Path u v} {l : Loop v} (rel : Relator v l) {q : Path
   let r'' := delete rel r'
   exact swap r''
 
+def splice {u v : V} {p : Path u v} {l : Loop v} (rel : Relator v l) {q : Path v u} : Relator u (.append p q) → Relator u (.append p (.append l q)) := by
+  intro r
+  apply swap
+  rw [Path.append_assoc]
+  apply concat rel
+  apply swap
+  exact r
+
 def trivial {u v : V} : (p : Path u v) → Relator u (.append p p.inverse)
   | .nil => .nil
   | .cons e p' => by
@@ -167,7 +175,7 @@ end Relator
 
 namespace Path.Homotopy
 
-variable {V : Type _} [C : TwoComplex V] {u v w : V} (p q r : Path u v)
+variable {V : Type _} [C : TwoComplex V] {u v : V} (p q r : Path u v)
 
 theorem refl : (p : Path u v) → Path.Homotopy p p := (.rel $ Relator.trivial ·)
 
@@ -183,5 +191,30 @@ theorem trans : Path.Homotopy p q → Path.Homotopy q r → Path.Homotopy p r
     rw [Path.append_assoc p _ _, ← Path.append_assoc _ q _] at H
     let H' := Relator.contract (.swap $ .trivial _) H
     exact .rel H'
+
+instance equivalence (u v : V) : Equivalence (@Path.Homotopy V C u v) where
+  refl := refl
+  symm := symm _ _
+  trans := trans _ _ _
+
+instance setoid (u v : V) : Setoid (Path u v) where
+  r := Path.Homotopy
+  iseqv := equivalence u v
+
+theorem mul_sound {u v w : V} {p q : Path u v} {r s : Path v w} : 
+  Path.Homotopy p q → Path.Homotopy r s → 
+  Path.Homotopy (.append p r) (.append q s)
+  | .rel a, .rel b  => .rel $ by
+    rw [inverse_append, append_assoc, ← append_assoc _ _ (inverse q)]
+    exact Relator.splice b a
+
+theorem inv_sound {u v : V} {p q : Path u v} : 
+  Path.Homotopy p q → 
+  Path.Homotopy p.inverse q.inverse
+  | .rel r =>.rel $ by
+    rw [← inverse_append]
+    apply Relator.inv
+    apply Relator.swap
+    exact r
 
 end Path.Homotopy
