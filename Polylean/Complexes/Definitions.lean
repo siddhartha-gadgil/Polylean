@@ -118,8 +118,6 @@ inductive Path {V : Type _} [Quiver V] : V → V → Sort _
   | nil : {A : V} → Path A A
   | cons : {A B C : V} → (A ⟶ B) → Path B C → Path A C
 
-abbrev Loop {V : Type _} [Quiver V] (A : V) := Path A A
-
 namespace Path
 
 variable {V : Type _} [Quiver V] {A B C D : V}
@@ -186,7 +184,7 @@ theorem append_cons (p : Path A B) (e : B ⟶ C) (p' : Path C D) :
   · case nil => rfl
   · case cons ih => dsimp [append]; rw [ih]
 
-theorem comp_assoc (p : Path A B) (q : Path B C) (r : Path C D) : 
+theorem append_assoc (p : Path A B) (q : Path B C) (r : Path C D) :
     append (append p q) r = append p (append q r) := by
   induction p
   · case nil => rfl
@@ -282,29 +280,7 @@ theorem last_eq_inv_first {V : Type _} [G : SerreGraph V] {A B : V} :
 
 end Path
 
-namespace Loop
-
-variable {V : Type _} (A : V)
-
-abbrev next [Quiver V] : Loop A → V := Path.first
-
-abbrev prev [Quiver V] : Loop A → V := Path.last
-
-abbrev concat [Quiver V] : Loop A → Loop A → Loop A := Path.append
-
-abbrev inv [SerreGraph V] : Loop A → Loop A := Path.inverse
-
-def rotate [Quiver V] : (l : Loop A) → Loop (l.next A)
-  | .nil' A => .nil' A
-  | .cons' _ _ _ e p => p.snoc e
-
--- TODO: Define this function
-def rotate' [Quiver V] {A : V} : (l : Loop A) → Loop (l.prev A)
-  | .nil => .nil
-  | .cons e p => sorry
-
-end Loop
-
+/-
 section Instances
 
 /-- Paths in a Serre graph form an invertegory under concatenation. -/
@@ -359,4 +335,5 @@ structure ContinuousMap {V W : Type _} [CV : TwoComplex V] [CW : TwoComplex W] w
 
   -- TODO Fix this
   -- mapCommute : Invertegory.Functor.comp graphMap CW.collapse = Invertegory.Functor.comp CV.collapse homotopyMap
+-/
 -/
