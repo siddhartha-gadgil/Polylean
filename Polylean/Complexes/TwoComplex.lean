@@ -55,14 +55,22 @@ def rotate' : (l : Loop A) → Loop (l.prev A) :=
   | .nil' _ => rfl
   | .cons' _ _ _ e p => sorry
 
-/-
-theorem inv_rotate_heq (l : Loop A) : HEq (rotate A l).inv (rotate' A l.inv) := by
+theorem rotate'_inv_heq (l : Loop A) : HEq (rotate' A l.inv) (rotate A l).inv := by
   rw [← inv_rotate_inv A l.inv]
-  congr 2 <;> rw [inv_inv] -/
+  congr 2 <;> rw [inv_inv]
 
-theorem inv_rotate (l : Loop A) : (rotate A l).inv = (prev_inv A l) ▸ (rotate' A l.inv) := sorry
+theorem rotate_inv_heq (l : Loop A) : HEq (rotate A l.inv) (rotate' A l).inv := by
+  rw [rotate', inv_inv]
+  exact .refl _
 
-theorem inv_rotate' (l : Loop A) : (rotate' A l).inv = (next_inv A l) ▸ (rotate A l.inv) := sorry  
+theorem HEq.toEqCast {A B : Sort _} {a : A} {b : B} : (h : A = B) → HEq a b → a = h ▸ b
+  | rfl, .refl _ => rfl
+
+theorem rotate'_inv (l : Loop A) : (rotate' A l.inv) = (congrArg Loop $ prev_inv A l) ▸ (rotate A l).inv := 
+  HEq.toEqCast (congrArg Loop $ prev_inv A l) (rotate'_inv_heq A l)
+
+theorem rotate_inv (l : Loop A) : (rotate A l.inv) = (congrArg Loop $ next_inv A l) ▸ (rotate' A l).inv :=
+  HEq.toEqCast (congrArg Loop $ next_inv A l) (rotate_inv_heq A l)
 
 end Loop
 
@@ -92,10 +100,7 @@ namespace Relator
 
 variable {V : Type _} [C : TwoComplex V] {u v w : V} (l l' : Loop v)
 
-def cast : {u v : V} → (h : u = v) → (l : Loop u) → Relator u l → Relator v (h ▸ l)
-  | _, _, rfl, _ => id
-
-def subst : {u v : V} → (h : u = v) → (l : Loop u) → (l' : Loop v) → (H : l' = h ▸ l) → Relator u l → Relator v l'
+def subst : {u v : V} → (h : u = v) → (l : Loop u) → (l' : Loop v) → (l = (congrArg Loop h) ▸ l') → Relator u l → Relator v l'
   | _, _, rfl, _, _, rfl => id
 
 def swap {u v : V} : {p : Path u v} → {q : Path v u} → Relator u (.append p q) → Relator v (.append q p)
@@ -150,11 +155,11 @@ def inv {v : V} {l : Loop v} : Relator v l → Relator v l.inv
       exact Relator.delete' (inv r) r''
   | .rotate r => by
       apply subst (Loop.prev_inv _ _)
-      · apply Loop.inv_rotate
+      · apply Loop.rotate'_inv
       · exact rotate' <| inv r
   | .rotate' r => by
       apply subst (Loop.next_inv _ _)
-      · apply Loop.inv_rotate'
+      · apply Loop.rotate_inv
       · exact rotate <| inv r
 
 end Relator
