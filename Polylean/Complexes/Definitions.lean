@@ -118,6 +118,9 @@ inductive Path {V : Type _} [Quiver V] : V → V → Sort _
   | nil : {A : V} → Path A A
   | cons : {A B C : V} → (A ⟶ B) → Path B C → Path A C
 
+def Quiver.toPath {V : Type _} [Quiver V] {A B : V} (e : A ⟶ B) : Path A B :=
+  .cons e .nil
+
 namespace Path
 
 variable {V : Type _} [Quiver V] {A B C D : V}
@@ -134,20 +137,6 @@ abbrev snoc : {A B C : V} → Path A B → (B ⟶ C) → Path A C
 
 @[matchPattern]
 abbrev snoc' (A B C : V) : Path A B → (B ⟶ C) → Path A C := Path.snoc
-
-noncomputable def Path.rec' {V : Type _} [Quiver V] :
-  {motive : (X Y : V) → Path X Y → Sort _} →
-  ({A : V} → motive A A .nil) →
-  ({A B C : V} → (p : Path A B) → (e : B ⟶ C) → motive A B p → motive A C (.snoc p e)) →
-  ({A B : V} → (p : Path A B) → motive A B p)
-  | motive, hnil, hsnoc => by
-    intro p
-    induction p
-    · case nil => exact hnil
-    · case cons e' p' ih =>
-      revert e'
-      revert p'
-      sorry -- use `Path.rec'` recursively
 
 /-- Concatenation of paths. -/
 def append : {A B C : V} → Path A B → Path B C → Path A C

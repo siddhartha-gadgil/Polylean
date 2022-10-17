@@ -1,6 +1,6 @@
 import Polylean.Complexes.Definitions
 
-abbrev Loop {V : Type _} [G : SerreGraph V] (A : V) := @Path V G.toQuiver A A
+abbrev Loop {V : Type _} [Quiver V] (A : V) := Path A A
 
 namespace Loop
 
@@ -75,11 +75,12 @@ theorem rotate_inv (l : Loop A) : (rotate A l.inv) = (congrArg Loop $ next_inv A
 end Loop
 
 
-class QuiverRel {V : Type _} extends Quiver V where
+class QuiverRel (V : Type _) extends Quiver V where
   rel : {v : V} → Path v v → Sort _
 
 class TwoComplex (V : Type _) extends SerreGraph V where
   rel : {v : V} → Loop v → Sort _
+  -- TODO Maybe push `inv` to a constructor of `Relator`
   inv : {v w : V} → (e : v ⟶ w) → rel (.cons (op e) $ .cons e .nil)
   flip :  {v : V} → {l : Loop v} → rel l → rel l.inv
   flipInv : {v : V} → {l : Loop v} → (r : rel l) → (Eq.subst l.inverse_inv $ flip (flip r)) = r
@@ -200,6 +201,17 @@ instance equivalence (u v : V) : Equivalence (@Path.Homotopy V C u v) where
 instance setoid (u v : V) : Setoid (Path u v) where
   r := Path.Homotopy
   iseqv := equivalence u v
+
+theorem inv_cancel_left (p : Path u v) : Path.Homotopy (.append (.inverse p) p) .nil := 
+  .rel $ by
+    simp [inverse]
+    apply Relator.swap
+    apply Relator.trivial
+
+theorem inv_cancel_right (p : Path u v) : Path.Homotopy (.append p (.inverse p)) .nil := 
+  .rel $ by
+    simp [inverse]
+    apply Relator.trivial
 
 theorem mul_sound {u v w : V} {p q : Path u v} {r s : Path v w} : 
   Path.Homotopy p q → Path.Homotopy r s → 
