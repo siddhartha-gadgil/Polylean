@@ -104,14 +104,17 @@ lemma odd_ne_zero : {a : ℤ} → ¬(a + a + 1 = 0) := by
 /-- the only element of `P` with order dividing `2` is the identity -/
 theorem square_free : ∀ g : P, g ^ 2 = 1 → g = 1 := by
   intro ⟨(p, q, r), x⟩
-  have zero_of_double_zero : ∀ m : ℤ, m + m = 0 ↔ m = 0 := by
+  
+  apply Q.rec (λ x => ((p, q, r), x) ^ 2 = ((0, 0, 0), _) → ((p, q, r), x) = ((0, 0, 0), _))
+  <;> rw [s_square, s] <;> simp only [subType.val, prod_eq, zero_of_double_zero, and_false, and_true, true_and] <;> try (apply odd_ne_zero)
+  . exact id
+
+  where
+    zero_of_double_zero : ∀ m : ℤ, m + m = 0 ↔ m = 0 := by
     intro m; apply Iff.intro
     · have : m + m = SubNegMonoid.gsmul (Int.ofNat Nat.zero.succ.succ) m := by rw [SubNegMonoid.gsmul_succ', add_left_cancel_iff, SubNegMonoid.gsmul_succ', Int.ofNat_zero, SubNegMonoid.gsmul_zero', add_zero]
       rw [this]; apply TorsionFreeAdditive.torsion_free
     · intro h; rw [h, add_zero]
-  apply Q.rec (λ x => ((p, q, r), x) ^ 2 = ((0, 0, 0), (⟨0, _⟩, ⟨0, _⟩)) → ((p, q, r), x) = ((0, 0, 0), (⟨0, _⟩, ⟨0, _⟩)))
-  <;> rw [s_square, s] <;> simp only [subType.val, prod_eq, zero_of_double_zero, and_false, and_true, true_and] <;> try (apply odd_ne_zero)
-  . exact id
 
 /-- if `g` is a torsion element, so is `g ^ 2` -/
 theorem torsion_implies_square_torsion : ∀ g : P, ∀ n : ℕ, g ^ n = 1 → (g ^ 2) ^ n = 1 :=
@@ -120,7 +123,7 @@ theorem torsion_implies_square_torsion : ∀ g : P, ∀ n : ℕ, g ^ n = 1 → (
               _      = g ^ (n * 2) := by rw [mul_comm]
               _      = (g ^ n) ^ 2 := by rw [pow_mul]
               _      = (1 : P) ^ 2 := by rw [← g_tor]
-              _      = (1 : P)     := rfl
+              _      = (1 : P)     := by simp
 
 
 /-- `P` is torsion-free -/

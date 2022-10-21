@@ -24,31 +24,14 @@ theorem gsmul_succ (n: ℤ) (x : A) : gsmul (n+1) x = x + gsmul n x  := by
       apply abg.gsmul_succ'
     case negSucc k => 
       induction k with
-      | zero => 
-        simp
-        simp [add_zero]
-        have l : -[1+ 0] + 1 = 0 := by rfl
-        rw [l]
-        have l₀ : gsmul 0 x = 0 := by apply abg.gsmul_zero'
-        rw [l₀]
-        simp
-        rw [abg.gsmul_neg']
-        simp
-        let l : gsmul 1 x = 
-                x + gsmul (0) x := abg.gsmul_succ' 0 x
-        rw [l]
-        rw [l₀]
+      | zero =>
+        show gsmul (Int.ofNat _) _ = _
+        rw [abg.gsmul_neg', abg.gsmul_succ']
         simp
       | succ l _ =>
-        have l₀ : -[1+ Nat.succ l] + 1 = -[1+ l] := by rfl
-        rw [l₀]
-        rw [abg.gsmul_neg']
-        rw [abg.gsmul_neg']
-        simp
-
-        let l₁ := abg.gsmul_succ' (l + 1) x
-        simp at l₁
-        rw [l₁, ← add_assoc, neg_hom, ← add_assoc, neg_hom, ← add_assoc x _ _]
+        show gsmul (Int.negSucc l) _ = _
+        rw [abg.gsmul_neg', abg.gsmul_neg', abg.gsmul_succ' l.succ]
+        rw [neg_hom, ← add_assoc]
         simp
 
 theorem isHom₁ (x : A) (n : ℤ) (m: Nat) : 
@@ -81,10 +64,7 @@ theorem isHom₂ (x : A) (n m : Nat) :
   by
     simp [zhom]
     repeat (rw [abg.gsmul_neg'])
-    simp
-    simp [Int.add]
-    have l₀ : -[1+ n] + -[1+ m] = -[1+ (n + m) + 1] := by rfl
-    rw [l₀]
+    show gsmul (Int.negSucc _) _ = _
     rw [abg.gsmul_neg']
     simp
     have l₁ : ((n : ℤ) + m + 1 + 1) = (n + 1) + (m + 1) := by 
