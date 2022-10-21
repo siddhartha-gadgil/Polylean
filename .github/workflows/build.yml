@@ -21,4 +21,5 @@ jobs:
 
       - name: build Polylean
         run: |
+          lake build mathlib
           lake build
