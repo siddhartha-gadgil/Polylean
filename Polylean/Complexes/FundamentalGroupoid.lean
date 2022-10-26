@@ -2,13 +2,20 @@ import Polylean.Complexes.TwoComplex
 import Mathlib.Algebra.Group.Defs
 
 /-- The fundamental groupoid of a two-complex. -/
-instance FundamentalGroupoid (V : Type _) [CV : TwoComplex V] : Groupoid V where
+instance FundamentalGroupoid {V : Type _} (CV : TwoComplex V) : Groupoid V where
   hom := λ u v => Quotient $ Path.Homotopy.setoid u v
   id := λ v => .mk' .nil
   comp := .lift₂ (λ p q => .mk' $ .append p q) $ λ _ _ _ _ h h' => 
             Quotient.sound $ Path.Homotopy.mul_sound h h'
   inv := .lift (λ p => .mk' p.inverse) λ _ _ h => 
             Quotient.sound $ Path.Homotopy.inv_sound h
+  invInv := by
+    intro _ _
+    apply Quotient.ind
+    intro e
+    apply Quotient.sound
+    simp
+    apply Path.Homotopy.refl
 
   idComp := by
     intro _ _
@@ -56,7 +63,7 @@ instance FundamentalGroupoid (V : Type _) [CV : TwoComplex V] : Groupoid V where
     apply Path.Homotopy.inv_cancel_right
 
 /-- The group of endomorphisms at an object of a groupoid. -/
-def Groupoid.groupAt {G : Type _} [Gpd : Groupoid G] (g : G) : Group (g ⟶ g) where
+def Groupoid.groupAt {G : Type _} (Gpd : Groupoid G) (g : G) : Group (g ⟶ g) where
   mul := Gpd.comp
   one := Gpd.id g
   inv := Gpd.inv
@@ -76,15 +83,16 @@ def Groupoid.groupAt {G : Type _} [Gpd : Groupoid G] (g : G) : Group (g ⟶ g) w
   gpow_succ' := by intros; rfl
 
 /-- The fundamental group of a two-complex. -/
-@[instance] def FundamentalGroup (V : Type _) [CV : TwoComplex.{_, _ + 1} V] (v : V) := 
-  @Groupoid.groupAt V (FundamentalGroupoid V) v
+@[instance] def FundamentalGroup {V : Type _} (CV : TwoComplex.{_, _ + 1} V) (v : V) := 
+  @Groupoid.groupAt V (FundamentalGroupoid CV) v
 
 /-- A group as a single-object groupoid. -/
-instance Group.toGroupoid (G : Type _) [Group G] : Groupoid Unit where
+instance Group.toGroupoid {G : Type } (_ : Group G) : Groupoid Unit where
   hom := fun | _, _ => G
   id := fun | _ => (1 : G)
   comp := λ g h => g * h
   inv := λ g => g⁻¹
+  invInv := by simp
 
   idComp := one_mul
   compId := mul_one
@@ -92,7 +100,11 @@ instance Group.toGroupoid (G : Type _) [Group G] : Groupoid Unit where
   invComp := mul_left_inv
   compInv := mul_right_inv
 
+#check @Path.compose
 
-instance Groupoid.toTwoComplex {G : Type _} [Groupoid G] : TwoComplex G := sorry
-
-  
+-- does not work
+instance Groupoid.toTwoComplex {G : Type _} (Grpd : Groupoid G) : AbstractTwoComplex G where
+  G := Grpd.toInvertegory.toSerreGraph
+  H := Grpd
+  collapse := @Path.compose G Grpd.toInvertegory.toCategory
+  collapseId := sorry

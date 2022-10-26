@@ -78,9 +78,9 @@ end Loop
 class QuiverRel (V : Type _) extends Quiver V where
   rel : {v : V} → Path v v → Sort _
 
-class TwoComplex (V : Type _) extends SerreGraph V where
+class TwoComplex (V : Type _) extends SerreGraph V where  
   rel : {v : V} → Loop v → Sort _
-  -- TODO Maybe push `inv` to a constructor of `Relator`
+  
   inv : {v w : V} → (e : v ⟶ w) → rel (.cons (op e) $ .cons e .nil)
   flip :  {v : V} → {l : Loop v} → rel l → rel l.inv
   flipInv : {v : V} → {l : Loop v} → (r : rel l) → (Eq.subst l.inverse_inv $ flip (flip r)) = r

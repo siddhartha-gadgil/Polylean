@@ -11,16 +11,14 @@ infixr:10 " ⟶ " => Quiver.hom -- type using `\-->` or `\hom`
 class SerreGraph (V : Type _) extends Quiver V where
   op : {A B : V} → (A ⟶ B) → (B ⟶ A)
   opInv : {A B : V} → (e : A ⟶ B) → op (op e) = e
-  opFree : {A : V} → (e : A ⟶ A) → op e ≠ e
 
 attribute [reducible] SerreGraph.op
 attribute [simp] SerreGraph.opInv
 
-def Quiver.symmetrize {V : Type _} [Q : Quiver V] : SerreGraph V :=
+def Quiver.symmetrize {V : Type _} (Q : Quiver V) : SerreGraph V :=
 { hom := λ A B => Q.hom A B ⊕ Q.hom B A,
   op := fun | .inl e => .inr e | .inr e => .inl e,
-  opInv := fun | .inl e => rfl | .inr e => rfl,
-  opFree := fun | .inl e => by simp | .inr e => by simp }
+  opInv := fun | .inl _ => rfl | .inr _ => rfl }
 
 /-- The definition of a `CategoryStruct`, a barebones structure for a category containing none of the axioms (following `mathlib`). -/
 class CategoryStruct (Obj : Type _) extends Quiver Obj where
@@ -47,6 +45,7 @@ attribute [simp] Category.compId
 /-- An `Invertegory` is meant to be an intermediate between a `Category` and a `Groupoid`. It is a category in which every morphism has a formal inverse, but the inverse is not required to satisfy any properties. This is not a standard construction in the literature. -/
 class Invertegory (Obj : Type _) extends Category Obj where
   inv : {X Y : Obj} → (X ⟶ Y) → (Y ⟶ X)
+  invInv : ∀ e : X ⟶ Y, inv (inv e) = e
 
 /-- A `Groupoid` is a category in which every morphism is invertible. -/
 class Groupoid (Obj : Type _) extends Invertegory Obj where
@@ -73,7 +72,7 @@ structure PreFunctor {V V' : Type _} (Q : Quiver V) (Q' : Quiver V') where
 instance (V : Type _) [Q : Quiver V] : Inhabited (PreFunctor Q Q) := ⟨PreFunctor.id V⟩
 
 /-- Composition of morphisms between quivers. -/
-@[simp] def PreFunctor.comp {U V W : Type _} [QU : Quiver U] [QV : Quiver V] [QW : Quiver W]
+@[simp] def PreFunctor.comp {U V W : Type _} {QU : Quiver U} {QV : Quiver V} {QW : Quiver W}
   (F : PreFunctor QU QV) (G : PreFunctor QV QW) : PreFunctor QU QW :=
   { obj := G.obj ∘ F.obj, map := G.map ∘ F.map }
 
@@ -93,7 +92,7 @@ attribute [simp] Category.Functor.mapComp
 -- TODO Use `..` notation : { .. , mapId := λ _ => rfl, mapComp := λ _ _ => rfl }
  { obj := id, map := id, mapId := λ _ => rfl, mapComp := λ _ _ => rfl }
 
-@[simp] def Category.Functor.comp {C D E : Type _} [𝓒 : Category C] [𝓓 : Category D] [𝓔 : Category E] (F : 𝓒 ⥤ 𝓓) (G : 𝓓 ⥤ 𝓔) : 𝓒 ⥤ 𝓔 :=
+@[simp] def Category.Functor.comp {C D E : Type _} {𝓒 : Category C} {𝓓 : Category D} {𝓔 : Category E} (F : 𝓒 ⥤ 𝓓) (G : 𝓓 ⥤ 𝓔) : 𝓒 ⥤ 𝓔 :=
 -- TODO Use `..` notation
   { obj := G.obj ∘ F.obj, map := G.map ∘ F.map, mapId := by intro; simp, mapComp := by intros; simp }
 
@@ -107,7 +106,7 @@ attribute [simp] Invertegory.Functor.mapInv
 -- TODO Use `..` notation
  { obj := id, map := id, mapId := λ _ => rfl, mapComp := λ _ _ => rfl, mapInv := rfl }
 
-@[simp] def Invertegory.Functor.comp {C D E : Type _} [ℭ : Invertegory C] [𝔇 : Invertegory D] [𝔈 : Invertegory E] (F : Invertegory.Functor ℭ 𝔇) (G : Invertegory.Functor 𝔇 𝔈) : Invertegory.Functor ℭ 𝔈 :=
+@[simp] def Invertegory.Functor.comp {C D E : Type _} {ℭ : Invertegory C} {𝔇 : Invertegory D} {𝔈 : Invertegory E} (F : Invertegory.Functor ℭ 𝔇) (G : Invertegory.Functor 𝔇 𝔈) : Invertegory.Functor ℭ 𝔈 :=
 -- TODO Use `..` notation
   { obj := G.obj ∘ F.obj, map := G.map ∘ F.map, mapId := by intro; simp, mapComp := by intros; simp, mapInv := by intros; simp }
 
@@ -200,6 +199,19 @@ theorem length_append {A B C : V} : (p : Path A B) → (q : Path B C) → (appen
     apply congrArg
     apply length_append
 
+def compose {C : Type _} [𝓒 : Category C] {X Y : C} : @Path C 𝓒.toQuiver X Y → (X ⟶ Y)
+  | .nil => 𝟙 _
+  | .cons e p => e ≫ p.compose
+
+@[simp] theorem compose_nil {C : Type _} [Category C] {X : C} : (Path.nil' X).compose = 𝟙 X := rfl
+
+def compose_append {C : Type _} [𝓒 : Category C] {X Y Z : C} : {p : Path X Y} → {q : Path Y Z} → (append p q).compose = p.compose ≫ q.compose
+  | .nil, _ => by simp
+  | .cons _ _, _ => by
+    dsimp [append, compose]
+    rw [compose_append, Category.compAssoc]
+
+
 /-- The end-point of the first edge in the path. -/
 def first : Path A B → V
   | .nil' v => v
@@ -281,8 +293,12 @@ instance (priority := low) Quiver.Pathegory {V : Type _} (_ : Quiver V) : Catego
   compId := Path.append_nil
   compAssoc := Path.append_assoc
 
+instance Invertegory.toSerreGraph {V : Type _} {_ : Invertegory V} : SerreGraph V where
+  op := inv
+  opInv := Invertegory.invInv
+
 /-- Paths in a Serre graph form an invertegory under concatenation. -/
-instance (priority := high) SerreGraph.Invertegraph {V : Type _} (_ : SerreGraph V) : Invertegory V where
+instance SerreGraph.Invertegraph {V : Type _} (_ : SerreGraph V) : Invertegory V where
   -- TODO Use `..` notation
   hom := Path
   id := Path.nil'
@@ -292,11 +308,32 @@ instance (priority := high) SerreGraph.Invertegraph {V : Type _} (_ : SerreGraph
   idComp := Path.nil_append
   compId := Path.append_nil
   compAssoc := Path.append_assoc
+  invInv := by simp
 
 /-- Embedding of a `Quiver` into its category of paths. -/
 instance {V : Type _} [Q : Quiver V] : PreFunctor Q Q.Pathegory.toQuiver where
   obj := id
-  map := (.cons · .nil)
+  map := Quiver.toPath
+
+instance Intertegory.composeFunctor {C : Type _} (ℭ : Invertegory G) : Invertegory.Functor (ℭ.toSerreGraph).Invertegraph ℭ where
+  obj := id
+  map := Path.compose
+
+  mapId := λ _ => rfl
+  mapComp := λ _ _ => Path.compose_append
+
+  -- does not work
+  mapInv := by
+    intros _ _ p
+    simp
+    induction p
+    · show Path.compose (Path.nil) = Invertegory.inv _
+      rw [Path.compose]
+      sorry
+    · show Path.compose (Path.snoc _ _) = _
+      rw [Path.compose]
+      sorry      
+    
 
 end Instances
 
@@ -315,17 +352,11 @@ instance (priority := low) AbstractTwoComplex.SerreGraph (V : Type _) [CV : Abst
 
 instance (priority := low) AbstractTwoComplex.Groupoid (V : Type _) [CV : AbstractTwoComplex V] : Groupoid V := CV.H
 
-/-
 /-- A continuous map between 2-complexes. -/
-structure ContinuousMap {V W : Type _} [CV : AbstractTwoComplex V] [CW : AbstractTwoComplex W] where
+structure AbstractTwoComplex.ContinuousMap {V W : Type _} (CV : AbstractTwoComplex V) (CW : AbstractTwoComplex W) where
   -- Alternative version: Construct a map between the two Serre graphs 
   graphMap : Invertegory.Functor CV.G.Invertegraph CW.G.Invertegraph
   homotopyMap : Invertegory.Functor CV.H.toInvertegory CW.H.toInvertegory
 
-  -- mapCommute : Invertegory.Functor.comp graphMap CW.collapse = Invertegory.Functor.comp CV.collapse homotopyMap
-
-variable {V W : Type _} [CV : AbstractTwoComplex V] [CW : AbstractTwoComplex W]
-variable (graphMap : Invertegory.Functor CV.G.Invertegraph CW.G.Invertegraph)
-
-#check Invertegory.Functor.comp graphMap CW.collapse
--/
+  mapCommute : Invertegory.Functor.comp graphMap CW.collapse = 
+               Invertegory.Functor.comp CV.collapse homotopyMap
