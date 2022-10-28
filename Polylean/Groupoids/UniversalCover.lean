@@ -1,4 +1,4 @@
-import Polylean.Groupoids.Groupoid
+import Polylean.Groupoids.FreeGroupoid
 
 instance Groupoid.Star {S : Sort _} [G : Groupoid S] (X : S) : Groupoid (Σ Y : S, X ⟶ Y) where
   hom := λ ⟨Y, g⟩ ⟨Z, h⟩ => {f : Y ⟶ Z // g ≫ f = h}
@@ -7,10 +7,10 @@ instance Groupoid.Star {S : Sort _} [G : Groupoid S] (X : S) : Groupoid (Σ Y : 
   inv := λ ⟨g, gcomp⟩ => ⟨g⁻¹, by rw [← gcomp]; simp⟩
 
   id_comp := by
-      intro ⟨_, _⟩ ⟨_, _⟩ ⟨_, _⟩
-      apply Subtype.eq
-      show 𝟙 ≫ _ = _
-      simp      
+    intro ⟨_, _⟩ ⟨_, _⟩ ⟨_, _⟩
+    apply Subtype.eq
+    show 𝟙 ≫ _ = _
+    simp      
   comp_id := by
     intro ⟨_, _⟩ ⟨_, _⟩ ⟨_, _⟩
     apply Subtype.eq
@@ -31,3 +31,22 @@ instance Groupoid.Star {S : Sort _} [G : Groupoid S] (X : S) : Groupoid (Σ Y : 
     apply Subtype.eq
     show _ ≫ _⁻¹ = 𝟙
     simp
+
+instance FreeGroupoid.UniversalQuiver 
+    {S : Type _} [Q : Quiver S] [G : Groupoid S] (X : S) [FG : FreeGroupoid Q G]
+    : Quiver (Σ Y : S, G.hom X Y) where
+  hom := λ ⟨Y, g⟩ ⟨Z, h⟩ => {f : Q.hom Y Z // g ≫ (FG.map f) = h}
+
+instance FreeGroupoid.UniversalCover 
+    {S : Type _} [Q : Quiver S] [G : Groupoid S]
+    (X : S) [FG : FreeGroupoid Q G]
+    : FreeGroupoid (UniversalQuiver X) (Groupoid.Star X) where
+    map := λ ⟨f, fcomp⟩ => ⟨FG.map f, fcomp⟩
+    induced_map := λ ⟨obj, map⟩ => 
+          { obj := obj, 
+            map := sorry 
+            map_comp := sorry }
+
+    induced_extends := sorry
+    induced_unique := sorry
+
