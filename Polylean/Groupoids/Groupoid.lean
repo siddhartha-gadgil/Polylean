@@ -1,8 +1,4 @@
-/-- A `Quiver` assigns to every pair of elements of `V` a type of "arrows" between them. -/
-class Quiver (V : Sort _) where
-  hom : V → V → Sort _
-
-infixr:10 " ⟶ " => Quiver.hom -- type using `\-->` or `\hom`
+import Polylean.Complexes.Quiver
 
 /-- A `GroupoidStruct` is a barebones structure for a groupoid containing none of the axioms. -/
 class GroupoidStruct (S : Sort _) extends Quiver S where
@@ -89,27 +85,6 @@ abbrev id' (X : S) : X ⟶ X := 𝟙
   simp at this; assumption
 
 end Groupoid
-
-
-/-- A `PreFunctor` is a morphism of `Quiver`s. -/
-structure Quiver.PreFunctor {V V' : Sort _} (Q : Quiver V) (Q' : Quiver V') where
-  obj : V → V'
-  map : {X Y : V} → (X ⟶ Y) → (obj X ⟶ obj Y)
-
-namespace Quiver.PreFunctor
-
-/-- The identity morphism between quivers. -/
-@[simp] protected def id (V : Sort _) [Q : Quiver V] : PreFunctor Q Q :=
-{ obj := id, map := id }
-
-instance (V : Sort _) [Q : Quiver V] : Inhabited (Quiver.PreFunctor Q Q) := ⟨Quiver.PreFunctor.id V⟩
-
-/-- Composition of morphisms between quivers. -/
-@[simp] def comp {U V W : Sort _} {𝓤 : Quiver U} {𝓥 : Quiver V} {𝓦 : Quiver W}
-  (F : PreFunctor 𝓤 𝓥) (G : PreFunctor 𝓥 𝓦) : PreFunctor 𝓤 𝓦 :=
-  { obj := G.obj ∘ F.obj, map := G.map ∘ F.map }
-
-end Quiver.PreFunctor
 
 
 /-- A `Functor` is a morphism of `Groupoid`s. -/
