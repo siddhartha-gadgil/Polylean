@@ -109,8 +109,10 @@ instance (S : Sort _) [G : Groupoid S] : Inhabited (G ⥤ G) := ⟨Groupoid.Func
   (F : 𝔊 ⥤ ℌ) (G : ℌ ⥤ ℑ) : 𝔊 ⥤ ℑ :=
   {obj := G.obj ∘ F.obj, map := G.map ∘ F.map, map_comp := by simp}
 
+infixr:80 " ⋙ " => comp
 
-variable {S T : Sort _} [G : Groupoid S] [H : Groupoid T] (Φ : G ⥤ H)
+variable {R S T : Sort _} [F : Groupoid R] [G : Groupoid S] [H : Groupoid T] 
+variable (Ψ : F ⥤ G) (Φ : G ⥤ H)
 
 @[simp] theorem map_id {X : S} : Φ.map (G.id' X) = H.id' (Φ.obj X) := by
   have := Φ.map_comp (G.id' X) (G.id' X)
@@ -121,6 +123,12 @@ variable {S T : Sort _} [G : Groupoid S] [H : Groupoid T] (Φ : G ⥤ H)
 @[simp] theorem map_inv {X Y : S} (g : X ⟶ Y) : Φ.map g⁻¹ = (Φ.map g)⁻¹ := by
   apply (Groupoid.left_cancel (Φ.map g) _ _).mp
   rw [← map_comp]
-  simp 
+  simp
+
+@[simp] theorem comp_obj : (Φ.obj ∘ Ψ.obj) = (Ψ ⋙ Φ).obj := rfl
+
+@[simp] theorem comp_obj' : ∀ x, (Φ.obj (Ψ.obj x)) = (Ψ ⋙ Φ).obj x := λ _ => rfl
+
+-- @[simp] theorem comp_map : (Φ.map ∘ Ψ.map) = (Ψ ⋙ Φ).map := sorry
 
 end Groupoid.Functor
