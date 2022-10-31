@@ -101,7 +101,6 @@ theorem mul_monom_add(b₁ b₂ : R)(h x₀ : G)(s: FormalSum R G): coords (mulM
       lhs
       rw [add_assoc]
       congr
-      skip
       rw [← add_assoc]
       congr
       rw [add_comm]    

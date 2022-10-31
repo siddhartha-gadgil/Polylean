@@ -1,6 +1,6 @@
 import Mathlib.Algebra.Group.Defs
 import Mathlib.Algebra.Ring.Basic
-import Polylean.SMul
+-- import Polylean.HasSmul
 
 /-!
 It appears that mathlib4 does not yet have homomorphisms. We need:
@@ -35,7 +35,7 @@ variable {G : Type u} [Group G] {a b c : G}
   simp [h] at this
   assumption
 
-instance {G : Type _} [Group G] : IsMulLeftCancel G := ⟨@Group.mul_left_cancel G _⟩
+-- instance {G : Type _} [Group G] : IsMulLeftCancel G := ⟨@Group.mul_left_cancel G _⟩
 
 @[simp] theorem Group.mul_right_cancel : b * a = c * a → b = c := by
   intro h
@@ -43,7 +43,7 @@ instance {G : Type _} [Group G] : IsMulLeftCancel G := ⟨@Group.mul_left_cancel
   simp [h] at this
   assumption
 
-instance {G : Type _} [Group G] : IsMulRightCancel G := ⟨@Group.mul_right_cancel G _⟩
+-- instance {G : Type _} [Group G] : IsMulRightCancel G := ⟨@Group.mul_right_cancel G _⟩
 
 @[simp] theorem one_inv {G : Type _} [Group G] : (1 : G)⁻¹ = 1 := by
   have : (1 : G)⁻¹ * 1 = 1 := mul_left_inv 1
@@ -81,9 +81,9 @@ instance Group.to_additive {G : Type _} [Grp : Group G] (mul_comm : ∀ g h : G,
 
     sub_eq_add_neg := by intros; rfl
 
-    gsmul_zero' := by intros; rfl
-    gsmul_succ' := by intros; rfl
-    gsmul_neg' := by intros; rfl
+    -- zsmul_zero' := by intros; rfl
+    -- zsmul_succ' := by intros; rfl
+    -- zsmul_neg' := by intros; rfl
   }
 
 end Group
@@ -102,10 +102,10 @@ variable {A : Type _} [AddCommGroup A] {a b c : A}
 @[simp] theorem add_right_eq_cancel : b + a = a ↔ b = 0 := by
   rw [add_comm]; simp
 
-@[simp] theorem neg_zero : (-0 : A) = (0 : A) := by
-  have : (-0 : A) + (0 : A) = (0 : A) := neg_add_self (0 : A)
-  rw [add_zero] at this
-  exact this
+-- @[simp] theorem neg_zero : (-0 : A) = (0 : A) := by
+--   have : (-0 : A) + (0 : A) = (0 : A) := neg_add_self (0 : A)
+--   rw [add_zero] at this
+--   exact this
 
 end AddCommGroup
 
@@ -174,17 +174,17 @@ instance subGroup.Group (P : G → Prop) [H : subGroup P] : Group (subType P) :=
     inv := λ ⟨g, prf⟩ => ⟨g⁻¹, H.inv_closure prf⟩
     mul_left_inv := by
                         intro ⟨a, prf⟩
-                        simp [Inv.inv]
+                        simp only [Inv.inv]
                         apply subType.eq_of_val_eq
                         apply mul_left_inv
 
-    npow_zero' := by intros; rfl
-    npow_succ' := by intros; rfl
+    -- npow_zero' := by intros; rfl
+    -- npow_succ' := by intros; rfl
 
     div_eq_mul_inv := by intros; rfl
-    gpow_zero' := by intros; rfl
-    gpow_succ' := by intros; rfl
-    gpow_neg' := by intros; rfl
+    -- gpow_zero' := by intros; rfl
+    -- gpow_succ' := by intros; rfl
+    -- gpow_neg' := by intros; rfl
   }
 
 /- Kernel of a group homomorphism-/
@@ -260,25 +260,25 @@ end Morphisms
 
 section SubNegMonoid
 
-attribute [simp] SubNegMonoid.gsmul_zero'
-attribute [simp] SubNegMonoid.gsmul_succ'
+attribute [simp] SubNegMonoid.zsmul_zero'
+attribute [simp] SubNegMonoid.zsmul_succ'
 
 attribute [simp] Int.cast_id
 
 variable {A : Type _} [SubNegMonoid A] (a : A)
 
-instance : SMul ℕ A where
-  sMul := SubNegMonoid.gsmul ∘ Int.ofNat
+instance : HasSmul ℕ A where
+  smul := SubNegMonoid.zsmul ∘ Int.ofNat
 
-@[simp] theorem smul_zero : Nat.zero • a = (0 : A) := SubNegMonoid.gsmul_zero' _
+@[simp] theorem smul_zero : Nat.zero • a = (0 : A) := SubNegMonoid.zsmul_zero' _
 
-@[simp] theorem smul_succ : ∀ (m : ℕ) (a : A), (Nat.succ m) • a = a + m • a := SubNegMonoid.gsmul_succ'
+@[simp] theorem smul_succ : ∀ (m : ℕ) (a : A), (Nat.succ m) • a = a + m • a := SubNegMonoid.zsmul_succ'
 
-@[simp] theorem SubNegMonoid.gsmul_succ'_ (n : ℕ) : SubNegMonoid.gsmul (↑(n) + 1) a = a + SubNegMonoid.gsmul (↑ n) a := by
-  rw [← Int.cast_ofNat, Int.cast_id, ← Int.ofNat_succ]; exact SubNegMonoid.gsmul_succ' _ _
+@[simp] theorem SubNegMonoid.zsmul_succ'_ (n : ℕ) : SubNegMonoid.zsmul (↑(n) + 1) a = a + SubNegMonoid.zsmul (↑ n) a := by
+  rw [← Int.cast_ofNat, Int.cast_id, ← Int.ofNat_succ]; exact SubNegMonoid.zsmul_succ' _ _
 
-theorem SubNegMonoid.gsmul_one : SubNegMonoid.gsmul 1 a = a := by
-  rw [← Int.ofNat_one, gsmul_succ', Int.ofNat_zero, gsmul_zero', add_zero]
+theorem SubNegMonoid.zsmul_one : SubNegMonoid.zsmul 1 a = a := by
+  rw [← Int.ofNat_one, zsmul_succ', Int.ofNat_zero, zsmul_zero', add_zero]
 
 end SubNegMonoid
 
@@ -314,34 +314,34 @@ variable (ϕ : A → B) [AddCommGroup.Homomorphism ϕ]
 @[simp] theorem hom_mul : ∀ a : A, ∀ n : ℕ, n • (ϕ a) = ϕ (n • a) := by
   intro a n
   induction n with
-    | zero => simp [SMul.sMul]
+    | zero => simp [HasSmul.smul]
     | succ m ih =>
-      simp [SMul.sMul] at *
+      simp [HasSmul.smul] at *
       simp [ih]
 
-@[simp] theorem nsmul_hom : ∀ n : ℕ, ∀ a b : A, nsmul_rec n (a + b) = nsmul_rec n a + nsmul_rec n b := by
-  intros n a b
-  cases n
-  · simp [nsmul_rec]
-  · repeat (rw [nsmul_rec])
-    rw [add_assoc, add_assoc, add_left_cancel_iff, ← add_assoc, add_comm (nsmul_rec _ a) _, add_assoc, add_left_cancel_iff]
-    apply nsmul_hom
+-- @[simp] theorem nsmul_hom : ∀ n : ℕ, ∀ a b : A, nsmul_rec n (a + b) = nsmul_rec n a + nsmul_rec n b := by
+--   intros n a b
+--   cases n
+--   · simp [nsmul_rec]
+--   · repeat (rw [nsmul_rec])
+--     rw [add_assoc, add_assoc, add_left_cancel_iff, ← add_assoc, add_comm (nsmul_rec _ a) _, add_assoc, add_left_cancel_iff]
+--     apply nsmul_hom
 
-@[simp] theorem gsmul_hom : ∀ n : ℤ, ∀ a b : A, gsmul_rec n (a + b) = gsmul_rec n a + gsmul_rec n b := by
-  intros n a b
-  cases n
-  · simp [gsmul_rec]
-  · simp [gsmul_rec]; apply neg_eq_of_add_eq_zero
-    rw [add_assoc, add_comm (nsmul_rec _ b) _, ← add_assoc, ← add_assoc]; simp
+-- @[simp] theorem zsmul_hom : ∀ n : ℤ, ∀ a b : A, zsmul_rec n (a + b) = zsmul_rec n a + zsmul_rec n b := by
+--   intros n a b
+--   cases n
+--   · simp [zsmul_rec]
+--   · simp [zsmul_rec]; apply neg_eq_of_add_eq_zero
+--     rw [add_assoc, add_comm (nsmul_rec _ b) _, ← add_assoc, ← add_assoc]; simp
 
-instance {n : ℤ} : AddCommGroup.Homomorphism (gsmul_rec n : A → A) where
-  add_dist := gsmul_hom n
+-- instance {n : ℤ} : AddCommGroup.Homomorphism (zsmul_rec n : A → A) where
+--   add_dist := zsmul_hom n
 
 @[simp] theorem neg_hom : ∀ a a' : A, -(a + a') = -a + -a' := by
   intro a a'
-  rw [← @add_left_cancel_iff _ _ _ a _ _, ← @add_left_cancel_iff _ _ _ a' _ _]
-  rw [← add_assoc a (-a) _, add_right_neg, zero_add, add_right_neg,
-  ← add_assoc, add_comm a a', add_right_neg]
+  rw [neg_add_rev]
+  rw [add_comm]
+  
 
 @[reducible] def neg (a : A) := -a
 
@@ -376,9 +376,9 @@ instance [IsoAB : AddCommGroup.Isomorphism A B] : AddCommGroup.Homomorphism (Iso
 
 instance [IsoAB : AddCommGroup.Isomorphism A B] : AddCommGroup.Homomorphism (IsoAB.inv) := IsoAB.invHom
 
-instance refl [AddCommGroup.Isomorphism A A] : AddCommGroup.Isomorphism A A := by assumption
+instance reflMorph [AddCommGroup.Isomorphism A A] : AddCommGroup.Isomorphism A A := by assumption
 
-instance symm [iso : AddCommGroup.Isomorphism A B] : AddCommGroup.Isomorphism B A :=
+instance symmMorph [iso : AddCommGroup.Isomorphism A B] : AddCommGroup.Isomorphism B A :=
   {
     map := iso.inv
     mapHom := iso.invHom
@@ -388,7 +388,7 @@ instance symm [iso : AddCommGroup.Isomorphism A B] : AddCommGroup.Isomorphism B 
     idTgt := iso.idSrc
   }
 
-instance trans [isoAB : AddCommGroup.Isomorphism A B] [isoBC : AddCommGroup.Isomorphism B C] : AddCommGroup.Isomorphism A C :=
+instance transMorph [isoAB : AddCommGroup.Isomorphism A B] [isoBC : AddCommGroup.Isomorphism B C] : AddCommGroup.Isomorphism A C :=
   {
     map := isoBC.map ∘ isoAB.map
     mapHom := @hom_comp _ _ _ _ _ _ isoAB.map isoAB.mapHom isoBC.map isoBC.mapHom

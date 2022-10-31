@@ -16,37 +16,35 @@ section Zhom
 variable {A : Type} [abg : AddCommGroup A]
 
 abbrev zhom (a: A) : ℤ → A :=
-  fun n => abg.gsmul n a
+  fun n => abg.zsmul n a
 
-theorem gsmul_succ (n: ℤ) (x : A) : gsmul (n+1) x = x + gsmul n x  := by 
+theorem zsmul_succ (n: ℤ) (x : A) : zsmul (n+1) x = x + zsmul n x  := by 
     cases n  
     case ofNat k => 
-      apply abg.gsmul_succ'
+      apply abg.zsmul_succ'
     case negSucc k => 
       induction k with
       | zero => 
         simp
         simp [add_zero]
-        have l : -[1+ 0] + 1 = 0 := by rfl
-        rw [l]
-        have l₀ : gsmul 0 x = 0 := by apply abg.gsmul_zero'
+        have l₀ : zsmul 0 x = 0 := by apply abg.zsmul_zero'
         rw [l₀]
         simp
-        rw [abg.gsmul_neg']
+        rw [abg.zsmul_neg']
         simp
-        let l : gsmul 1 x = 
-                x + gsmul (0) x := abg.gsmul_succ' 0 x
+        let l : zsmul 1 x = 
+                x + zsmul (0) x := abg.zsmul_succ' 0 x
         rw [l]
         rw [l₀]
         simp
       | succ l _ =>
         have l₀ : -[1+ Nat.succ l] + 1 = -[1+ l] := by rfl
         rw [l₀]
-        rw [abg.gsmul_neg']
-        rw [abg.gsmul_neg']
+        rw [abg.zsmul_neg']
+        rw [abg.zsmul_neg']
         simp
 
-        let l₁ := abg.gsmul_succ' (l + 1) x
+        let l₁ := abg.zsmul_succ' (l + 1) x
         simp at l₁
         rw [l₁, ← add_assoc, neg_hom, ← add_assoc, neg_hom, ← add_assoc x _ _]
         simp
@@ -63,7 +61,7 @@ theorem isHom₁ (x : A) (n : ℤ) (m: Nat) :
       rw [← add_assoc]
       simp
       simp
-      let l₂ := gsmul_succ (n + k) x
+      let l₂ := zsmul_succ (n + k) x
       simp at l₂
       rw [l₂] 
       rw [ih]
@@ -80,12 +78,12 @@ theorem isHom₂ (x : A) (n m : Nat) :
           zhom x (Int.negSucc m) + zhom x (Int.negSucc n) :=
   by
     simp [zhom]
-    repeat (rw [abg.gsmul_neg'])
+    repeat (rw [abg.zsmul_neg'])
     simp
     simp [Int.add]
     have l₀ : -[1+ n] + -[1+ m] = -[1+ (n + m) + 1] := by rfl
     rw [l₀]
-    rw [abg.gsmul_neg']
+    rw [abg.zsmul_neg']
     simp
     have l₁ : ((n : ℤ) + m + 1 + 1) = (n + 1) + (m + 1) := by 
         rw [← add_assoc]
@@ -100,7 +98,7 @@ theorem isHom₂ (x : A) (n m : Nat) :
     simp [neg_hom]
     rw [add_assoc, add_assoc]
     simp
-    rw [add_comm, add_comm (-gsmul _ x) _, add_assoc, add_assoc]
+    rw [add_comm, add_comm (-zsmul _ x) _, add_assoc, add_assoc]
     simp [add_comm]
 
 theorem zhom_is_hom (x: A) (n m : ℤ) :
@@ -126,9 +124,9 @@ theorem zhom_is_hom (x: A) (n m : ℤ) :
   
 theorem zhom_one (x : A) : zhom x 1 = x := by
   simp [zhom]
-  let l : gsmul 1 x = x + gsmul 0 x := abg.gsmul_succ' 0 x
+  let l : zsmul 1 x = x + zsmul 0 x := abg.zsmul_succ' 0 x
   rw [l]
-  rw [abg.gsmul_zero' x]
+  rw [abg.zsmul_zero' x]
   simp [add_zero]
   
 instance zhomHom(a : A) : AddCommGroup.Homomorphism  (zhom a) := 

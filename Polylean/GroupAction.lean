@@ -1,19 +1,19 @@
 import Polylean.Morphisms
-import Polylean.SMul
+-- import Polylean.SMul
 
 /-
 Define group actions. This is done as a typeclass representing the property of being a group action.
 -/
 
 
-class Group.Action (G X : Type _) [Group G] extends SMul G X where
+class Group.Action (G X : Type _) [Group G] extends HasSmul G X where
   id_action : ∀ x : X, (1 : G) • x = x
   compatibility : ∀ g g' : G, ∀ x : X, (g * g') • x = g • (g' • x)
 
 attribute [simp] Group.Action.id_action
 attribute [simp] Group.Action.compatibility
 
-class AddCommGroup.Action (A X : Type _) [AddCommGroup A] extends SMul A X where
+class AddCommGroup.Action (A X : Type _) [AddCommGroup A] extends HasSmul A X where
   id_action : ∀ {x : X}, (0 : A) • x = x
   compatibility : ∀ {a a' : A}, ∀ {x : X}, (a + a') • x = a • (a' • x)
 
@@ -39,10 +39,10 @@ instance : AddCommGroup.Action A B where
 
 instance (a : A) : AddCommGroup.Homomorphism (α a) := aut_action a
 
-@[simp] theorem act_zero : ∀ {a : A}, a • (0 : B) = (0 : B) := by intro; simp [SMul.sMul]
+@[simp] theorem act_zero : ∀ {a : A}, a • (0 : B) = (0 : B) := by intro; simp [HasSmul.smul]
 
-@[simp] theorem add_dist : ∀ {a : A}, ∀ {b b' : B}, a • (b + b') = a • b + a • b' := by intro; simp [SMul.sMul]
+@[simp] theorem add_dist : ∀ {a : A}, ∀ {b b' : B}, a • (b + b') = a • b + a • b' := by intro; simp [HasSmul.smul]
 
-@[simp] theorem neg_push : ∀ {a : A}, ∀ {b : B}, a • (-b) = - (a • b) := by intros; simp [SMul.sMul]
+@[simp] theorem neg_push : ∀ {a : A}, ∀ {b : B}, a • (-b) = - (a • b) := by intros; simp [HasSmul.smul]
 
 end AutAction
