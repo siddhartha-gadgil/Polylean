@@ -19,42 +19,29 @@ variable (S : Sort _) [G : Group] [Γ : Groupoid S] [α : Groupoid.Action S]
 
 @[simp] theorem action_id : action 𝟙 = (Functor.id S) := sorry
 
-def Orbit :=  λ s t : S => ∃ g : G.hom () (), (α.action g).obj s = t
 
-instance Orbit.Equivalence : Equivalence (Orbit S) where
-  refl := λ s => ⟨𝟙, by simp⟩
-  symm := λ ⟨g, gaction⟩ => ⟨g⁻¹, by 
-    have := congrArg (α.action g⁻¹).obj gaction
-    rw [Groupoid.Functor.comp_obj', ← compatibility] at this
-    simp at this
-    exact Eq.symm this⟩
-  trans := λ ⟨g, gaction⟩ ⟨h, haction⟩ => ⟨g ≫ h, by rw [compatibility, ← Groupoid.Functor.comp_obj', gaction, haction]⟩
+inductive Orbit.rel : S → S → Prop
+  | action (A : S) (g : G.hom () ()) : Orbit.rel A ((α.action g).obj A)
 
-instance Orbit.Setoid : Setoid S where
-  r := Orbit S
-  iseqv := Orbit.Equivalence S
+def QuotientSpace := Quot $ Orbit.rel S
 
-@[simp] theorem Orbit.rel (X : S) (g : G.hom () ()) : Quotient.mk (Orbit.Setoid S) ((α.action g).obj X) = Quotient.mk (Orbit.Setoid S) X := by
-  apply Quotient.sound
-  apply (Orbit.Equivalence S).symm
-  apply Exists.intro g
-  rfl
-
-abbrev QuotientSpace := Quotient $ Orbit.Setoid S
 
 abbrev HomCollection (X Y : QuotientSpace S) := 
-  Σ (A : {Z // Quotient.mk _ Z = X}), 
-  Σ (B : {Z // Quotient.mk _ Z = Y}),
+  Σ (A : {Z // X = Quot.mk _ Z}), 
+  Σ (B : {Z // Y = Quot.mk _ Z}),
     A.val ⟶ B.val
       
 /-- The translation of a morphism by an action. -/
 inductive HomCollection.rel : (X Y : QuotientSpace S) → HomCollection _ X Y → HomCollection _ X Y → Prop
   | action {A B : S} (f : A ⟶ B) (g : G.hom () ()) : 
-      HomCollection.rel (Quotient.mk _ A) (Quotient.mk _ B) 
+      HomCollection.rel (Quot.mk _ A) (Quot.mk _ B) 
         ⟨⟨A, rfl⟩, ⟨B, rfl⟩, f⟩
-        ⟨⟨(α.action g).obj A, by simp⟩, ⟨(α.action g).obj B, by simp⟩, (α.action g).map f⟩
 
-def HomCollection.id (A : S) : HomCollection _ (Quotient.mk _ A) (Quotient.mk _ A) :=
+        ⟨⟨(α.action g).obj A, Quot.sound (Orbit.rel.action _ _)⟩, 
+         ⟨(α.action g).obj B, Quot.sound (Orbit.rel.action _ _)⟩, 
+         (α.action g).map f⟩
+
+def HomCollection.id (A : S) : HomCollection _ (Quot.mk _ A) (Quot.mk _ A) :=
   ⟨⟨A, rfl⟩, ⟨A, rfl⟩, 𝟙⟩
 
 def HomCollection.comp {X Y Z : QuotientSpace S} : HomCollection _ X Y → HomCollection _ Y Z → HomCollection _ X Z
@@ -66,14 +53,14 @@ def HomCollection.inv {X Y : QuotientSpace S} : HomCollection _ X Y → HomColle
 def HomSpace (X Y : QuotientSpace S) := Quot $ HomCollection.rel _ X Y
 
 def HomSpace.id : (X : QuotientSpace S) → HomSpace _ X X := 
-  Quotient.rec (λ a => Quot.mk _ (HomCollection.id S a))
+  Quot.rec (λ a => Quot.mk _ (HomCollection.id S a))
   (by
-    intro A B p
+    intro a b
+    simp [HomCollection.id]
+    intro p
     cases p
-    rename_i g hyp
-    have hyp' := Eq.symm hyp
-    subst hyp'
-    sorry)
+    sorry
+    )
 
 def HomSpace.comp {X Y Z : QuotientSpace S} : HomSpace _ X Y → HomSpace _ Y Z → HomSpace _ X Z := sorry
 
