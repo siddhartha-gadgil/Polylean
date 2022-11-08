@@ -1,7 +1,7 @@
 import Polylean.Complexes.Structures.Quiver
 
 /-- Serre's definition of an undirected graph. -/
-class SerreGraph (V : Type _) extends Quiver V where
+class SerreGraph (V : Sort _) extends Quiver V where
   op : {A B : V} → (A ⟶ B) → (B ⟶ A)
   opInv : {A B : V} → (e : A ⟶ B) → op (op e) = e
 
@@ -9,7 +9,7 @@ attribute [reducible] SerreGraph.op
 attribute [simp] SerreGraph.opInv
 
 /-- Every `Quiver` can be turned into a `SerreGraph` by adding a formal inverse for each edge. -/
-def Quiver.symmetrize {V : Type _} (Q : Quiver V) : SerreGraph V :=
+def Quiver.symmetrize {V : Sort _} (Q : Quiver V) : SerreGraph V :=
 { hom := λ A B => Q.hom A B ⊕ Q.hom B A,
   op := fun | .inl e => .inr e | .inr e => .inl e,
   opInv := fun | .inl _ => rfl | .inr _ => rfl }
@@ -17,12 +17,12 @@ def Quiver.symmetrize {V : Type _} (Q : Quiver V) : SerreGraph V :=
 
 namespace Path
 
-variable {V : Type _} [G : SerreGraph V] {A B C : V} (p : Path A B)
+variable {V : Sort _} [G : SerreGraph V] {A B C : V} (p : Path A B)
 
 /-- The inverse of a path in a Serre graph. -/
-def inverse {V : Type _} [SerreGraph V] : {A B : V} → Path A B → Path B A
-  | _, _, .nil => .nil
-  | _, _, .cons e p => .snoc p.inverse (SerreGraph.op e)
+def inverse {A B : V} : Path A B → Path B A
+  | .nil => .nil
+  | .cons e p => .snoc p.inverse (SerreGraph.op e)
 
 @[simp] theorem inverse_snoc {A B : V} : (p : Path A B) → (e : B ⟶ C) → 
   inverse (.snoc p e) = .cons (SerreGraph.op e) (inverse p)
@@ -66,11 +66,11 @@ theorem last_eq_inv_first :
 
 end Path
 
-abbrev Loop {V : Type _} [Quiver V] (A : V) := Path A A
+abbrev Loop {V : Sort _} [Quiver V] (A : V) := Path A A
 
 namespace Loop
 
-variable {V : Type _} [SerreGraph V] (A : V)
+variable {V : Sort _} [SerreGraph V] (A : V)
 
 def toPath : Loop A → Path A A := id
 

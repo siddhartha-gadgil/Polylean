@@ -1,16 +1,16 @@
 import Polylean.Complexes.Structures.SerreGraph
 
-class QuiverRel (V : Type _) extends Quiver V where
+class QuiverRel (V : Sort _) extends Quiver V where
   rel : {v : V} → Path v v → Sort _
 
-class TwoComplex (V : Type _) extends SerreGraph V where  
+class TwoComplex (V : Sort _) extends SerreGraph V where  
   rel : {v : V} → Loop v → Sort _
   
   inv : {v w : V} → (e : v ⟶ w) → rel (.cons (op e) $ .cons e .nil)
   flip :  {v : V} → {l : Loop v} → rel l → rel l.inv
   flipInv : {v : V} → {l : Loop v} → (r : rel l) → (Eq.subst l.inverse_inv $ flip (flip r)) = r
 
-inductive Relator {V : Type _} [TwoComplex V] : (v : V) → (ℓ : Loop v) → Sort _
+inductive Relator {V : Sort _} [TwoComplex V] : (v : V) → (ℓ : Loop v) → Sort _
   | nil : {v : V} → Relator v (.nil v)
   | disc : {v : V} → {l : Loop v} → TwoComplex.rel l → Relator v l
   | concat : {v : V} → {l l' : Loop v} → Relator v l → Relator v l' → Relator v (.append l l')
@@ -18,13 +18,13 @@ inductive Relator {V : Type _} [TwoComplex V] : (v : V) → (ℓ : Loop v) → S
   | rotate : {v : V} → {l : Loop v} → Relator v l → Relator (l.next v) l.rotate
   | rotate' : {v : V} → {l : Loop v} → Relator v l → Relator (l.prev v) l.rotate'
 
-inductive Path.Homotopy {V : Type _} [TwoComplex V] : {v w : V} → (p q : Path v w) → Prop
+inductive Path.Homotopy {V : Sort _} [TwoComplex V] : {v w : V} → (p q : Path v w) → Prop
   | rel : {v w : V} → {p q : Path v w} → Relator v (.append p q.inverse) → Homotopy p q
 
 
 namespace Relator
 
-variable {V : Type _} [C : TwoComplex V] {u v w : V} (l l' : Loop v)
+variable {V : Sort _} [C : TwoComplex V] {u v w : V} (l l' : Loop v)
 
 def subst : {u v : V} → (h : u = v) → (l : Loop u) → (l' : Loop v) → (l = (congrArg Loop h) ▸ l') → Relator u l → Relator v l'
   | _, _, rfl, _, _, rfl => id
@@ -101,7 +101,7 @@ end Relator
 
 namespace Path.Homotopy
 
-variable {V : Type _} [C : TwoComplex V] {u v : V} (p q r : Path u v)
+variable {V : Sort _} [C : TwoComplex V] {u v : V} (p q r : Path u v)
 
 theorem refl : (p : Path u v) → Path.Homotopy p p := (.rel $ Relator.trivial ·)
 

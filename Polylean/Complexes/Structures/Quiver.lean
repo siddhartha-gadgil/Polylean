@@ -4,27 +4,27 @@
     It is a common generalisation of multigraphs and categories. 
     This definition is taken from `mathlib`: 
     https://leanprover-community.github.io/mathlib_docs/combinatorics/quiver/basic.html#quiver. -/
-class Quiver (V : Type _) where
+class Quiver (V : Sort _) where
   hom : V → V → Sort _
 
 infixr:10 " ⟶ " => Quiver.hom -- type using `\-->` or `\hom`
 
 
 /-- A pre-functor is a morphism of quivers. -/
-structure Quiver.PreFunctor {V V' : Type _} (Q : Quiver V) (Q' : Quiver V') where
+structure Quiver.PreFunctor {V V' : Sort _} (Q : Quiver V) (Q' : Quiver V') where
   obj : V → V'
   map : {X Y : V} → (X ⟶ Y) → (obj X ⟶ obj Y)
 
 namespace Quiver.PreFunctor
 
 /-- The identity morphism between quivers. -/
-@[simp] protected def id (V : Type _) [Q : Quiver V] : PreFunctor Q Q :=
+@[simp] protected def id (V : Sort _) [Q : Quiver V] : PreFunctor Q Q :=
 { obj := id, map := id }
 
-instance (V : Type _) [Q : Quiver V] : Inhabited (PreFunctor Q Q) := ⟨PreFunctor.id V⟩
+instance (V : Sort _) [Q : Quiver V] : Inhabited (PreFunctor Q Q) := ⟨PreFunctor.id V⟩
 
 /-- Composition of morphisms between quivers. -/
-@[simp] def comp {U V W : Type _} {QU : Quiver U} {QV : Quiver V} {QW : Quiver W}
+@[simp] def comp {U V W : Sort _} {QU : Quiver U} {QV : Quiver V} {QW : Quiver W}
   (F : PreFunctor QU QV) (G : PreFunctor QV QW) : PreFunctor QU QW :=
   { obj := G.obj ∘ F.obj, map := G.map ∘ F.map }
 
@@ -32,16 +32,16 @@ end Quiver.PreFunctor
 
 
 /-- Paths in a quiver. -/
-inductive Path {V : Type _} [Quiver V] : V → V → Sort _
+inductive Path {V : Sort _} [Quiver V] : V → V → Sort _
   | nil : {A : V} → Path A A
   | cons : {A B C : V} → (A ⟶ B) → Path B C → Path A C
 
-def Quiver.toPath {V : Type _} [Quiver V] {A B : V} (e : A ⟶ B) : Path A B :=
+def Quiver.toPath {V : Sort _} [Quiver V] {A B : V} (e : A ⟶ B) : Path A B :=
   .cons e .nil
 
 namespace Path
 
-variable {V : Type _} [Quiver V] {A B C D : V}
+variable {V : Sort _} [Quiver V] {A B C D : V}
 
 @[matchPattern] abbrev nil' (A : V) : Path A A := Path.nil
 @[matchPattern] abbrev cons' (A B C : V) : 
