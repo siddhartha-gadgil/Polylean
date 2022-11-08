@@ -137,3 +137,20 @@ theorem last_snoc : (A B C : V) → (p : Path A B) → (e : B ⟶ C) → last (s
   | _, _, _, .cons' _ _ _ _ (.cons _ _), _ => by rw [snoc_cons, snoc, last, ← snoc_cons]; apply last_snoc
 
 end Path
+
+
+abbrev Loop {V : Sort _} [Quiver V] (A : V) := Path A A
+
+namespace Loop
+
+variable {V : Sort _} [Quiver V] (A : V)
+
+def toPath : Loop A → Path A A := id
+
+abbrev nil : Loop A := Path.nil
+
+abbrev next : Loop A → V := Path.first
+
+abbrev concat : Loop A → Loop A → Loop A := Path.append
+
+end Loop

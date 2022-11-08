@@ -66,19 +66,10 @@ theorem last_eq_inv_first :
 
 end Path
 
-abbrev Loop {V : Sort _} [Quiver V] (A : V) := Path A A
 
 namespace Loop
 
 variable {V : Sort _} [SerreGraph V] (A : V)
-
-def toPath : Loop A → Path A A := id
-
-abbrev nil : Loop A := Path.nil
-
-abbrev next : Loop A → V := Path.first
-
-abbrev concat : Loop A → Loop A → Loop A := Path.append
 
 abbrev inv {A : V} : Loop A → Loop A := Path.inverse
 
