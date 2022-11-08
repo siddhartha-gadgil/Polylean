@@ -1,4 +1,4 @@
-import Polylean.Complexes.Quiver
+import Polylean.Complexes.Structures.Quiver
 
 /-- A `GroupoidStruct` is a barebones structure for a groupoid containing none of the axioms. -/
 class GroupoidStruct (S : Sort _) extends Quiver S where

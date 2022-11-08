@@ -30,6 +30,7 @@ instance (V : Type _) [Q : Quiver V] : Inhabited (PreFunctor Q Q) := ⟨PreFunct
 
 end Quiver.PreFunctor
 
+
 /-- Paths in a quiver. -/
 inductive Path {V : Type _} [Quiver V] : V → V → Sort _
   | nil : {A : V} → Path A A
