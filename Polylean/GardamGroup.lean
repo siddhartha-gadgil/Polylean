@@ -12,12 +12,12 @@ This is done via the cocycle construction, using the explicit action and cocycle
 
 namespace P
 
--- the "kernel" group
+/-- the "kernel" group -/
 abbrev K := ℤ × ℤ × ℤ
 
 instance KGrp : AddCommGroup K := inferInstance
 
--- the "quotient" group
+/-- the "quotient" group -/
 abbrev Q := Fin 2 × Fin 2
 
 instance QGrp : AddCommGroup Q := inferInstance
@@ -33,15 +33,15 @@ abbrev a  : Q := (⟨1, by decide⟩, ⟨0, by decide⟩)
 abbrev b  : Q := (⟨0, by decide⟩, ⟨1, by decide⟩)
 abbrev ab : Q := (⟨1, by decide⟩, ⟨1, by decide⟩)
 
--- the action of `Q` on `K` by automorphisms
--- `id` and `neg` are the identity and negation homomorphisms
+/-- the action of `Q` on `K` by automorphisms
+ `id` and `neg` are the identity and negation homomorphisms -/
 @[reducible] def action : Q → K → K
   | (⟨0, _⟩, ⟨0, _⟩) => id × id × id
   | (⟨0, _⟩, ⟨1, _⟩) => neg × id × neg
   | (⟨1, _⟩, ⟨0, _⟩) => id × neg × neg
   | (⟨1, _⟩, ⟨1, _⟩) => neg × neg × id
 
--- a helper function to easily prove theorems about Q by cases
+/-- a helper function to easily prove theorems about Q by cases -/
 def Q.rec (P : Q → Sort _) :
   P (⟨0, by decide⟩, ⟨0, by decide⟩) →
   P (⟨0, by decide⟩, ⟨1, by decide⟩) →
@@ -60,8 +60,8 @@ def Q.rec (P : Q → Sort _) :
 instance (q : Q) : AddCommGroup.Homomorphism (action q) := by
   revert q; apply Q.rec <;> rw [action] <;> exact inferInstance
 
--- confirm that the above action is an action by automorphisms
--- this is done automatically with the machinery of decidable equality of homomorphisms on free groups
+/- confirm that the above action is an action by automorphisms
+- this is done automatically with the machinery of decidable equality of homomorphisms on free groups -/
 instance : AutAction Q K action :=
   {
     aut_action := inferInstance
@@ -70,7 +70,7 @@ instance : AutAction Q K action :=
   }
 
 
--- the cocycle in the construction
+/-- the cocycle in the construction -/
 @[reducible] def cocycle : Q → Q → K
   | (⟨0, _⟩, ⟨0, _⟩) , (⟨0, _⟩, ⟨0, _⟩)  => 0
   | (⟨0, _⟩, ⟨0, _⟩) , (⟨0, _⟩, ⟨1, _⟩)  => 0
@@ -89,8 +89,8 @@ instance : AutAction Q K action :=
   | (⟨1, _⟩, ⟨1, _⟩) , (⟨1, _⟩, ⟨0, _⟩)  => -y + z
   | (⟨1, _⟩, ⟨1, _⟩) , (⟨1, _⟩, ⟨1, _⟩)  => z
 
--- confirm that the above function indeed satisfies the cocycle condition
--- this is done fully automatically by previously defined decision procedures
+/-- confirm that the above function indeed satisfies the cocycle condition
+-- this is done fully automatically by previously defined decision procedures -/
 instance P_cocycle : Cocycle cocycle :=
   {
     α := action
@@ -100,7 +100,7 @@ instance P_cocycle : Cocycle cocycle :=
   }
 
 
--- the group `P` constructed via the cocycle construction
+/-- the group `P` constructed via the cocycle construction -/
 
 abbrev P := K × Q
 
@@ -108,7 +108,7 @@ instance PGrp : Group P := MetabelianGroup.metabeliangroup cocycle
 
 instance : DecidableEq P := inferInstanceAs (DecidableEq (K × Q))
 
--- a handy theorem for describing the group multiplication
+/-- a handy theorem for describing the group multiplication -/
 @[simp] theorem Pmul : ∀ k k' : K, ∀ q q' : Q, (k, q) * (k', q') = (k + action q k' + cocycle q q', q + q') :=
   λ k k' q q' => by
     rw [MetabelianGroup.mult]

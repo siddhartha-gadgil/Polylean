@@ -1,5 +1,5 @@
 import Polylean.MetabelianGroup
-import Polylean.Experiments.Tactics
+import Polylean.Tactics.ReduceGoal
 
 /-
 Define the product of two groups and related concepts.
