@@ -81,8 +81,8 @@ theorem isHom₂ (x : A) (n m : Nat) :
     repeat (rw [abg.zsmul_neg'])
     simp
     simp [Int.add]
-    have l₀ : -[1+ n] + -[1+ m] = -[1+ (n + m) + 1] := by rfl
-    rw [l₀]
+    -- have l₀ : -[1+ n] + -[1+ m] = -[1+ (n + m) + 1] := by rfl
+    -- rw [l₀]
     rw [abg.zsmul_neg']
     simp
     have l₁ : ((n : ℤ) + m + 1 + 1) = (n + 1) + (m + 1) := by 
