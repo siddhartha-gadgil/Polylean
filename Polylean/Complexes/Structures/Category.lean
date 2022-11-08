@@ -74,3 +74,18 @@ def compose_append {X Y Z : C} : {p : Path X Y} → {q : Path Y Z} → (append p
     rw [compose_append, Category.comp_assoc]
 
 end Path
+
+/-- Paths in a quiver form a category under concatenation. -/
+instance (priority := low) Quiver.PathCategory {V : Sort _} (_ : Quiver V) : Category V where
+  hom := Path
+  id := Path.nil'
+  comp := Path.append
+
+  id_comp := Path.nil_append
+  comp_id := Path.append_nil
+  comp_assoc := Path.append_assoc
+
+/-- Embedding of a `Quiver` into its category of paths. -/
+instance {V : Sort _} [Q : Quiver V] : Quiver.PreFunctor Q Q.PathCategory.toQuiver where
+  obj := id
+  map := Quiver.toPath
