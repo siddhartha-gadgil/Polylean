@@ -3,10 +3,13 @@ open Lake DSL
 
 package polylean
 
-@[defaultTarget]
+@[default_target]
+lean_lib Polylean
+
+@[default_target]
 lean_exe polymath
 
-@[defaultTarget]
+@[default_target]
 lean_lib GardamTheorem
 
 require mathlib from git
