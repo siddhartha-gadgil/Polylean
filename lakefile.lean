@@ -1,7 +1,9 @@
 import Lake
 open Lake DSL
 
-package polylean
+package Polylean {
+  precompileModules := true
+}
 
 @[default_target]
 lean_lib Polylean

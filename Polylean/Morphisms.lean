@@ -142,7 +142,7 @@ def subType (P: T → Prop) := {a : T // P a}
 
 theorem subType.eq_of_val_eq (P : T → Prop)  :
     ∀ {a b : subType P}, Eq a.val b.val → Eq a b
-  | ⟨v, prf⟩, ⟨_, _⟩, rfl => rfl
+  | ⟨_, _⟩, ⟨_, _⟩, rfl => rfl
 
 end subType
 
@@ -211,7 +211,7 @@ instance : subGroup (λ h : H => ∃ g : G, ϕ g = h) where
 instance : Group (image ϕ) := subGroup.Group _
 
 instance inclusion (P : G → Prop) [subGroup P] : Group.Homomorphism (subType.val P) where
-  mul_dist := λ ⟨g, pg⟩ ⟨g', pg'⟩ => rfl
+  mul_dist := λ ⟨_, _⟩ ⟨_, _⟩ => rfl
 
 end subGroup
 
