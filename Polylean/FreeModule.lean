@@ -1,6 +1,5 @@
 import Mathlib.Algebra.Ring.Basic
 import Mathlib.Algebra.Group.Defs
-import Polylean.SMul
 
 /-!
 Free module over a ring `R` over a set `X`. It is assumed that both `R` and `X` have decidable equality. This is to obtain decidable equality for the elements of the module, which we do. We choose our definition to allow both such computations and to prove results.
@@ -460,7 +459,7 @@ def FreeModule.add  : FreeModule R X → FreeModule R X → FreeModule R X := by
 instance  : Add (FreeModule R X) :=
   ⟨FreeModule.add⟩
 
-instance  : SMul R (FreeModule R X) :=
+instance  : HasSmul R (FreeModule R X) :=
   ⟨FreeModule.scmul⟩
 namespace FormalSum
 
@@ -628,9 +627,9 @@ instance : AddCommGroup (FreeModule R X) :=
     sub_eq_add_neg := by 
       intro x y 
       rfl
-    gsmul_zero' := by intros; rfl
-    gsmul_succ' := by intros; rfl
-    gsmul_neg' := by intros; rfl
+    -- gsmul_zero' := by intros; rfl
+    -- gsmul_succ' := by intros; rfl
+    -- gsmul_neg' := by intros; rfl
 
     add_left_neg := by 
         intro x
@@ -793,9 +792,9 @@ theorem nonzero_coeff_has_complement  (x₀ : X)(s : FormalSum R X) : 0 ≠ s.co
 
 /-- if all coordinates are zero, then moves relate to the empty sum -/
 theorem equiv_e_of_zero_coeffs  (s : FormalSum R X) (hyp : ∀ x : X, s.coords x = 0) : s ≃ [] :=
-  let canc : IsAddLeftCancel R :=
-    ⟨fun a b c h => by
-      rw [← neg_add_cancel_left a b, h, neg_add_cancel_left]⟩
+  -- let canc : IsAddLeftCancel R :=
+  --   ⟨fun a b c h => by
+  --     rw [← neg_add_cancel_left a b, h, neg_add_cancel_left]⟩
   match mt : s with
   | [] => rfl
   | h :: t => by
@@ -849,10 +848,6 @@ theorem equiv_e_of_zero_coeffs  (s : FormalSum R X) (hyp : ∀ x : X, s.coords x
               rw [← c]
               let ceq := coords_well_defined x₀ _ _ eqnStep
               simp [coords, monomCoeff] at ceq
-              let pad : coords t x₀ = coords t x₀ + 0 := by
-                simp [add_zero]
-              let ceq' := Eq.trans ceq pad
-              let ceq'' := add_left_cancel ceq'
               assumption
             else by
               let hx := hyp x
@@ -889,9 +884,6 @@ theorem equiv_e_of_zero_coeffs  (s : FormalSum R X) (hyp : ∀ x : X, s.coords x
 
 /-- if coordinates are equal, the sums are related by moves -/
 theorem equiv_of_equal_coeffs  (s₁ s₂ : FormalSum R X) (hyp : ∀ x : X, s₁.coords x = s₂.coords x) : s₁ ≃ s₂ :=
-  let canc : IsAddLeftCancel R :=
-    ⟨fun a b c h => by
-      rw [← neg_add_cancel_left a b, h, neg_add_cancel_left]⟩
   match s₁ with
   | [] =>
     have coeffs : ∀ x : X, s₂.coords x = 0 := by
@@ -998,30 +990,50 @@ A basic `Repr` on Free Modules, mainly for debugging. This is implemented by con
 
 theorem fst_le_max (a b : Nat): a ≤ max a b  := by
     simp [max]
-    exact if c:b < a 
+    exact if c:a ≤ b 
           then by
+              unfold max
+              unfold Nat.instMaxNat
+              unfold maxOfLe
               simp [if_pos c]
-          else by
-              simp [if_neg c]
-              apply le_of_not_lt
               assumption
+          else by
+              unfold max
+              unfold Nat.instMaxNat
+              unfold maxOfLe
+              simp [if_neg c]
+
             
 theorem snd_le_max (a b : Nat): b ≤ max a b  := by
     simp [max]
-    exact if c:b < a 
-    then by 
+    exact if c: a ≤ b
+    then by
+      unfold max
+      unfold Nat.instMaxNat
+      unfold maxOfLe 
       simp [if_pos c]
-      apply le_of_lt
-      assumption
     else by 
+      unfold max
+      unfold Nat.instMaxNat
+      unfold maxOfLe
       simp [if_neg c]
+      apply Nat.le_of_lt
+      let c' := Nat.gt_of_not_le c
+      assumption
+      
 
 theorem eq_fst_or_snd_of_max (a b : Nat) : (max a b = a) ∨ (max a b = b) := by
       simp [max]
-      exact if c:b < a 
+      exact if c: a ≤ b 
         then by
+          unfold max
+          unfold Nat.instMaxNat
+          unfold maxOfLe
           simp [if_pos c]
         else by
+          unfold max
+          unfold Nat.instMaxNat
+          unfold maxOfLe
           simp [if_neg c]
 
 def maxNormSuccOnSupp (norm: X → Nat)(crds : X → R)(s: List X) : Nat :=

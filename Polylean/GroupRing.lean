@@ -100,8 +100,7 @@ theorem mul_monom_add(b₁ b₂ : R)(h x₀ : G)(s: FormalSum R G): coords (mulM
     conv =>
       lhs
       rw [add_assoc]
-      congr
-      skip
+      arg 2
       rw [← add_assoc]
       congr
       rw [add_comm]    
@@ -110,7 +109,7 @@ theorem mul_monom_add(b₁ b₂ : R)(h x₀ : G)(s: FormalSum R G): coords (mulM
       rw [add_assoc]
     conv =>
       rhs 
-      congr
+      arg 2
       skip 
       rw [← add_assoc]
 
@@ -130,7 +129,7 @@ theorem mul_zero_cons (s t : FormalSum R G)(g: G):  mul s ((0, h) :: t) ≈  mul
       simp [coords, mul]
       let l := mul_monom_zero h x₀ tail
       rw [l]
-      simp [zero_add]
+
 
 /-- Quotient in second argument for group ring multiplication 
 -/
@@ -288,8 +287,6 @@ theorem first_arg_invariant (s₁ s₂ t : FormalSum R G) (rel : ElementaryMove 
         simp
         conv =>
           lhs 
-          congr
-          congr
           rw [add_comm]    
         
 /-- multiplication for free modules -/
@@ -334,9 +331,9 @@ instance : Ring (FreeModule R G) :=
     sub_eq_add_neg := by 
       intro x y 
       rfl
-    gsmul_zero' := by intros; rfl
-    gsmul_succ' := by intros; rfl
-    gsmul_neg' := by intros; rfl
+    -- gsmul_zero' := by intros; rfl
+    -- gsmul_succ' := by intros; rfl
+    -- gsmul_neg' := by intros; rfl
 
     add_left_neg := by 
         intro x
@@ -344,7 +341,7 @@ instance : Ring (FreeModule R G) :=
         simp at l
         have lc : (-1 : R) + 1 = 0 := by 
             apply add_left_neg
-        rw [lc] at l
+        -- rw [lc] at l
         rw [FreeModule.unit_coeffs] at l
         rw [FreeModule.zero_coeffs] at l
         exact l
@@ -373,7 +370,6 @@ instance : Ring (FreeModule R G) :=
           let lih := congrFun ih x₀
           rw [← append_coords] at lih
           rw [lih]
-          simp [add_assoc]
     right_distrib := by
       apply @Quotient.ind (motive := fun a  =>
         ∀ b c, (a + b) * c = a * c + b * c)
@@ -401,13 +397,11 @@ instance : Ring (FreeModule R G) :=
           simp [add_assoc, add_left_cancel]
           conv =>
             lhs
-            arg 2
             rw [← add_assoc]
             arg 1
             rw [add_comm]
           conv =>
             rhs
-            arg 2
             rw [← add_assoc]
 
     zero_mul := by
@@ -517,12 +511,12 @@ instance : Ring (FreeModule R G) :=
       apply eqlCoords.refl
     npow_succ' := by
       intro n x
-      rw [npow_rec]
+      rw [npowRec]
 
     intCast := fun n => 
       match n with 
       | Int.ofNat k =>  ⟦ [(Int.ofNat k, 1)] ⟧
-      | Int.negSucc k => - ⟦ [(Int.ofNat k + 1, 1)] ⟧
+      | Int.negSucc k => - ⟦ [(Int.ofNat k + (1 : R), (1 : G))] ⟧
     intCast_ofNat := by 
       intro n
       apply Quotient.sound

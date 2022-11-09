@@ -5,13 +5,13 @@ package Polylean {
   precompileModules := true
 }
 
-@[defaultTarget]
+@[default_target]
 lean_lib Polylean
 
-@[defaultTarget]
+@[default_target]
 lean_exe polymath
 
-@[defaultTarget]
+@[default_target]
 lean_lib GardamTheorem
 
 require mathlib from git

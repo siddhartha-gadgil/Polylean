@@ -100,7 +100,7 @@ theorem right_inv : ∀ (g : K × Q), mul c g (inv c g) = e
   | (k, q) => by
     simp [mul, inv, e]
     repeat (rw [← AddCommGroup.Action.compatibility])
-    simp; rw [← add_assoc]; simp
+    simp;
 
 theorem mul_assoc : ∀ (g g' g'' : K × Q), mul c (mul c g g') g'' =  mul c g (mul c g' g'')
   | (k, q), (k', q'), (k'', q'') => by
@@ -128,9 +128,9 @@ instance metabeliangroup : Group (K × Q) :=
     npow_zero' := by intros; rfl,
     npow_succ' := by intros; rfl,
 
-    gpow_zero' := by intros; rfl,
-    gpow_succ' := by intros; rfl,
-    gpow_neg' := by intros; rfl,
+    -- gpow_zero' := by intros; rfl,
+    -- gpow_succ' := by intros; rfl,
+    -- gpow_neg' := by intros; rfl,
   }
 
 def mult (k k' : K) (q q' : Q) : (k, q) * (k', q') =  (k + (q • k') + c q q', q + q') := rfl
@@ -199,7 +199,7 @@ instance : AddCommGroup.Homomorphism (Metabelian.Kernel.inclusion Q K) where
     apply subType.eq_of_val_eq
     show ((k + k'), (0 : Q)) = (k, (0 : Q)) * (k', (0 : Q))
     rw [MetabelianGroup.mult]
-    simp
+    simp only [add_zero, Cocycle.cocycleId, AddCommGroup.Action.id_action, add_comm]
 
 instance : AddCommGroup.Homomorphism (Metabelian.Kernel.projection Q K) where
   add_dist := by

@@ -58,7 +58,7 @@ theorem product_coords : ∀ g h : K × Q,
         let tc : @trivial_cocycle Q K _ q q' = 0 := by rfl
         show (k + q • k' + trivial_cocycle q q', q + q') = (k + k', q + q')
         rw [tc, add_zero]
-        simp only [SMul.sMul] 
+        simp only [HasSmul.smul] 
         have tc' : trivial_action q k'= k' := by rfl
         rw [tc']
         
