@@ -43,17 +43,17 @@ namespace Path
 
 variable {V : Sort _} [Quiver V] {A B C D : V}
 
-@[matchPattern] abbrev nil' (A : V) : Path A A := Path.nil
-@[matchPattern] abbrev cons' (A B C : V) : 
+@[match_pattern] abbrev nil' (A : V) : Path A A := Path.nil
+@[match_pattern] abbrev cons' (A B C : V) : 
   (A ⟶ B) → Path B C → Path A C := Path.cons
 
 /-- Concatenate an edge to the end of a path. -/
-@[matchPattern]
+@[match_pattern]
 abbrev snoc : {A B C : V} → Path A B → (B ⟶ C) → Path A C
   | _, _, _, .nil, e => .cons e .nil
   | _, _, _, .cons e p', e' => .cons e (snoc p' e')
 
-@[matchPattern]
+@[match_pattern]
 abbrev snoc' (A B C : V) : Path A B → (B ⟶ C) → Path A C := Path.snoc
 
 /-- Concatenation of paths. -/

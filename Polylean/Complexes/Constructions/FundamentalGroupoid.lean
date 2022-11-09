@@ -72,10 +72,6 @@ def Groupoid.groupAt {G : Sort _} (Gpd : Groupoid G) (g : G) : Group (g ⟶ g) w
 
   div_eq_mul_inv := by intros; rfl
 
-  gpow_zero' := by intros; rfl
-  gpow_neg' := by intros; rfl
-  gpow_succ' := by intros; rfl
-
 /-- The fundamental group of a two-complex. -/
 @[instance] def FundamentalGroup {V : Sort _} (CV : CombinatorialTwoComplex.{_ + 1, _ + 1} V) (v : V) := 
   @Groupoid.groupAt V (FundamentalGroupoid CV) v
