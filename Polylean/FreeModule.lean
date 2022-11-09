@@ -1,6 +1,5 @@
 import Mathlib.Algebra.Ring.Basic
 import Mathlib.Algebra.Group.Defs
--- import Polylean.SMul
 
 /-!
 Free module over a ring `R` over a set `X`. It is assumed that both `R` and `X` have decidable equality. This is to obtain decidable equality for the elements of the module, which we do. We choose our definition to allow both such computations and to prove results.
