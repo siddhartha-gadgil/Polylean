@@ -25,12 +25,12 @@ theorem Nat.mod2_add_dist : ∀ m n : ℕ, Nat.mod2 (m + n) = Nat.mod2 m + Nat.m
   | Nat.zero, Nat.zero => rfl
   | Nat.zero, Nat.succ _ => by
     simp [mod2, add_zero]
-    show _ = (0 : Fin 2) + _
-    rw [AddMonoid.zero_add]
+    -- show _ = (0 : Fin 2) + _
+    -- rw [AddMonoid.zero_add]
   | Nat.succ _, Nat.zero => by
     simp [mod2, zero_add]
-    show _ = _ + (0 : Fin 2)
-    simp
+    -- show _ = _ + (0 : Fin 2)
+    -- simp
   | Nat.succ a, Nat.succ b => by
     rw [Nat.add_succ, Nat.succ_add, mod2, mod2_add_dist a b, mod2_succ, mod2_succ]
     rw [add_assoc, ← add_assoc _ 1 _, add_comm _ 1, ← add_assoc 1 _ _, ← add_assoc 1 _ _]

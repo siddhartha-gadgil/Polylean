@@ -7,7 +7,6 @@ open SubNegMonoid
 
 /-!
 The section `Zhom` consists of results related to the scalar integer multiplication homomorphism of additive groups.
-
 The later part contains the theory of free Abelian groups, with `ℤ` as an example, as well as a proof that the product of free Abelian groups is free.
 -/
 
@@ -16,44 +15,27 @@ section Zhom
 variable {A : Type} [abg : AddCommGroup A]
 
 abbrev zhom (a: A) : ℤ → A :=
-  fun n => abg.gsmul n a
+  fun n => abg.zsmul n a
 
-theorem gsmul_succ (n: ℤ) (x : A) : gsmul (n+1) x = x + gsmul n x  := by 
-    cases n  
-    case ofNat k => 
-      apply abg.gsmul_succ'
-    case negSucc k => 
+theorem zsmul_succ (n: ℤ) (x : A) : zsmul (n+1) x = x + zsmul n x  := by
+    cases n
+    case ofNat k =>
+      apply abg.zsmul_succ'
+    case negSucc k =>
       induction k with
-      | zero => 
-        simp
-        simp [add_zero]
-        have l : -[1+ 0] + 1 = 0 := by rfl
-        rw [l]
-        have l₀ : gsmul 0 x = 0 := by apply abg.gsmul_zero'
-        rw [l₀]
-        simp
-        rw [abg.gsmul_neg']
-        simp
-        let l : gsmul 1 x = 
-                x + gsmul (0) x := abg.gsmul_succ' 0 x
-        rw [l]
-        rw [l₀]
+      | zero =>
+        show zsmul (Int.ofNat _) _ = _
+        rw [abg.zsmul_neg', abg.zsmul_succ']
         simp
       | succ l _ =>
-        have l₀ : -[1+ Nat.succ l] + 1 = -[1+ l] := by rfl
-        rw [l₀]
-        rw [abg.gsmul_neg']
-        rw [abg.gsmul_neg']
+        show zsmul (Int.negSucc l) _ = _
+        rw [abg.zsmul_neg', abg.zsmul_neg', abg.zsmul_succ' l.succ]
+        rw [neg_hom, ← add_assoc]
         simp
 
-        let l₁ := abg.gsmul_succ' (l + 1) x
-        simp at l₁
-        rw [l₁, ← add_assoc, neg_hom, ← add_assoc, neg_hom, ← add_assoc x _ _]
-        simp
-
-theorem isHom₁ (x : A) (n : ℤ) (m: Nat) : 
+theorem isHom₁ (x : A) (n : ℤ) (m: Nat) :
       zhom x (n + m) = zhom x n + zhom x m :=
-  by 
+  by
     induction m with
     | zero =>
       simp [zhom]
@@ -63,9 +45,9 @@ theorem isHom₁ (x : A) (n : ℤ) (m: Nat) :
       rw [← add_assoc]
       simp
       simp
-      let l₂ := gsmul_succ (n + k) x
+      let l₂ := zsmul_succ (n + k) x
       simp at l₂
-      rw [l₂] 
+      rw [l₂]
       rw [ih]
       simp
       conv =>
@@ -75,32 +57,29 @@ theorem isHom₁ (x : A) (n : ℤ) (m: Nat) :
         rw [add_comm]
       rw [← add_assoc]
 
-theorem isHom₂ (x : A) (n m : Nat) : 
-        zhom x ((Int.negSucc n) + (Int.negSucc m)) = 
+theorem isHom₂ (x : A) (n m : Nat) :
+        zhom x ((Int.negSucc n) + (Int.negSucc m)) =
           zhom x (Int.negSucc m) + zhom x (Int.negSucc n) :=
   by
     simp [zhom]
-    repeat (rw [abg.gsmul_neg'])
+    repeat (rw [abg.zsmul_neg'])
+    show zsmul (Int.negSucc _) _ = _
+    rw [abg.zsmul_neg']
     simp
-    simp [Int.add]
-    have l₀ : -[1+ n] + -[1+ m] = -[1+ (n + m) + 1] := by rfl
-    rw [l₀]
-    rw [abg.gsmul_neg']
-    simp
-    have l₁ : ((n : ℤ) + m + 1 + 1) = (n + 1) + (m + 1) := by 
+    have l₁ : ((n : ℤ) + m + 1 + 1) = (n + 1) + (m + 1) := by
         rw [← add_assoc]
         simp [add_comm]
         rw [← add_assoc]
         simp [add_comm]
     rw [l₁]
-    simp 
+    simp
     let l₂ := isHom₁ x (n  + 1) (m + 1)
     simp [zhom] at l₂
     rw [l₂]
     simp [neg_hom]
     rw [add_assoc, add_assoc]
     simp
-    rw [add_comm, add_comm (-gsmul _ x) _, add_assoc, add_assoc]
+    rw [add_comm, add_comm (-zsmul _ x) _, add_assoc, add_assoc]
     simp [add_comm]
 
 theorem zhom_is_hom (x: A) (n m : ℤ) :
@@ -123,26 +102,26 @@ theorem zhom_is_hom (x: A) (n m : ℤ) :
         rhs
         rw [add_comm]
       assumption
-  
+
 theorem zhom_one (x : A) : zhom x 1 = x := by
   simp [zhom]
-  let l : gsmul 1 x = x + gsmul 0 x := abg.gsmul_succ' 0 x
+  let l : zsmul 1 x = x + zsmul 0 x := abg.zsmul_succ' 0 x
   rw [l]
-  rw [abg.gsmul_zero' x]
+  rw [abg.zsmul_zero' x]
   simp [add_zero]
-  
-instance zhomHom(a : A) : AddCommGroup.Homomorphism  (zhom a) := 
+
+instance zhomHom(a : A) : AddCommGroup.Homomorphism  (zhom a) :=
   ⟨zhom_is_hom a⟩
 
 theorem unique_morphism_nat (f g : ℤ → A)[AddCommGroup.Homomorphism f]
-        [AddCommGroup.Homomorphism g]: 
+        [AddCommGroup.Homomorphism g]:
           f 1 = g 1  → ∀ n: ℕ, f (n + 1) = g (n + 1) := by
           intro hyp
           intro n
           induction n with
           | zero =>
-            simp [hyp]            
-          | succ k ih => 
+            simp [hyp]
+          | succ k ih =>
             simp [hyp] at *
             assumption
 
@@ -156,7 +135,7 @@ theorem unique_morphism (f g : ℤ → A)[AddCommGroup.Homomorphism f]
           cases n
           case ofNat k =>
             cases k
-            case zero => 
+            case zero =>
               rw [fzero, gzero]
             case succ k' =>
               apply unique_morphism_nat f g hyp
@@ -167,7 +146,7 @@ theorem unique_morphism (f g : ℤ → A)[AddCommGroup.Homomorphism f]
               simp [Int.negSucc_ofNat_eq]
             rw [fn, gn]
             let l := unique_morphism_nat f g hyp k
-            rw [l]           
+            rw [l]
 
 
 
@@ -177,11 +156,11 @@ class FreeAbelianGroup(F: Type)[AddCommGroup F] (X: Type) where
   i: X → F
   inducedMap : (A: Type) →  [AddCommGroup A] →  (X → A) → (F → A)
   induced_extends{A: Type}[AddCommGroup A] : ∀ f : X → A, (inducedMap A f) ∘ i = f
-  induced_hom: (A: Type) → [abg : AddCommGroup A] → 
+  induced_hom: (A: Type) → [abg : AddCommGroup A] →
       (f : X → A) →  AddCommGroup.Homomorphism (@inducedMap A abg f)
-  unique_extension{A: Type}[AddCommGroup A] 
+  unique_extension{A: Type}[AddCommGroup A]
     (f g : F → A)[AddCommGroup.Homomorphism f][AddCommGroup.Homomorphism g] :
-       f ∘ i = g ∘ i  → f = g 
+       f ∘ i = g ∘ i  → f = g
 
 section Homomorphisms
 
@@ -193,7 +172,7 @@ theorem unique_extension{F: Type}[AddCommGroup F] {X: Type}[fgp : FreeAbelianGro
 
 instance fromBasisHom {F: Type}[AddCommGroup F]
   {X: Type}[fag : FreeAbelianGroup F X]{A: Type}[AddCommGroup A]
-  {f: X → A} : @AddCommGroup.Homomorphism F A _ _ 
+  {f: X → A} : @AddCommGroup.Homomorphism F A _ _
     (@fromBasis F _ X  fag A _ f) := by
     apply fag.induced_hom
 
@@ -208,13 +187,13 @@ instance inducedHomomorphism (F : Type) [AddCommGroup F] {X : Type} [fag : FreeA
 
 instance fromBasisFamilyHom {F: Type}[AddCommGroup F]
   {X: Type}[fag : FreeAbelianGroup F X]{A: Type}[AddCommGroup A]{D : Type}
-  {f: D → X → A}{p : D} :  @AddCommGroup.Homomorphism F A _ _ 
+  {f: D → X → A}{p : D} :  @AddCommGroup.Homomorphism F A _ _
     ((@fromBasisFamily F _ X  fag A _ D f) p) := by
     apply fag.induced_hom
 
 instance fromBasisHom' {F: Type}[AddCommGroup F]
   {X: Type}[fag : FreeAbelianGroup F X]{A: Type}[AddCommGroup A]
-  {f: X → A} : @AddCommGroup.Homomorphism F A _ _ 
+  {f: X → A} : @AddCommGroup.Homomorphism F A _ _
     (fag.inducedMap A f) := by
     apply fag.induced_hom
 
@@ -230,7 +209,7 @@ instance intFree : FreeAbelianGroup ℤ Unit  where
     intro A _ f
     apply funext; intro u
     simp [unitBasis]
-    apply zhom_one 
+    apply zhom_one
 
   induced_hom := by
     intro A abg f
@@ -246,13 +225,13 @@ end ZasFree
 open EnumDecide
 
 section DecideHomsEqual
-def decideHomsEqual{F: Type}[AddCommGroup F] (X: Type)[fgp : FreeAbelianGroup F X] {A: Type}[AddCommGroup A][DecidableEq A][DecideForall X] (f g : F → A)[AddCommGroup.Homomorphism f][AddCommGroup.Homomorphism g] : Decidable (f = g) := 
-        if c : ∀ x : X, f (fgp.i x) = g (fgp.i x) then 
+def decideHomsEqual{F: Type}[AddCommGroup F] (X: Type)[fgp : FreeAbelianGroup F X] {A: Type}[AddCommGroup A][DecidableEq A][DecideForall X] (f g : F → A)[AddCommGroup.Homomorphism f][AddCommGroup.Homomorphism g] : Decidable (f = g) :=
+        if c : ∀ x : X, f (fgp.i x) = g (fgp.i x) then
         by
           apply Decidable.isTrue
           apply fgp.unique_extension f g
           apply funext
-          intro x  
+          intro x
           exact c x
         else by
           apply Decidable.isFalse
@@ -260,13 +239,13 @@ def decideHomsEqual{F: Type}[AddCommGroup F] (X: Type)[fgp : FreeAbelianGroup F 
           let c' : ∀ (x : X), f (fgp.i x) = g (fgp.i x) := by
             intro x
             apply congrFun contra (fgp.i x)
-          contradiction 
+          contradiction
 
 instance decHomsEqual{F: Type}[AddCommGroup F]
   {X: Type}[fgp : FreeAbelianGroup F X]
   {A: Type}[AddCommGroup A][DecidableEq A][DecideForall X]
     (f g : F → A)[AddCommGroup.Homomorphism f][AddCommGroup.Homomorphism g] :
-      Decidable (f = g) := by apply decideHomsEqual X 
+      Decidable (f = g) := by apply decideHomsEqual X
 
 end DecideHomsEqual
 
@@ -275,7 +254,7 @@ abbrev double : ℤ → ℤ := fromBasis (fun _ : Unit => 2)
 
 def dblHom : AddCommGroup.Homomorphism (double ) := inferInstance
 
-abbrev egAction : Fin 2 → ℤ → ℤ 
+abbrev egAction : Fin 2 → ℤ → ℤ
 | ⟨0, _⟩ => fromBasis (fun _ : Unit => 1)
 | ⟨1, _⟩ => fromBasis (fun _ : Unit => -1)
 
@@ -283,27 +262,27 @@ def egHom₀  : AddCommGroup.Homomorphism (egAction 0) := inferInstance
 
 -- proof of being an action
 
-def egActionBasis' : Fin 2 → Unit → ℤ 
+def egActionBasis' : Fin 2 → Unit → ℤ
 | ⟨0, _⟩ => fun _ => 1
 | ⟨1, _⟩ => fun _ => -1
 
 abbrev egAction' := fromBasisFamily ℤ (Fin 2)  (egActionBasis')
 
-def egHom' (x: Fin 2)  : 
+def egHom' (x: Fin 2)  :
   AddCommGroup.Homomorphism (egAction' x) := inferInstance -- works!
 
-def egHom'' (x y: Fin 2)  : 
-  AddCommGroup.Homomorphism <| 
+def egHom'' (x y: Fin 2)  :
+  AddCommGroup.Homomorphism <|
       (egAction' x) ∘ (egAction' y) := inferInstance -- works!
 
-theorem egIsAction: ∀ (x y: Fin 2), 
+theorem egIsAction: ∀ (x y: Fin 2),
   (egAction' x) ∘ (egAction' y) = egAction' (x + y) := by decide -- works!
 
 end Examples
 section Product
 
 variable {A B : Type _} [AddCommGroup A] [AddCommGroup B]
-variable {X_A X_B : Type _} 
+variable {X_A X_B : Type _}
 variable [FAb_A : FreeAbelianGroup A X_A] [FAb_B : FreeAbelianGroup B X_B ]
 
 def ι : (X_A ⊕ X_B) → A × B
@@ -385,21 +364,3 @@ theorem FreeAbelianGroup.left_incl (xa : X_A) : FreeAbelianGroup.i ((Sum.inl xa)
 theorem FreeAbelianGroup.right_incl (xb : X_B) : FreeAbelianGroup.i ((Sum.inr xb) : X_A ⊕ X_B) = ((0 : A), FAb_B.i xb) := by simp [i, ι]
 
 end Product
-
-namespace Z3
-
--- elements in the basis `X` of Z3 ; to be mapped by inclusion
-def  ex : Unit ⊕ Unit ⊕ Unit := Sum.inl ()
-def  ey : Unit ⊕ Unit ⊕ Unit := Sum.inr (Sum.inl ())
-def  ez : Unit ⊕ Unit ⊕ Unit := Sum.inr (Sum.inr ())
-
-def onX {α : Type _} : α × α × α →   Unit ⊕ Unit ⊕ Unit → α 
-| (a, _, _), (Sum.inl _) => a
-| (_, b, _), (Sum.inr (Sum.inl _)) => b
-| (_, _, c), (Sum.inr (Sum.inr _)) => c
-
-
-instance free : FreeAbelianGroup (ℤ × ℤ × ℤ) (Unit ⊕ Unit ⊕ Unit) :=
-        inferInstance
-
-end Z3

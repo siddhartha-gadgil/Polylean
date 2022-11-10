@@ -1,5 +1,13 @@
-{"version": 1,
+{"version": 2,
  "packages":
  [{"url": "https://github.com/leanprover-community/mathlib4.git",
-   "rev": "58f072fdbfd5dd77c98d8393a489ed3eff383ac8",
-   "name": "mathlib"}]}
+   "rev": "e2dbc0a5a7ad32d6934b83ffd9f412c344f884f0",
+   "name": "mathlib"},
+  {"url": "https://github.com/leanprover/std4",
+   "rev": "439263f585961c94df05c181616b1561063d8f3f",
+   "name": "std",
+   "inputRev": "main"},
+  {"url": "https://github.com/gebner/quote4",
+   "rev": "5be427045b61c9d40f9f4b46b3ade98e019a1ad1",
+   "name": "Qq",
+   "inputRev": "master"}]}
