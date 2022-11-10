@@ -451,8 +451,8 @@ have k₂ (b : EdgePath G x x) : ht_mul.mul (@ht_one V E G x).one (htclass b)  =
 apply Quot.ind
 apply k₂
 
-def ht_semigroup (G : Graph V E) (x : V) := @Semigroup.mk (ht G x x) (ht_mul) (by apply ht_mult_assoc) 
+instance ht_semigroup {G : Graph V E} {x : V} : Semigroup (ht G x x) where
+mul := (@ht_mul V E G x).mul
+mul_assoc := by apply ht_mult_assoc 
 
-def ht_monoid (G : Graph V E) (x : V) := @Monoid.mk (ht G x x) (ht_semigroup G x) (ht_one) (ht_right_identity) (ht_left_identity) (npow_rec) (by simp[npow_rec]) (by simp[npow_rec])   
-
-   
+def ht_monoid (G : Graph V E) (x : V) := @Monoid.mk (ht G x x) (ht_semigroup) (ht_one) (ht_right_identity) (ht_left_identity) (npow_rec) (by simp[npow_rec]) (by simp[npow_rec])   
