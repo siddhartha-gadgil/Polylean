@@ -23,7 +23,7 @@ def Wrd.toString(w: Wrd) := w.foldl (fun x y => s!"{x}{y}") ""
 instance : ToString Wrd := ⟨Wrd.toString⟩
 
 def Wrd.pow : Wrd → Nat → Wrd 
-  | w, 0 => #[]
+  | _, 0 => #[]
   | w, Nat.succ m => w ++ (pow w m)
 
 instance : Pow Wrd Nat where
@@ -42,7 +42,7 @@ def splits(l : Letter) : (w : Wrd) → Array {p : Wrd × Wrd // p.1.size + p.2.s
   | 0 => #[]
   | m + 1  =>    
     let x := w.back
-    have lll : w.size -1 < w.size := by
+    have _ : w.size -1 < w.size := by
       rw [h] 
       apply Nat.le_refl
     let ys := w.pop
@@ -85,8 +85,8 @@ do
             rw [h]
             rw [← ysize]
             apply Nat.lt_trans h0 (Nat.lt_succ_self _)
-          have h1 : snd.size < w.size  := Nat.lt_of_le_of_lt (Nat.le_add_left _ _) h0
-          have h2 : fst.size < w.size := Nat.lt_of_le_of_lt (Nat.le_add_right _ _) h0
+          have _ : snd.size < w.size  := Nat.lt_of_le_of_lt (Nat.le_add_left _ _) h0
+          have _ : fst.size < w.size := Nat.lt_of_le_of_lt (Nat.le_add_right _ _) h0
           return (← length fst) + (← length snd)
         derived.foldl (fun x y => do return min (← x) y) (pure base)
     normCache.set <| (← normCache.get).insert w res
