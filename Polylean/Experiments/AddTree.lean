@@ -4,7 +4,7 @@ import Mathlib.Algebra.Group.Defs
 import Polylean.Tactics.ReduceGoal
 import Std
 import Lean
-import Polylean.ProdSeq
+import Polylean.Experiments.ProdSeq
 open Lean Meta Elab Nat Term Std ProdSeq
 
 
