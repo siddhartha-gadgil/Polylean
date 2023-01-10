@@ -1,4 +1,3 @@
-import Mathlib.Algebra.Hom.Group
 import Polylean.Cocycle
 
 /-!
@@ -12,7 +11,7 @@ We define the cocycle condition and construct a group structure on a structure e
 
 namespace MetabelianGroup
 
-variable {Q K : Type _} [AddCommGroup Q] [AddCommGroup K]
+variable {Q K : Type _} [Group Q] [AddCommGroup K]
 variable (c : Q → Q → K) [ccl : Cocycle c]
 
 declare_aesop_rule_sets [Metabelian]
@@ -21,17 +20,17 @@ declare_aesop_rule_sets [Metabelian]
 The cocycle condition is crucially used in showing associativity and other properties. -/
 @[aesop norm unfold (rule_sets [Metabelian])] 
 def mul : (K × Q) → (K × Q) → (K × Q)
-  | (k, q), (k', q') => (k + (q +ᵥ k') + c q q', q + q')
+  | (k, q), (k', q') => (k + (q • k') + c q q', q * q')
 
 /-- The identity element of the Metabelian group, 
   which is the ordered pair of the identities of the individual groups. -/
 @[aesop norm unfold (rule_sets [Metabelian])] 
-def e : K × Q := (0, 0)
+def e : K × Q := (0, 1)
 
 /-- The inverse operation of the Metabelian group. -/
 @[aesop norm unfold (rule_sets [Metabelian])] 
 def inv : K × Q → K × Q
-  | (k, q) => (- ((-q) +ᵥ (k  + c q (-q))), -q)
+  | (k, q) => (- (q⁻¹ • (k  + c q q⁻¹)), q⁻¹)
 
 /-!
 Some of the standard lemmas to show that `K × Q` has the structure of a group with the above operations.
@@ -43,28 +42,32 @@ lemma left_id : ∀ (g : K × Q), mul c e g = g
 
 @[aesop norm (rule_sets [Metabelian])]
 lemma right_id : ∀ (g : K × Q), mul c g e = g
-  | (k, q) => by aesop (rule_sets [Cocycle, Metabelian, AutAction])
+  | (k, q) => by aesop (rule_sets [Cocycle, Metabelian])
 
 @[aesop norm (rule_sets [Metabelian])]
 lemma left_inv : ∀ (g : K × Q), mul c (inv c g) g = e
   | (k , q) => by
     have := Cocycle.inv_rel' c q
-    aesop (rule_sets [Metabelian, Cocycle, AutAction])
+    have : ∀ (q : Q) (k k' : K), q • (k + k') = q • k + q • k' := smul_add
+    aesop (rule_sets [Metabelian, Cocycle])
 
 @[aesop norm (rule_sets [Metabelian])]
 lemma right_inv : ∀ (g : K × Q), mul c g (inv c g) = e
-  | (k, q) => by aesop (rule_sets [Metabelian, Cocycle, AutAction])
+  | (k, q) => by 
+    have : ∀ (q q' : Q) (k : K), q • (q' • k) = (q * q') • k := by intros; symm; apply mul_smul
+    aesop (rule_sets [Metabelian, Cocycle])
 
 @[aesop unsafe (rule_sets [Metabelian])]
 theorem mul_assoc : ∀ (g g' g'' : K × Q), mul c (mul c g g') g'' =  mul c g (mul c g' g'')
   | (k, q), (k', q'), (k'', q'') => by
-    aesop (rule_sets [Metabelian, Cocycle, AutAction]) 
+    have : ∀ (q : Q) (k k' : K), q • (k + k') = q • k + q • k' := smul_add
+    aesop (rule_sets [Metabelian, Cocycle]) 
         (options := {terminal := false, warnOnNonterminal := false})
     · simp only [add_assoc, add_left_cancel_iff]
-      rw [add_left_comm, add_left_cancel_iff]
+      rw [add_left_comm, mul_smul, add_left_cancel_iff]
       -- The cocycle condition is precisely what is required for the associativity of multiplication
       exact ccl.cocycle_condition q q' q''
-    · apply add_assoc
+    · apply Semigroup.mul_assoc
 
 -- A proof that `K × Q` can be given a group structure using the above multiplication operation
 instance metabelianGroup : Group (K × Q) :=
@@ -151,7 +154,7 @@ instance : AddCommGroup.Homomorphism (Metabelian.Kernel.projection Q K) where
     -- show (Metabelian.Kernel.projection Q K) ⟨(k, (0 : Q)) * (k', (0 : Q)), _⟩ = k + k'
     show (fun (k, _) => k) ((k, (0 : Q)) * (k', (0 : Q))) = k + k'
     reduceGoal
-    -- show k + (0 : Q) +ᵥ k' + c 0 0 = k + k'
+    -- show k + (0 : Q) • k' + c 0 0 = k + k'
     simp
 
 instance : AddCommGroup.Isomorphism K (Metabelian.Kernel Q K) :=
