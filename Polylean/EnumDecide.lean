@@ -1,9 +1,10 @@
-/-
+/-!
 Automatically decide statements of the form `∀ x : X, P x` on a finite type `X` by enumeration.
 -/
 
 namespace EnumDecide
 
+/-- It is possible to check whether a given decidable predicate holds for all natural numbers below a given bound. -/
 def decideBelow (p:Nat → Prop)[DecidablePred p](bound: Nat): Decidable (∀ n : Nat, n < bound → p n) := 
     match bound with
     | 0 => by
@@ -103,6 +104,7 @@ def decideBelowFin {m: Nat}(p:Fin m → Prop)[DecidablePred p](bound: Nat): Deci
           exact contra n bd'
         contradiction
 
+/-- It is possible to decide whether a predicate holds for all elements of `Fin n`. -/
 def decideFin {m: Nat}(p:Fin m → Prop)[DecidablePred p]: Decidable (∀ n : Fin m, p n) := 
   match decideBelowFin p m with 
   | Decidable.isTrue hyp => 
@@ -117,6 +119,8 @@ def decideFin {m: Nat}(p:Fin m → Prop)[DecidablePred p]: Decidable (∀ n : Fi
     intro ⟨n, ineq⟩ _
     exact contra ⟨n, ineq⟩   
 
+/-- A typeclass for "exhaustively verifiable types", i.e., 
+  types for which it is possible to decide whether a given (decidable) predicate holds for all its elements. -/
 class DecideForall (α : Type) where
   decideForall (p : α → Prop) [DecidablePred p]: 
     Decidable (∀ x : α, p x)  
@@ -136,6 +140,8 @@ theorem Zmod3.assoc :
 end Examples
 
 section CompositeEnumeration
+
+@[instance]
 def decideProd {α β : Type}[dfa : DecideForall α][dfb : DecideForall β] (p:α × β → Prop)[DecidablePred p] : Decidable (∀ xy :α × β, p xy) := 
     if c: (∀ x: α, ∀ y : β, p (x, y)) 
     then
@@ -151,10 +157,7 @@ def decideProd {α β : Type}[dfa : DecideForall α][dfb : DecideForall β] (p:�
       intro x y
       exact contra (x, y)
 
-instance {α β : Type}[dfa : DecideForall α][dfb : DecideForall β] :
-  DecideForall (α × β) := 
-  ⟨by apply decideProd⟩
-
+@[instance]
 def decideUnit (p: Unit → Prop)[DecidablePred p] : Decidable (∀ x : Unit, p x) := 
    if c : p (()) then by 
       apply Decidable.isTrue
@@ -168,9 +171,7 @@ def decideUnit (p: Unit → Prop)[DecidablePred p] : Decidable (∀ x : Unit, p 
       apply c
       exact contra ()
 
-instance : DecideForall Unit := 
-  ⟨by apply decideUnit⟩
-
+@[instance]
 def decideSum {α β : Type}[dfa : DecideForall α][dfb : DecideForall β](p:α ⊕ β → Prop)[DecidablePred p] : Decidable (∀ x :α ⊕ β, p x) := 
     if c: ∀x: α, p (Sum.inl x) then 
        if c': ∀y: β , p (Sum.inr y) then 
@@ -193,10 +194,6 @@ def decideSum {α β : Type}[dfa : DecideForall α][dfb : DecideForall β](p:α 
       intro x
       exact contra (Sum.inl x) 
       
-instance {α β : Type}[dfa : DecideForall α][dfb : DecideForall β] :
-  DecideForall (α ⊕ β) := 
-  ⟨by apply decideSum⟩
-
 instance funEnum {α β : Type}[dfa : DecideForall α][dfb : DecidableEq β] : DecidableEq (α → β) := fun f g => 
       if c:∀ x:α, f x = g x then
         by
