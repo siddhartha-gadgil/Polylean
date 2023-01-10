@@ -36,12 +36,18 @@ instance : AddAction A B where
 Some easy consequences of the definition of an action by automorphisms.
 -/
 
-@[simp] theorem vadd_eq : ∀ {a : A} {b : B}, a +ᵥ b = α a b := rfl
+declare_aesop_rule_sets [AutAction]
 
-@[simp] theorem vadd_zero : ∀ {a : A}, a +ᵥ (0 : B) = (0 : B) := by aesop
+@[simp, aesop safe (rule_sets [AutAction])]
+theorem vadd_eq : ∀ {a : A} {b : B}, a +ᵥ b = α a b := rfl
 
-@[simp] theorem vadd_dist : ∀ {a : A} {b b' : B}, a +ᵥ (b + b') = (a +ᵥ b) + (a +ᵥ b') := by aesop
+@[aesop safe (rule_sets [AutAction])]
+theorem vadd_zero : ∀ {a : A}, a +ᵥ (0 : B) = (0 : B) := by aesop
 
-@[simp] theorem vadd_neg : ∀ {a : A} {b : B}, a +ᵥ (-b) = - (a +ᵥ b) := by aesop
+@[aesop safe (rule_sets [AutAction])]
+theorem vadd_dist : ∀ {a : A} {b b' : B}, a +ᵥ (b + b') = (a +ᵥ b) + (a +ᵥ b') := by aesop
+
+@[aesop safe (rule_sets [AutAction])]
+theorem vadd_neg : ∀ {a : A} {b : B}, a +ᵥ (-b) = - (a +ᵥ b) := by aesop
 
 end AutAction
