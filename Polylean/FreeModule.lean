@@ -214,7 +214,7 @@ instance formalSumSetoid (R X : Type) [Ring R] [DecidableEq R][DecidableEq X] : 
 abbrev FreeModule (R X : Type) [Ring R] [DecidableEq R][DecidableEq X] :=
   Quotient (formalSumSetoid R X)
 
-notation "⟦" a "⟧" => Quotient.mk' a
+-- notation "⟦" a "⟧" => Quotient.mk' a
 
 end QuotientFreeModule
 
@@ -225,7 +225,8 @@ section DecidableEqQuotFreeModule
 namespace FreeModule
 
 /-- decidable equality for quotient elements in the free module -/
-def decideEqualQuotient  (s₁ s₂ : FormalSum R X) : Decidable (⟦s₁⟧ = ⟦s₂⟧) :=
+@[instance]
+def decideEqualQuotient  (s₁ s₂ : FormalSum R X) : Decidable (@Eq (FreeModule R X) ⟦s₁⟧ ⟦s₂⟧) :=
   if ch₁ : equalOnSupport s₁.support s₁.coords s₂.coords then
     if ch₂ : equalOnSupport s₂.support s₁.coords s₂.coords then
       Decidable.isTrue
@@ -262,10 +263,6 @@ def decideEqualQuotient  (s₁ s₂ : FormalSum R X) : Decidable (⟦s₁⟧ = �
         let lem := equal_on_support_of_equal s₁.support s₁.coords s₂.coords (Quotient.exact contra)
         contradiction)
 
-instance  {s₁ s₂ : FormalSum R X} :
-    Decidable (⟦s₁⟧ = ⟦s₂⟧) :=
-  decideEqualQuotient s₁ s₂
-
 /-- boolean equality on support -/
 def beqOnSupport  (l : List X) (f g : X → R) :Bool :=
   l.all <| fun x => decide (f x = g x)
@@ -283,7 +280,9 @@ theorem eql_on_support_of_true {l : List X} {f g : X → R} : beqOnSupport l f g
     exact And.intro hyp.left p₂
 
 /-- boolean equality on support gives equal quotients -/
-theorem eqlquot_of_beq_support(s₁ s₂ : FormalSum R X)(c₁ : beqOnSupport s₁.support s₁.coords s₂.coords)(c₂ : beqOnSupport s₂.support s₁.coords s₂.coords) : ⟦s₁⟧ = ⟦s₂⟧ := 
+theorem eqlquot_of_beq_support (s₁ s₂ : FormalSum R X)
+  (c₁ : beqOnSupport s₁.support s₁.coords s₂.coords)
+  (c₂ : beqOnSupport s₂.support s₁.coords s₂.coords) : @Eq (FreeModule R X) ⟦s₁⟧ ⟦s₂⟧ := 
         by
         let ch₁ := eql_on_support_of_true c₁
         let ch₂ := eql_on_support_of_true c₂
@@ -311,35 +310,27 @@ theorem eqlquot_of_beq_support(s₁ s₂ : FormalSum R X)(c₁ : beqOnSupport s�
 /--
 boolean equality for the quotient via lifting
 -/
-def beq_quot  (x₁ x₂ : FreeModule R X) : Bool := by
-  apply Quotient.lift₂ (fun (s₁ s₂ : FormalSum R X) => decide (⟦s₁⟧ = ⟦s₂⟧))
+def beq_quot : (x₁ x₂ : FreeModule R X) → Bool := by
+  apply Quotient.lift₂ (fun (s₁ s₂ : FormalSum R X) => decide (@Eq (FreeModule R X) ⟦s₁⟧ ⟦s₂⟧))
   intro a₁ b₁ a₂ b₂ eqv₁ eqv₂
-  let eq₁ : ⟦a₁⟧ = ⟦a₂⟧ := Quot.sound eqv₁
-  let eq₂ : ⟦b₁⟧ = ⟦b₂⟧ := Quot.sound eqv₂
-  simp [eq₁, eq₂]
-  exact x₁
-  exact x₂
+  let eq₁ : Eq (α := FreeModule R X) ⟦a₁⟧ ⟦a₂⟧ := Quot.sound eqv₁
+  let eq₂ : Eq (α := FreeModule R X) ⟦b₁⟧ ⟦b₂⟧ := Quot.sound eqv₂
+  conv => lhs; congr; rw [eq₁, eq₂]
 
 /--
-boolean equality for the quotient is equality
+Boolean equality for the quotient is equality.
 -/
 def eq_of_beq_true  : ∀ x₁ x₂ : FreeModule R X, x₁.beq_quot x₂ = true → x₁ = x₂ := by
-  let f :=
-    @Quotient.ind₂ (FormalSum R X) (FormalSum R X) (formalSumSetoid R X) (formalSumSetoid R X)
-      (fun (x₁ x₂ : FreeModule R X) => x₁.beq_quot x₂ = true → x₁ = x₂)
-  apply f
+  apply Quotient.ind₂ (motive := fun (x₁ x₂ : FreeModule R X) => x₁.beq_quot x₂ = true → x₁ = x₂)
   intro s₁ s₂ eqv
   let eql := of_decide_eq_true eqv
   assumption
 
 /--
-boolean inequality for the quotient is inequality
+Boolean inequality for the quotient is inequality.
 -/
 def neq_of_beq_false  : ∀ x₁ x₂ : FreeModule R X, x₁.beq_quot x₂ = false → Not (x₁ = x₂) := by
-  let f :=
-    @Quotient.ind₂ (FormalSum R X) (FormalSum R X) (formalSumSetoid R X) (formalSumSetoid R X)
-      (fun (x₁ x₂ : FreeModule R X) => x₁.beq_quot x₂ = false → Not (x₁ = x₂))
-  apply f
+  apply Quotient.ind₂ (motive := fun (x₁ x₂ : FreeModule R X) => x₁.beq_quot x₂ = false → Not (x₁ = x₂))
   intro s₁ s₂ neqv
   let neql := of_decide_eq_false neqv
   assumption
@@ -410,7 +401,6 @@ def FreeModule.scmul  : R → FreeModule R X → FreeModule R X := by
   intro s₁ s₂
   simp
   intro hypeq
-  apply Quotient.sound
   apply funext
   intro x₀
   have l₁ := scmul_coords r s₁ x₀
@@ -448,7 +438,6 @@ def FreeModule.add  : FreeModule R X → FreeModule R X → FreeModule R X := by
   intro a₁ b₁ a₂ b₂
   simp
   intro eq₁ eq₂
-  apply Quotient.sound
   apply funext
   intro x₀
   have l₁ := append_coords a₁ b₁ x₀
@@ -459,7 +448,7 @@ def FreeModule.add  : FreeModule R X → FreeModule R X → FreeModule R X := by
 instance  : Add (FreeModule R X) :=
   ⟨FreeModule.add⟩
 
-instance  : HasSmul R (FreeModule R X) :=
+instance  : HSMul R (FreeModule R X) (FreeModule R X) :=
   ⟨FreeModule.scmul⟩
 namespace FormalSum
 
@@ -622,14 +611,7 @@ instance : AddCommGroup (FreeModule R X) :=
     zero_add := FreeModule.zero_addn
     neg := fun x => (-1 : R) • x
 
-    nsmul_zero' := by intros; rfl
-    nsmul_succ' := by intros; rfl
-    sub_eq_add_neg := by 
-      intro x y 
-      rfl
-    -- gsmul_zero' := by intros; rfl
-    -- gsmul_succ' := by intros; rfl
-    -- gsmul_neg' := by intros; rfl
+    sub_eq_add_neg := by intros; rfl
 
     add_left_neg := by 
         intro x
