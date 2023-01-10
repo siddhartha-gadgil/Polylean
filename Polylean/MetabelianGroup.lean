@@ -37,20 +37,20 @@ declare_aesop_rule_sets [Cocycle]
 variable {Q K : Type _} [AddCommGroup Q] [AddCommGroup K]
 variable (c : Q → Q → K) [ccl : Cocycle c]
 
-attribute [simp, aesop safe (rule_sets [Cocycle])] Cocycle.cocycle_zero
-attribute [aesop safe (rule_sets [Cocycle])] Cocycle.cocycle_condition
+attribute [aesop norm (rule_sets [Cocycle])] Cocycle.cocycle_zero
+attribute [aesop norm (rule_sets [Cocycle])] Cocycle.cocycle_condition
 
 instance : AutAction Q K ccl.α := ccl.autAct
 
 @[aesop norm (rule_sets [Cocycle])]
 theorem left_id {q : Q} : c 0 q = (0 : K) := by
   have := ccl.cocycle_condition 0 0 q
-  aesop
+  aesop (rule_sets [Cocycle])
 
 @[aesop norm (rule_sets [Cocycle])]
 theorem right_id {q : Q} : c q 0 = (0 : K) := by
   have := ccl.cocycle_condition q 0 0
-  aesop
+  aesop (rule_sets [AutAction, Cocycle])
 
 @[aesop unsafe (rule_sets [Cocycle])]
 theorem inv_rel (q : Q) : c q (-q) = q +ᵥ (c (-q) q) := by
@@ -79,9 +79,11 @@ The cocycle condition is crucially used in showing associativity and other prope
 def mul : (K × Q) → (K × Q) → (K × Q)
   | (k, q), (k', q') => (k + (q +ᵥ k') + c q q', q + q')
 
+/-- The identity element of the metabelian group. -/
 @[aesop norm unfold (rule_sets [Metabelian])] 
 def e : K × Q := (0, 0)
 
+/-- The inverse operation of the metabelian group. -/
 @[aesop norm unfold (rule_sets [Metabelian])] 
 def inv : K × Q → K × Q
   | (k, q) => (- ((-q) +ᵥ (k  + c q (-q))), -q)
@@ -92,29 +94,27 @@ theorem left_id : ∀ (g : K × Q), mul c e g = g
 
 @[aesop norm (rule_sets [Metabelian])]
 theorem right_id : ∀ (g : K × Q), mul c g e = g
-  | (k, q) => by aesop (rule_sets [Cocycle, Metabelian])
+  | (k, q) => by aesop (rule_sets [Cocycle, Metabelian, AutAction])
 
 @[aesop norm (rule_sets [Metabelian])]
 theorem left_inv : ∀ (g : K × Q), mul c (inv c g) g = e
   | (k , q) => by
-    aesop (rule_sets [Metabelian])
-    sorry
+    have := Cocycle.inv_rel' c q
+    aesop (rule_sets [Metabelian, Cocycle, AutAction])
 
 @[aesop norm (rule_sets [Metabelian])]
 theorem right_inv : ∀ (g : K × Q), mul c g (inv c g) = e
-  | (k, q) => by
-    aesop (rule_sets [Metabelian])
-    sorry
+  | (k, q) => by aesop (rule_sets [Metabelian, Cocycle, AutAction])
 
 @[aesop unsafe (rule_sets [Metabelian])]
 theorem mul_assoc : ∀ (g g' g'' : K × Q), mul c (mul c g g') g'' =  mul c g (mul c g' g'')
   | (k, q), (k', q'), (k'', q'') => by
-    simp [mul]
-    apply And.intro
-    · rw [add_assoc, add_assoc, add_assoc, add_assoc, add_assoc, add_left_cancel_iff,
-         add_assoc, add_left_cancel_iff, ← add_assoc, ← add_assoc, add_comm (c q q') _, add_assoc, add_assoc, add_left_cancel_iff]
-      exact ccl.cocycle_condition q q' q'' -- the cocycle condition implies associativity
-    · rw [add_assoc]
+    aesop (rule_sets [Metabelian, Cocycle, AutAction]) 
+        (options := {terminal := false, warnOnNonterminal := false})
+    · simp only [add_assoc, add_left_cancel_iff]
+      rw [add_left_comm, add_left_cancel_iff]
+      exact ccl.cocycle_condition q q' q''
+    · apply add_assoc
 
 -- A proof that `K × Q` can be given a group structure using the above multiplication operation
 instance metabelianGroup : Group (K × Q) :=
