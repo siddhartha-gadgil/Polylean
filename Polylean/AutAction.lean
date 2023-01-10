@@ -44,10 +44,15 @@ theorem vadd_eq : ∀ {a : A} {b : B}, a +ᵥ b = α a b := rfl
 @[aesop norm (rule_sets [AutAction])]
 theorem vadd_zero : ∀ {a : A}, a +ᵥ (0 : B) = (0 : B) := by aesop (rule_sets [AutAction])
 
-@[aesop norm (rule_sets [AutAction])]
+@[aesop unsafe apply (rule_sets [AutAction])]
 theorem vadd_dist : ∀ {a : A} {b b' : B}, a +ᵥ (b + b') = (a +ᵥ b) + (a +ᵥ b') := by aesop (rule_sets [AutAction])
 
 @[aesop norm (rule_sets [AutAction])]
-theorem vadd_neg : ∀ {a : A} {b : B}, a +ᵥ (-b) = - (a +ᵥ b) := by aesop (rule_sets [AutAction])
+theorem vadd_neg_vadd : ∀ {a : A} {b : B}, a +ᵥ (-a +ᵥ b) = b := by
+  have compatibility' :  ∀ {a a' : A} {b : B}, α a (α a' b) = α (a + a') b := by aesop (rule_sets [AutAction]) 
+  aesop (erase compatibility) (rule_sets [AutAction])
+  
+@[aesop unsafe (rule_sets [AutAction])]
+theorem vadd_of_neg : ∀ {a : A} {b : B}, a +ᵥ (-b) = - (a +ᵥ b) := by aesop (rule_sets [AutAction])
 
 end AutAction
