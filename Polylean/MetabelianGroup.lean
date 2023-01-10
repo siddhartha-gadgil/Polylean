@@ -43,22 +43,22 @@ attribute [aesop norm (rule_sets [Cocycle])] Cocycle.cocycle_condition
 instance : AutAction Q K ccl.α := ccl.autAct
 
 @[aesop norm (rule_sets [Cocycle])]
-theorem left_id {q : Q} : c 0 q = (0 : K) := by
+lemma left_id {q : Q} : c 0 q = (0 : K) := by
   have := ccl.cocycle_condition 0 0 q
   aesop (rule_sets [Cocycle])
 
 @[aesop norm (rule_sets [Cocycle])]
-theorem right_id {q : Q} : c q 0 = (0 : K) := by
+lemma right_id {q : Q} : c q 0 = (0 : K) := by
   have := ccl.cocycle_condition q 0 0
   aesop (rule_sets [AutAction, Cocycle])
 
 @[aesop unsafe (rule_sets [Cocycle])]
-theorem inv_rel (q : Q) : c q (-q) = q +ᵥ (c (-q) q) := by
+lemma inv_rel (q : Q) : c q (-q) = q +ᵥ (c (-q) q) := by
   have := ccl.cocycle_condition q (-q) q
   aesop (rule_sets [AutAction, Cocycle])
 
 @[aesop unsafe (rule_sets [Cocycle])]
-theorem inv_rel' (q : Q) : c (-q) q = (-q) +ᵥ (c q (-q)) := by
+lemma inv_rel' (q : Q) : c (-q) q = (-q) +ᵥ (c q (-q)) := by
   have := inv_rel c (-q)
   aesop
 
@@ -71,39 +71,42 @@ variable (c : Q → Q → K) [ccl : Cocycle c]
 
 declare_aesop_rule_sets [Metabelian]
 
-/--
-The multiplication operation defined using the cocycle.
-The cocycle condition is crucially used in showing associativity and other properties.
--/
+/-- The multiplication operation defined using the cocycle.
+The cocycle condition is crucially used in showing associativity and other properties. -/
 @[aesop norm unfold (rule_sets [Metabelian])] 
 def mul : (K × Q) → (K × Q) → (K × Q)
   | (k, q), (k', q') => (k + (q +ᵥ k') + c q q', q + q')
 
-/-- The identity element of the metabelian group. -/
+/-- The identity element of the Metabelian group, 
+  which is the ordered pair of the identities of the individual groups. -/
 @[aesop norm unfold (rule_sets [Metabelian])] 
 def e : K × Q := (0, 0)
 
-/-- The inverse operation of the metabelian group. -/
+/-- The inverse operation of the Metabelian group. -/
 @[aesop norm unfold (rule_sets [Metabelian])] 
 def inv : K × Q → K × Q
   | (k, q) => (- ((-q) +ᵥ (k  + c q (-q))), -q)
 
+/-!
+Some of the standard lemmas to show that `K × Q` has the structure of a group with the above operations.
+-/
+
 @[aesop norm (rule_sets [Metabelian])] 
-theorem left_id : ∀ (g : K × Q), mul c e g = g
+lemma left_id : ∀ (g : K × Q), mul c e g = g
   | (k, q) => by aesop (rule_sets [Cocycle, Metabelian])
 
 @[aesop norm (rule_sets [Metabelian])]
-theorem right_id : ∀ (g : K × Q), mul c g e = g
+lemma right_id : ∀ (g : K × Q), mul c g e = g
   | (k, q) => by aesop (rule_sets [Cocycle, Metabelian, AutAction])
 
 @[aesop norm (rule_sets [Metabelian])]
-theorem left_inv : ∀ (g : K × Q), mul c (inv c g) g = e
+lemma left_inv : ∀ (g : K × Q), mul c (inv c g) g = e
   | (k , q) => by
     have := Cocycle.inv_rel' c q
     aesop (rule_sets [Metabelian, Cocycle, AutAction])
 
 @[aesop norm (rule_sets [Metabelian])]
-theorem right_inv : ∀ (g : K × Q), mul c g (inv c g) = e
+lemma right_inv : ∀ (g : K × Q), mul c g (inv c g) = e
   | (k, q) => by aesop (rule_sets [Metabelian, Cocycle, AutAction])
 
 @[aesop unsafe (rule_sets [Metabelian])]
@@ -113,6 +116,7 @@ theorem mul_assoc : ∀ (g g' g'' : K × Q), mul c (mul c g g') g'' =  mul c g (
         (options := {terminal := false, warnOnNonterminal := false})
     · simp only [add_assoc, add_left_cancel_iff]
       rw [add_left_comm, add_left_cancel_iff]
+      -- The cocycle condition is precisely what is required for the associativity of multiplication
       exact ccl.cocycle_condition q q' q''
     · apply add_assoc
 
@@ -120,14 +124,14 @@ theorem mul_assoc : ∀ (g g' g'' : K × Q), mul c (mul c g g') g'' =  mul c g (
 instance metabelianGroup : Group (K × Q) :=
   {
     mul := mul c,
-    mul_assoc := mul_assoc c,
     one := e,
+    inv := inv c,
+
     mul_one := right_id c,
     one_mul := left_id c,
+    mul_assoc := mul_assoc c,
 
-    inv := inv c,
     mul_left_inv := left_inv c,
-
     div_eq_mul_inv := by intros; rfl
   }
 
