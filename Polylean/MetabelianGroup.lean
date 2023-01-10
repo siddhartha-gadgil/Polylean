@@ -1,5 +1,5 @@
 import Mathlib.Algebra.Hom.Group
-import Polylean.AutAction
+import Polylean.Cocycle
 
 /-!
 Metabelian groups are group extensions `1 → K → G → Q → 1` with both the kernel and the quotient abelian. Such an extension is determined by data:
