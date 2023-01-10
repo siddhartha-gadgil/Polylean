@@ -20,34 +20,34 @@ namespace AutAction
 
 variable (A B : Type _) [AddCommGroup A] [AddCommGroup B] (α : A → (B →+ B)) [AutAction A B α]
 
-attribute [simp] id_action
-attribute [simp] compatibility
+declare_aesop_rule_sets [AutAction]
+
+attribute [aesop norm (rule_sets [AutAction])] id_action
+attribute [aesop norm (rule_sets [AutAction])] compatibility
 
 /-- An action by automorphisms of additive groups is an additive group action. -/
 instance : AddAction A B where
   vadd := fun a b => α a b
-  zero_vadd := (by aesop : ∀ b : B, α 0 b = b)
+  zero_vadd := (by aesop (rule_sets [AutAction]) : ∀ b : B, α 0 b = b)
   add_vadd := by
     intros a a' b
     show α (a + a') b = α a (α a' b)
-    simp
+    aesop (rule_sets [AutAction])
 
 /-!
 Some easy consequences of the definition of an action by automorphisms.
 -/
 
-declare_aesop_rule_sets [AutAction]
-
-@[simp, aesop safe (rule_sets [AutAction])]
+@[aesop norm (rule_sets [AutAction])]
 theorem vadd_eq : ∀ {a : A} {b : B}, a +ᵥ b = α a b := rfl
 
-@[aesop safe (rule_sets [AutAction])]
-theorem vadd_zero : ∀ {a : A}, a +ᵥ (0 : B) = (0 : B) := by aesop
+@[aesop norm (rule_sets [AutAction])]
+theorem vadd_zero : ∀ {a : A}, a +ᵥ (0 : B) = (0 : B) := by aesop (rule_sets [AutAction])
 
-@[aesop safe (rule_sets [AutAction])]
-theorem vadd_dist : ∀ {a : A} {b b' : B}, a +ᵥ (b + b') = (a +ᵥ b) + (a +ᵥ b') := by aesop
+@[aesop norm (rule_sets [AutAction])]
+theorem vadd_dist : ∀ {a : A} {b b' : B}, a +ᵥ (b + b') = (a +ᵥ b) + (a +ᵥ b') := by aesop (rule_sets [AutAction])
 
-@[aesop safe (rule_sets [AutAction])]
-theorem vadd_neg : ∀ {a : A} {b : B}, a +ᵥ (-b) = - (a +ᵥ b) := by aesop
+@[aesop norm (rule_sets [AutAction])]
+theorem vadd_neg : ∀ {a : A} {b : B}, a +ᵥ (-b) = - (a +ᵥ b) := by aesop (rule_sets [AutAction])
 
 end AutAction
