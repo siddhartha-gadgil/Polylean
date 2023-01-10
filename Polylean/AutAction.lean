@@ -1,9 +1,10 @@
 import Mathlib.Algebra.Group.Defs
 import Mathlib.GroupTheory.GroupAction.Defs
+import Polylean.Tactics.ReduceGoal
 import Aesop
 
-/-
-An action of one group on another by automorphisms. 
+/-!
+The definition of an action of one group on another by automorphisms. 
 This is done as a typeclass representing the property of being an action by automorphisms.
 -/
 
@@ -22,6 +23,7 @@ variable (A B : Type _) [AddCommGroup A] [AddCommGroup B] (α : A → (B →+ B)
 attribute [simp] id_action
 attribute [simp] compatibility
 
+/-- An action by automorphisms of additive groups is an additive group action. -/
 instance : AddAction A B where
   vadd := fun a b => α a b
   zero_vadd := (by aesop : ∀ b : B, α 0 b = b)
@@ -29,6 +31,10 @@ instance : AddAction A B where
     intros a a' b
     show α (a + a') b = α a (α a' b)
     simp
+
+/-!
+Some easy consequences of the definition of an action by automorphisms.
+-/
 
 @[simp] theorem vadd_eq : ∀ {a : A} {b : B}, a +ᵥ b = α a b := rfl
 
