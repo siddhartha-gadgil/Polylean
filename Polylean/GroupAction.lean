@@ -1,47 +1,41 @@
-import Polylean.Morphisms
+import Mathlib.Algebra.Group.Defs
+import Mathlib.GroupTheory.GroupAction.Defs
+import Aesop
 
 /-
-Define group actions. This is done as a typeclass representing the property of being a group action.
+An action of one group on another by automorphisms. 
+This is done as a typeclass representing the property of being an action by automorphisms.
 -/
 
-
-class Group.Action (G X : Type _) [Group G] extends HasSmul G X where
-  id_action : ∀ x : X, (1 : G) • x = x
-  compatibility : ∀ g g' : G, ∀ x : X, (g * g') • x = g • (g' • x)
-
-attribute [simp] Group.Action.id_action
-attribute [simp] Group.Action.compatibility
-
-class AddCommGroup.Action (A X : Type _) [AddCommGroup A] extends HasSmul A X where
-  id_action : ∀ {x : X}, (0 : A) • x = x
-  compatibility : ∀ {a a' : A}, ∀ {x : X}, (a + a') • x = a • (a' • x)
-
-attribute [simp] AddCommGroup.Action.id_action
-attribute [simp] AddCommGroup.Action.compatibility
-
-class AutAction (A B : Type _) [AddCommGroup A] [AddCommGroup B] (α : A → B → B) where
-  [aut_action : ∀ a : A, AddCommGroup.Homomorphism (α a)]
-  id_action : α 0 = id
+/-- An action of an additive group on another additive group by automorphisms. -/
+class AutAction (A B : Type _) [AddCommGroup A] [AddCommGroup B] (α : A → (B →+ B)) where
+  /-- The automorphism corresponding to the zero element is the identity. -/
+  id_action : α 0 = .id _
+  /-- The compatibility of group addition with the action by automorphisms. -/
   compatibility : ∀ a a' : A, α (a + a') = α a ∘ α a'
 
 
 namespace AutAction
 
-variable (A B : Type _) [AddCommGroup A] [AddCommGroup B] (α : A → B → B) [AA : AutAction A B α]
+variable (A B : Type _) [AddCommGroup A] [AddCommGroup B] (α : A → (B →+ B)) [AutAction A B α]
 
 attribute [simp] id_action
 attribute [simp] compatibility
 
-instance : AddCommGroup.Action A B where
-    id_action := λ {x : B} => congrFun AA.id_action x
-    compatibility := λ {a a' : A} {x : B} => congrFun (AA.compatibility a a') x
+instance : AddAction A B where
+  vadd := fun a b => α a b
+  zero_vadd := (by aesop : ∀ b : B, α 0 b = b)
+  add_vadd := by
+    intros a a' b
+    show α (a + a') b = α a (α a' b)
+    simp
 
-instance (a : A) : AddCommGroup.Homomorphism (α a) := aut_action a
+@[simp] theorem vadd_eq : ∀ {a : A} {b : B}, a +ᵥ b = α a b := rfl
 
-@[simp] theorem act_zero : ∀ {a : A}, a • (0 : B) = (0 : B) := by intro; simp [HasSmul.smul]
+@[simp] theorem vadd_zero : ∀ {a : A}, a +ᵥ (0 : B) = (0 : B) := by aesop
 
-@[simp] theorem add_dist : ∀ {a : A}, ∀ {b b' : B}, a • (b + b') = a • b + a • b' := by intro; simp [HasSmul.smul]
+@[simp] theorem vadd_dist : ∀ {a : A} {b b' : B}, a +ᵥ (b + b') = (a +ᵥ b) + (a +ᵥ b') := by aesop
 
-@[simp] theorem neg_push : ∀ {a : A}, ∀ {b : B}, a • (-b) = - (a • b) := by intros; simp [HasSmul.smul]
+@[simp] theorem vadd_neg : ∀ {a : A} {b : B}, a +ᵥ (-b) = - (a +ᵥ b) := by aesop
 
 end AutAction
