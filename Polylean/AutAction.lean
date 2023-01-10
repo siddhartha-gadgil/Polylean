@@ -39,20 +39,82 @@ Some easy consequences of the definition of an action by automorphisms.
 -/
 
 @[aesop norm (rule_sets [AutAction])]
-theorem vadd_eq : ∀ {a : A} {b : B}, a +ᵥ b = α a b := rfl
+lemma vadd_eq : ∀ {a : A} {b : B}, a +ᵥ b = α a b := rfl
 
 @[aesop norm (rule_sets [AutAction])]
-theorem vadd_zero : ∀ {a : A}, a +ᵥ (0 : B) = (0 : B) := by aesop (rule_sets [AutAction])
+lemma vadd_zero : ∀ {a : A}, a +ᵥ (0 : B) = (0 : B) := by aesop (rule_sets [AutAction])
 
-@[aesop unsafe apply (rule_sets [AutAction])]
-theorem vadd_dist : ∀ {a : A} {b b' : B}, a +ᵥ (b + b') = (a +ᵥ b) + (a +ᵥ b') := by aesop (rule_sets [AutAction])
-
-@[aesop norm (rule_sets [AutAction])]
-theorem vadd_neg_vadd : ∀ {a : A} {b : B}, a +ᵥ (-a +ᵥ b) = b := by
-  have compatibility' :  ∀ {a a' : A} {b : B}, α a (α a' b) = α (a + a') b := by aesop (rule_sets [AutAction]) 
-  aesop (erase compatibility) (rule_sets [AutAction])
-  
 @[aesop unsafe (rule_sets [AutAction])]
-theorem vadd_of_neg : ∀ {a : A} {b : B}, a +ᵥ (-b) = - (a +ᵥ b) := by aesop (rule_sets [AutAction])
+lemma vadd_dist : ∀ {a : A} {b b' : B}, a +ᵥ (b + b') = (a +ᵥ b) + (a +ᵥ b') := by aesop (rule_sets [AutAction])
+
+@[aesop unsafe (rule_sets [AutAction])]
+lemma compatibility' : ∀ {a a' : A} {b : B}, α a (α a' b) = α (a + a') b := by aesop (rule_sets [AutAction]) 
+
+@[aesop unsafe (rule_sets [AutAction])]
+lemma act_comm {a a' : A} : (α a) ∘ (α a') = (α a') ∘ (α a) := by 
+  ext; simp only [Function.comp, compatibility', add_comm]
+
+@[aesop norm (rule_sets [AutAction])]
+lemma act_neg_act {a : A} {b : B} : α a (α (-a) b) = b := by
+  rw [compatibility']
+  aesop (erase compatibility) (rule_sets [AutAction])
+
+@[aesop unsafe (rule_sets [AutAction])]
+lemma vadd_of_neg : ∀ {a : A} {b : B}, a +ᵥ (-b) = - (a +ᵥ b) := by aesop (rule_sets [AutAction])
 
 end AutAction
+
+
+/--
+A cocycle associated with a certain action of `Q` on `K` via automorphisms is a function from `Q × Q` to `K` satisfying
+a certain requirement known as the "cocycle condition". This allows one to define an associative multiplication operation on the set `K × Q` as shown below.
+The requirement `c 0 0 = (0 : K)` is not strictly necessary and mainly for convenience.
+-/
+class Cocycle {Q K : Type _} [AddCommGroup Q] [AddCommGroup K] (c : Q → Q → K) where
+  /-- An action of the quotient on the kernel by automorphisms. -/
+  α : Q → (K →+ K)
+  /-- A typeclass instance for the action by automorphisms. -/
+  [autAct : AutAction Q K α]
+  /-- The value of the cocycle is zero when its inputs are zero, as a convention. -/
+  cocycle_zero : c 0 0 = (0 : K)
+  /-- The *cocycle condition*. -/
+  cocycle_condition : ∀ q q' q'' : Q, c q q' + c (q + q') q'' = q +ᵥ c q' q'' + c q (q' + q'')
+
+
+namespace Cocycle
+
+/-!
+A few deductions from the cocycle condition.
+-/
+
+declare_aesop_rule_sets [Cocycle]
+
+variable {Q K : Type _} [AddCommGroup Q] [AddCommGroup K]
+variable (c : Q → Q → K) [ccl : Cocycle c]
+
+attribute [aesop norm (rule_sets [Cocycle])] Cocycle.cocycle_zero
+attribute [aesop norm (rule_sets [Cocycle])] Cocycle.cocycle_condition
+
+instance : AutAction Q K ccl.α := ccl.autAct
+
+@[aesop norm (rule_sets [Cocycle])]
+lemma left_id {q : Q} : c 0 q = (0 : K) := by
+  have := ccl.cocycle_condition 0 0 q
+  aesop (rule_sets [Cocycle])
+
+@[aesop norm (rule_sets [Cocycle])]
+lemma right_id {q : Q} : c q 0 = (0 : K) := by
+  have := ccl.cocycle_condition q 0 0
+  aesop (rule_sets [AutAction, Cocycle])
+
+@[aesop unsafe (rule_sets [Cocycle])]
+lemma inv_rel (q : Q) : c q (-q) = q +ᵥ (c (-q) q) := by
+  have := ccl.cocycle_condition q (-q) q
+  aesop (rule_sets [AutAction, Cocycle])
+
+@[aesop unsafe (rule_sets [Cocycle])]
+lemma inv_rel' (q : Q) : c (-q) q = (-q) +ᵥ (c q (-q)) := by
+  have := inv_rel c (-q)
+  aesop
+
+end Cocycle
