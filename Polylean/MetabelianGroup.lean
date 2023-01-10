@@ -32,25 +32,32 @@ namespace Cocycle
 A few deductions from the cocycle condition.
 -/
 
+declare_aesop_rule_sets [Cocycle]
+
 variable {Q K : Type _} [AddCommGroup Q] [AddCommGroup K]
 variable (c : Q → Q → K) [ccl : Cocycle c]
 
-attribute [simp] Cocycle.cocycle_zero
+attribute [simp, aesop safe (rule_sets [Cocycle])] Cocycle.cocycle_zero
+attribute [aesop safe (rule_sets [Cocycle])] Cocycle.cocycle_condition
 
 instance : AutAction Q K ccl.α := ccl.autAct
 
-@[simp] theorem left_id {q : Q} : c 0 q = (0 : K) := by
+@[aesop norm (rule_sets [Cocycle])]
+theorem left_id {q : Q} : c 0 q = (0 : K) := by
   have := ccl.cocycle_condition 0 0 q
   aesop
 
-@[simp] theorem right_id {q : Q} : c q 0 = (0 : K) := by
+@[aesop norm (rule_sets [Cocycle])]
+theorem right_id {q : Q} : c q 0 = (0 : K) := by
   have := ccl.cocycle_condition q 0 0
   aesop
 
+@[aesop unsafe (rule_sets [Cocycle])]
 theorem inv_rel (q : Q) : c q (-q) = q +ᵥ (c (-q) q) := by
   have := ccl.cocycle_condition q (-q) q
-  aesop
+  aesop (rule_sets [AutAction, Cocycle])
 
+@[aesop unsafe (rule_sets [Cocycle])]
 theorem inv_rel' (q : Q) : c (-q) q = (-q) +ᵥ (c q (-q)) := by
   have := inv_rel c (-q)
   aesop
@@ -62,34 +69,44 @@ namespace MetabelianGroup
 variable {Q K : Type _} [AddCommGroup Q] [AddCommGroup K]
 variable (c : Q → Q → K) [ccl : Cocycle c]
 
+declare_aesop_rule_sets [Metabelian]
+
 /--
 The multiplication operation defined using the cocycle.
 The cocycle condition is crucially used in showing associativity and other properties.
 -/
-@[reducible, aesop norm unfold] def mul : (K × Q) → (K × Q) → (K × Q)
+@[aesop norm unfold (rule_sets [Metabelian])] 
+def mul : (K × Q) → (K × Q) → (K × Q)
   | (k, q), (k', q') => (k + (q +ᵥ k') + c q q', q + q')
 
-@[reducible, aesop norm unfold] def e : K × Q := (0, 0)
+@[aesop norm unfold (rule_sets [Metabelian])] 
+def e : K × Q := (0, 0)
 
-@[reducible, aesop norm unfold] def inv : K × Q → K × Q
+@[aesop norm unfold (rule_sets [Metabelian])] 
+def inv : K × Q → K × Q
   | (k, q) => (- ((-q) +ᵥ (k  + c q (-q))), -q)
 
-@[simp] theorem left_id : ∀ (g : K × Q), mul c e g = g
-  | (k, q) => by aesop
+@[aesop norm (rule_sets [Metabelian])] 
+theorem left_id : ∀ (g : K × Q), mul c e g = g
+  | (k, q) => by aesop (rule_sets [Cocycle, Metabelian])
 
-@[simp] theorem right_id : ∀ (g : K × Q), mul c g e = g
-  | (k, q) => by aesop
+@[aesop norm (rule_sets [Metabelian])]
+theorem right_id : ∀ (g : K × Q), mul c g e = g
+  | (k, q) => by aesop (rule_sets [Cocycle, Metabelian])
 
+@[aesop norm (rule_sets [Metabelian])]
 theorem left_inv : ∀ (g : K × Q), mul c (inv c g) g = e
-  | (k , q) => by sorry
-
-theorem right_inv : ∀ (g : K × Q), mul c g (inv c g) = e
-  | (k, q) => by
-    reduceGoal
-    repeat (rw [← AddCommGroup.Action.compatibility])
-    simp
+  | (k , q) => by
+    aesop (rule_sets [Metabelian])
     sorry
 
+@[aesop norm (rule_sets [Metabelian])]
+theorem right_inv : ∀ (g : K × Q), mul c g (inv c g) = e
+  | (k, q) => by
+    aesop (rule_sets [Metabelian])
+    sorry
+
+@[aesop unsafe (rule_sets [Metabelian])]
 theorem mul_assoc : ∀ (g g' g'' : K × Q), mul c (mul c g g') g'' =  mul c g (mul c g' g'')
   | (k, q), (k', q'), (k'', q'') => by
     simp [mul]
@@ -113,10 +130,6 @@ instance metabelianGroup : Group (K × Q) :=
 
     div_eq_mul_inv := by intros; rfl
   }
-
-def mul_eq (k k' : K) (q q' : Q) : (k, q) * (k', q') = (k + (q +ᵥ k') + c q q', q + q') := rfl
-
-def inv_eq (k : K) (q : Q) : (k, q)⁻¹ = (- ((-q) +ᵥ (k  + c q (-q))), -q) := rfl
 
 end MetabelianGroup
 
