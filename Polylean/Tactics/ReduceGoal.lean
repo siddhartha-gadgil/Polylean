@@ -1,11 +1,11 @@
 import Lean
 
-open Lean Meta Elab Tactic Term in
+open Lean Meta MVarId Elab Tactic Term in
 elab "reduceGoal" : tactic => do
   let goal ← Lean.Elab.Tactic.getMainGoal
-  withMVarContext goal do
-    let goalDecl ← Lean.Meta.getMVarDecl goal
+  withContext goal do
+    let goalDecl ← getDecl goal
     let goalType := goalDecl.type
-    let reducedGoalType ← withTransparency TransparencyMode.reducible $ reduce (skipTypes := false) (skipProofs := false) goalType
-    let goal' ← replaceTargetDefEq goal reducedGoalType
+    let reducedGoalType ← Meta.withTransparency TransparencyMode.reducible $ reduce (skipTypes := false) (skipProofs := false) goalType
+    let goal' ← MVarId.replaceTargetDefEq goal reducedGoalType
     replaceMainGoal [goal']
