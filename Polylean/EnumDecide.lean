@@ -22,7 +22,6 @@ def decideBelow (p:Nat → Prop)[DecidablePred p](bound: Nat): Decidable (∀ n 
           | inl eql => 
             have eql' : n = k := by
                 injection eql
-                assumption
             simp [eql']
             assumption
           | inr lt => 
@@ -69,7 +68,6 @@ def decideBelowFin {m: Nat}(p:Fin m → Prop)[DecidablePred p](bound: Nat): Deci
               have eql' : n = ⟨k, ineq⟩ := by
                   apply Fin.eq_of_val_eq
                   injection eql
-                  assumption
               simp [eql']
               assumption
             | inr lt => 
@@ -88,7 +86,7 @@ def decideBelowFin {m: Nat}(p:Fin m → Prop)[DecidablePred p](bound: Nat): Deci
         else
           by 
           apply Decidable.isTrue
-          intro ⟨n, nbd⟩ bd
+          intro ⟨n, nbd⟩ _
           have ineq' : m ≤ k := by
             apply Nat.le_of_succ_le_succ
             apply Nat.gt_of_not_le ineq 
@@ -116,7 +114,7 @@ def decideFin {m: Nat}(p:Fin m → Prop)[DecidablePred p]: Decidable (∀ n : Fi
     apply Decidable.isFalse
     intro contra
     apply hyp
-    intro ⟨n, ineq⟩ bd
+    intro ⟨n, ineq⟩ _
     exact contra ⟨n, ineq⟩   
 
 class DecideForall (α : Type) where
