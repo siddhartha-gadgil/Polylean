@@ -119,7 +119,7 @@ theorem mul_zero_cons (s t : FormalSum R G)(g: G):  mul s ((0, h) :: t) ≈  mul
     case nil =>
       simp [mul, mulMonom]
       apply eqlCoords.refl
-    case cons head tail ih =>
+    case cons head tail _ =>
       simp [mul, mulMonom]
       apply funext ; intro x₀
       simp [coords]
@@ -135,16 +135,14 @@ theorem mul_zero_cons (s t : FormalSum R G)(g: G):  mul s ((0, h) :: t) ≈  mul
 -/
 def mulAux : FormalSum R G → FreeModule R G → FreeModule R G := by
   intro s
-  let f  := fun t => ⟦ FormalSum.mul s t ⟧ 
-  apply  Quotient.lift f
+  apply  Quotient.lift (⟦FormalSum.mul s ·⟧)
   apply func_eql_of_move_equiv
   intro t t' rel
   simp 
   induction rel with
   | zeroCoeff tail g a hyp =>
     rw [hyp]
-    apply Quotient.sound
-    simp [mul]
+    dsimp [mul]
     apply funext
     intro x₀
     rw [← append_coords]
@@ -152,24 +150,20 @@ def mulAux : FormalSum R G → FreeModule R G → FreeModule R G := by
     rw [l]
     simp [zero_add]
   | addCoeffs a b x tail =>
-    apply Quotient.sound
     apply funext; intro x₀
     simp [mul]
     repeat (rw [← append_coords])
     simp
     simp [mul_monom_add, add_assoc]    
-  | cons a x s₁ s₂ r step =>
-    apply Quotient.sound
+  | cons a x s₁ s₂ _ step =>
     apply funext ; intro x₀
     simp [mul]
     rw [← append_coords]
     rw [← append_coords]
-    simp 
-    let l := Quotient.exact step
-    let l := congrFun l x₀
+    simp
+    let l := congrFun step x₀
     rw [l]
   | swap a₁ a₂ x₁ x₂ tail =>
-    apply Quotient.sound
     apply funext ; intro x₀
     simp [mul, ← append_coords]
     rw [← add_assoc]
@@ -191,7 +185,7 @@ theorem mul_monom_invariant (b : R)(h x₀ : G)(s₁ s₂ : FormalSum R G) (rel 
       | addCoeffs a₁ a₂ x tail => 
         simp [mulMonom, coords, right_distrib, monom_coords_hom, add_assoc]
         
-      | cons a x t₁ t₂ r step => 
+      | cons a x t₁ t₂ _ step => 
         simp [mulMonom, coords, step]
       | swap a₁ a₂ x₁ x₂ tail => 
         simp [mulMonom, coords]
@@ -243,7 +237,7 @@ theorem first_arg_invariant (s₁ s₂ t : FormalSum R G) (rel : ElementaryMove 
         let pl := congrFun prev x₀
         rw [pl]
         simp [add_assoc] 
-      | cons a x s₁ s₂ r step => 
+      | cons a x s₁ s₂ r _ => 
         simp [mul]
         apply funext; intro x₀
         rw [← append_coords]
@@ -306,7 +300,6 @@ def mul : FreeModule R G → FreeModule R G → FreeModule R G := by
     ⟦FormalSum.mul s₂ t⟧ := by rfl
   rw [lhs, rhs]
   simp
-  apply Quotient.sound
   apply first_arg_invariant
   exact rel
 
@@ -316,24 +309,31 @@ instance groupRingMul : Mul (FreeModule R G) :=
 instance : One (FreeModule R G) := 
   ⟨⟦[(1, 1)]⟧⟩
 
-/-- The group ring is a ring -/
-instance : Ring (FreeModule R G) :=
+instance : AddCommGroup (FreeModule R G) := 
   {
-    zero := ⟦ []⟧
+    zero := ⟦ [] ⟧
     add := FreeModule.add
+    
     add_assoc := FreeModule.addn_assoc
     add_zero := FreeModule.addn_zero
     zero_add := FreeModule.zero_addn
+    add_comm := FreeModule.addn_comm
+    add_left_neg := by
+        intro x
+        let l := FreeModule.coeffs_distrib (-1 : R) (1 : R) x
+        rw [add_left_neg, FreeModule.unit_coeffs, FreeModule.zero_coeffs] at l
+        exact l
+  }
+
+/-- The group ring is a ring -/
+instance : Ring (FreeModule R G) :=
+  {
+    mul := mul
     neg := fun x => (-1 : R) • x
 
-    nsmul_zero' := by intros; rfl
-    nsmul_succ' := by intros; rfl
     sub_eq_add_neg := by 
       intro x y 
       rfl
-    -- gsmul_zero' := by intros; rfl
-    -- gsmul_succ' := by intros; rfl
-    -- gsmul_neg' := by intros; rfl
 
     add_left_neg := by 
         intro x
@@ -346,9 +346,6 @@ instance : Ring (FreeModule R G) :=
         rw [FreeModule.zero_coeffs] at l
         exact l
 
-    add_comm := FreeModule.addn_comm
-
-    mul := mul
     left_distrib := by
       apply @Quotient.ind (motive := fun a  =>
         ∀ b c, a * (b + c) = a * b + a * c)
@@ -362,7 +359,7 @@ instance : Ring (FreeModule R G) :=
           simp
           simp [FormalSum.mul]
           apply eqlCoords.refl
-      | cons h t ih => 
+      | cons h t ih =>
           simp [FormalSum.mul]
           apply funext; intro x₀
           repeat (rw [← append_coords])
@@ -380,30 +377,20 @@ instance : Ring (FreeModule R G) :=
       apply Quotient.sound
       induction z with
       | nil => 
-          simp
           simp [FormalSum.mul]
           apply eqlCoords.refl
       | cons h t ih => 
           let (a, h) := h
           simp [FormalSum.mul, mulMonom]
-          apply funext; intro x₀
+          funext x₀
           repeat (rw [← append_coords])
           simp
           let lih := congrFun ih x₀
           rw [← append_coords] at lih
           rw [lih]
-          simp [add_assoc]
+          simp only [add_assoc]
           rw [mul_monom_dist]
-          simp [add_assoc, add_left_cancel]
-          conv =>
-            lhs
-            rw [← add_assoc]
-            arg 1
-            rw [add_comm]
-          conv =>
-            rhs
-            rw [← add_assoc]
-
+          simp only [add_assoc, add_left_comm, add_left_cancel_iff]
     zero_mul := by
       apply Quotient.ind
       intro x
@@ -442,17 +429,8 @@ instance : Ring (FreeModule R G) :=
       rw [← append_coords]
       simp
       cases m:1 == x₀ with
-      | true =>
-          repeat (rw [coords])
-          repeat (rw [monomCoeff])
-          simp
-          rw [m]
-      | false => 
-          repeat (rw [coords])
-          repeat (rw [monomCoeff])
-          simp
-          rw [m]
-          simp          
+      | true => simp only [coords, monomCoeff, m, add_zero] 
+      | false => simp only [coords, monomCoeff, m, add_zero]        
     mul_assoc := by
       apply @Quotient.ind (motive := fun a  =>
         ∀ b c, a * b * c = a * (b * c))
@@ -503,29 +481,7 @@ instance : Ring (FreeModule R G) :=
         simp
         rw [FormalSum.mul]
         rw [← append_coords]
-        simp [ih, mulMonom, coords]
-    npow_zero' := by
-      apply Quotient.ind
-      intro x
-      apply Quotient.sound
-      apply eqlCoords.refl
-    npow_succ' := by
-      intro n x
-      rw [npowRec]
-
-    intCast := fun n => 
-      match n with 
-      | Int.ofNat k =>  ⟦ [(Int.ofNat k, 1)] ⟧
-      | Int.negSucc k => - ⟦ [(Int.ofNat k + (1 : R), (1 : G))] ⟧
-    intCast_ofNat := by 
-      intro n
-      apply Quotient.sound
-      apply funext; intro x₀
-      simp
-    intCast_negSucc := by 
-      intro n
-      simp
-      simp [NonUnitalNonAssocSemiring.natCast]            
+        simp [ih, mulMonom, coords]      
   }
   
 end GroupRing
