@@ -12,7 +12,7 @@ We define the cocycle condition and construct a group structure on a structure e
 
 namespace MetabelianGroup
 
-variable {Q K : Type _} [AddCommGroup Q] [AddCommGroup K]
+variable {Q K : Type _} [AddGroup Q] [AddCommGroup K]
 variable (c : Q → Q → K) [ccl : Cocycle c]
 
 declare_aesop_rule_sets [Metabelian]

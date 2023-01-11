@@ -8,8 +8,9 @@ The definition of an action of one group on another by automorphisms.
 This is done as a typeclass representing the property of being an action by automorphisms.
 -/
 
-/-- An action of an additive group on another additive group by automorphisms. -/
-class AutAction (A B : Type _) [AddCommGroup A] [AddCommGroup B] (α : A → (B →+ B)) where
+/-- An action of an additive group on another additive group by automorphisms. 
+    There is a closely related typeclass `DistribMulAction` in `Mathlib` that uses multiplicative notation. -/
+class AutAction (A B : Type _) [AddGroup A] [AddGroup B] (α : A → (B →+ B)) where
   /-- The automorphism corresponding to the zero element is the identity. -/
   id_action : α 0 = .id _
   /-- The compatibility of group addition with the action by automorphisms. -/
@@ -18,7 +19,7 @@ class AutAction (A B : Type _) [AddCommGroup A] [AddCommGroup B] (α : A → (B 
 
 namespace AutAction
 
-variable (A B : Type _) [AddCommGroup A] [AddCommGroup B] (α : A → (B →+ B)) [AutAction A B α]
+variable (A B : Type _) [AddGroup A] [AddGroup B] (α : A → (B →+ B)) [AutAction A B α]
 
 declare_aesop_rule_sets [AutAction]
 
@@ -26,7 +27,7 @@ attribute [aesop norm (rule_sets [AutAction])] id_action
 attribute [aesop norm (rule_sets [AutAction])] compatibility
 
 /-- An action by automorphisms of additive groups is an additive group action. -/
-instance : AddAction A B where
+instance AutAction.toAddAction : AddAction A B where
   vadd := fun a b => α a b
   zero_vadd := (by aesop (rule_sets [AutAction]) : ∀ b : B, α 0 b = b)
   add_vadd := by
@@ -50,10 +51,6 @@ lemma vadd_dist : ∀ {a : A} {b b' : B}, a +ᵥ (b + b') = (a +ᵥ b) + (a +ᵥ
 @[aesop unsafe (rule_sets [AutAction])]
 lemma compatibility' : ∀ {a a' : A} {b : B}, α a (α a' b) = α (a + a') b := by aesop (rule_sets [AutAction]) 
 
-@[aesop unsafe (rule_sets [AutAction])]
-lemma act_comm {a a' : A} : (α a) ∘ (α a') = (α a') ∘ (α a) := by 
-  ext; simp only [Function.comp, compatibility', add_comm]
-
 @[aesop norm (rule_sets [AutAction])]
 lemma act_neg_act {a : A} {b : B} : α a (α (-a) b) = b := by
   rw [compatibility']
@@ -70,7 +67,7 @@ A cocycle associated with a certain action of `Q` on `K` via automorphisms is a 
 a certain requirement known as the "cocycle condition". This allows one to define an associative multiplication operation on the set `K × Q` as shown below.
 The requirement `c 0 0 = (0 : K)` is not strictly necessary and mainly for convenience.
 -/
-class Cocycle {Q K : Type _} [AddCommGroup Q] [AddCommGroup K] (c : Q → Q → K) where
+class Cocycle {Q K : Type _} [AddGroup Q] [AddGroup K] (c : Q → Q → K) where
   /-- An action of the quotient on the kernel by automorphisms. -/
   α : Q → (K →+ K)
   /-- A typeclass instance for the action by automorphisms. -/
@@ -89,7 +86,7 @@ A few deductions from the cocycle condition.
 
 declare_aesop_rule_sets [Cocycle]
 
-variable {Q K : Type _} [AddCommGroup Q] [AddCommGroup K]
+variable {Q K : Type _} [AddGroup Q] [AddGroup K]
 variable (c : Q → Q → K) [ccl : Cocycle c]
 
 attribute [aesop norm (rule_sets [Cocycle])] Cocycle.cocycle_zero
