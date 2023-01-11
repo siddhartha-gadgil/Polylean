@@ -1,47 +1,38 @@
 import Mathlib.Data.Fin.Basic
-import Polylean.Morphisms
-
-section Mod2
+import Mathlib.Data.Int.Cast.Lemmas
+import Mathlib.Algebra.Group.Defs
+import Aesop
 
 /-
 This section sets up the `modulo 2` homomorphism `ℤ → ℤ/2ℤ`.
 -/
 
-def Nat.mod2 : ℕ → Fin 2
-  | Nat.zero => ⟨0, by decide⟩
-  | Nat.succ Nat.zero => ⟨1, by decide⟩
-  | Nat.succ (Nat.succ n) => mod2 n
+declare_aesop_rule_sets [ModArith]
 
-def Int.mod2 : ℤ → Fin 2
-  | Int.ofNat n => n.mod2
-  | Int.negSucc n => n.succ.mod2
+@[aesop norm unfold (rule_sets [ModArith])]
+def Int.modn (n : ℕ) [h : Fact (n ≠ 0)] : ℤ → Fin n
+  | m => ⟨m.natMod n, Int.natMod_lt h.out⟩
 
-theorem mod2_succ : ∀ n : ℕ, n.succ.mod2 = (1 : Fin 2) + n.mod2
-  | Nat.zero => rfl
-  | Nat.succ Nat.zero => rfl
-  | Nat.succ (Nat.succ n) => by rw [Nat.mod2, Nat.mod2, ← Nat.succ_eq_add_one, mod2_succ n]
+@[aesop norm (rule_sets [ModArith])]
+lemma mod2_succ : ∀ n : ℕ, (n.succ).mod2 = (1 : Fin 2) + n.mod2
+  | 0 => rfl
+  | 1 => rfl
+  | .succ (.succ n) => by 
+    have := mod2_succ n
+    aesop (rule_sets [ModArith])
 
 theorem Nat.mod2_add_dist : ∀ m n : ℕ, Nat.mod2 (m + n) = Nat.mod2 m + Nat.mod2 n
-  | Nat.zero, Nat.zero => rfl
-  | Nat.zero, Nat.succ _ => by
-    simp [mod2, add_zero]
-    -- show _ = (0 : Fin 2) + _
-    -- rw [AddMonoid.zero_add]
-  | Nat.succ _, Nat.zero => by
-    simp [mod2, zero_add]
-    -- show _ = _ + (0 : Fin 2)
-    -- simp
-  | Nat.succ a, Nat.succ b => by
-    rw [Nat.add_succ, Nat.succ_add, mod2, mod2_add_dist a b, mod2_succ, mod2_succ]
-    rw [add_assoc, ← add_assoc _ 1 _, add_comm _ 1, ← add_assoc 1 _ _, ← add_assoc 1 _ _]
-    have : (1 : Fin 2) + (1 : Fin 2) = (0 : Fin 2) := rfl
-    rw [this, AddMonoid.zero_add]
+  | _, .zero => by aesop (rule_sets [ModArith])
+  | a, .succ b => by
+    rw [Nat.add_succ]
+    simp only [mod2_succ]
+    rw [Nat.mod2_add_dist a b, add_left_comm]
 
-theorem Int.mod2_add_dist_cross : ∀ m n : ℕ, Int.mod2 (Int.ofNat m + Int.negSucc n) = Nat.mod2 m + ((1 : Fin 2) + Nat.mod2 n)
+lemma Int.mod2_add_dist_cross : ∀ m n : ℕ, Int.mod2 (Int.ofNat m + Int.negSucc n) = Nat.mod2 m + ((1 : Fin 2) + Nat.mod2 n)
   | Nat.zero, Nat.zero => rfl
   | Nat.succ a, Nat.zero => by
     rw [← add_assoc _ 1 _, add_comm _ 1, ← mod2_succ]; show _ = Nat.mod2 a + (0 : Fin 2)
-    have : Int.ofNat (Nat.succ a) + Int.negSucc Nat.zero = Int.ofNat a := by rw [ofNat_succ, negSucc_ofNat_eq, ofNat_zero, zero_add, add_assoc, add_neg_self, add_zero]
+    have : Int.ofNat (Nat.succ a) + Int.negSucc Nat.zero = Int.ofNat a := by aesop
     rw [this, AddMonoid.add_zero]; rfl
   | Nat.zero, Nat.succ _ => by simp [mod2]; rw [← mod2_succ]; show _ = (0 : Fin 2) + _; rw [AddMonoid.zero_add]
   | Nat.succ a, Nat.succ b => by
