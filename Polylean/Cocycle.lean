@@ -14,7 +14,7 @@ class AutAction (A B : Type _) [AddGroup A] [AddGroup B] (α : A → (B →+ B))
   /-- The automorphism corresponding to the zero element is the identity. -/
   id_action : α 0 = .id _
   /-- The compatibility of group addition with the action by automorphisms. -/
-  compatibility : ∀ a a' : A, α (a + a') = α a ∘ α a'
+  compatibility : ∀ a a' : A, α (a + a') = (α a).comp (α a')
 
 
 namespace AutAction
