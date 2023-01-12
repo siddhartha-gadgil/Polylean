@@ -1,4 +1,5 @@
 import Mathlib.Algebra.Hom.Group
+import Mathlib.GroupTheory.Submonoid.Basic
 import Polylean.Cocycle
 
 /-!
@@ -83,7 +84,7 @@ instance metabelianGroup : Group (K × Q) :=
 
 end MetabelianGroup
 
-/-
+
 section Exactness
 
 /-
@@ -93,21 +94,32 @@ This section describes the inclusion of `K` into `M` and shows that it is an iso
 This isomorphism is later used in proving that `P` is torsion-free from the fact that `ℤ³` is torsion-free.
 -/
 
-variable (Q K : Type _) [AddCommGroup Q] [AddCommGroup K]
+variable (K Q : Type _) [AddCommGroup K] [AddCommGroup Q]
 variable (c : Q → Q → K) [ccl : Cocycle c]
 
-instance G : Group (K × Q) := MetabelianGroup.metabelianGroup c
+instance : Group (K × Q) := MetabelianGroup.metabelianGroup c
 
 -- this is the subgroup of the metabelian group that occurs as
 -- the image of the inclusion of `K` and the kernel of the projection onto `Q`.
-def Metabelian.Kernel := subType (λ ((_, q) : K × Q) => q = (0 : Q))
+def Metabelian.Kernel : Set (K × Q)
+  | (_, q) => q = 0
 
-def Metabelian.Kernel.inclusion : K → (Metabelian.Kernel Q K)
+def Metabelian.Kernel.inclusion : K → (Metabelian.Kernel K Q)
   | k => ⟨(k, 0), rfl⟩
 
-def Metabelian.Kernel.projection : (Metabelian.Kernel Q K) → K
+def Metabelian.Kernel.projection : (Metabelian.Kernel K Q) → K
   | ⟨(k, _), _⟩ => k
 
+instance : Submonoid (K × Q) where
+  carrier := Metabelian.Kernel K Q
+  mul_mem' := by
+    intro ⟨_, qa⟩ ⟨_, qb⟩ (hqa : qa = 0) (hqb : qb = 0)
+    subst hqa hqb
+    show 0 + 0 = 0
+    rw [add_zero]
+  one_mem' := rfl
+
+/-
 instance : subGroup (λ ((_, q) : K × Q) => q = (0 : Q)) where
   mul_closure := by
     intro ⟨ka, qa⟩ ⟨kb, qb⟩; intro (hqa : qa = 0) (hqb : qb = 0)
