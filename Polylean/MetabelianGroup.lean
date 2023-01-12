@@ -19,17 +19,17 @@ declare_aesop_rule_sets [Metabelian]
 
 /-- The multiplication operation defined using the cocycle.
 The cocycle condition is crucially used in showing associativity and other properties. -/
-@[aesop norm unfold (rule_sets [Metabelian])] 
+@[reducible, aesop norm unfold (rule_sets [Metabelian])] 
 def mul : (K × Q) → (K × Q) → (K × Q)
   | (k, q), (k', q') => (k + (q +ᵥ k') + c q q', q + q')
 
 /-- The identity element of the Metabelian group, 
   which is the ordered pair of the identities of the individual groups. -/
-@[aesop norm unfold (rule_sets [Metabelian])] 
+@[reducible, aesop norm unfold (rule_sets [Metabelian])] 
 def e : K × Q := (0, 0)
 
 /-- The inverse operation of the Metabelian group. -/
-@[aesop norm unfold (rule_sets [Metabelian])] 
+@[reducible, aesop norm unfold (rule_sets [Metabelian])] 
 def inv : K × Q → K × Q
   | (k, q) => (- ((-q) +ᵥ (k  + c q (-q))), -q)
 
