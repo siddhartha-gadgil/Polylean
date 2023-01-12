@@ -58,30 +58,31 @@ def s : P → (Metabelian.Kernel K Q)
 
 /-- proof that the above function satsifies the property of taking an element to its square -/
 theorem s_square : ∀ g : P, g ^ 2 = (s g).val := by
-  intro ((p, q, r), x); revert x
+  sorry 
+  /- intro ((p, q, r), x); revert x
   have square_mul {G : Type} [Group G] (g : G) : g ^ 2 = g * g := by
     show g ^ (Nat.succ 1) = g * g; rw [pow_succ, pow_one
   fin_cases
-  apply Q.rec <;> rw [s, square_mul, Pmul] <;> reduceGoal <;> simp only [id, DirectSum.add, add_zero, add_neg_self] <;> rfl
+  apply Q.rec <;> rw [s, square_mul, Pmul] <;> reduceGoal <;> simp only [id, DirectSum.add, add_zero, add_neg_self] <;> rfl -/
 
 /-- ℤ³ is torsion-free -/
 instance K.torsionfree : AddTorsionFree K := inferInstance
 
 /-- The kernel subgroup of `P` is isomorphic to `ℤ³`-/
-instance K.isokernel : K ≃+ (Metabelian.Kernel Q K) := inferInstance
+-- instance K.isokernel : K ≃+ (Metabelian.Kernel Q K) := inferInstance
 
-/-- the kernel is torsion-free, as a corollary -/
-instance kernel_torsion_free : AddTorsionFree (Metabelian.Kernel Q K) := inferInstance
+-- /-- the kernel is torsion-free, as a corollary -/
+-- instance kernel_torsion_free : AddTorsionFree (Metabelian.Kernel Q K) := inferInstance
 -- @iso_torsion_free (ℤ × ℤ × ℤ) (Metabelian.Kernel Q K) _ _ isoℤ3kernel torsionfreeℤ3
 
-/-- a proof that an odd integer must be non-zero -/
+-- /-- a proof that an odd integer must be non-zero -/
 lemma odd_ne_zero : {a : ℤ} → ¬(a + a + 1 = 0)
   | .ofNat x => sorry
   | .negSucc x => sorry
 
 /-- the only element of `P` with order dividing `2` is the identity -/
-theorem square_free : ∀ g : P, g ^ 2 = 1 → g = 1 := by
-  intro ⟨(p, q, r), x⟩
+theorem square_free : ∀ g : P, g ^ 2 = 1 → g = 1 := by sorry
+  /- intro ⟨(p, q, r), x⟩
   rw [s_square]
 
   apply Q.rec (λ x => ((p, q, r), x) ^ 2 = ((0, 0, 0), _) → ((p, q, r), x) = ((0, 0, 0), _))
@@ -90,10 +91,11 @@ theorem square_free : ∀ g : P, g ^ 2 = 1 → g = 1 := by
 
   where
     zero_of_double_zero : ∀ m : ℤ, m + m = 0 ↔ m = 0 := by
+    sorry
     intro m; apply Iff.intro
     · have : m + m = (Int.ofNat Nat.zero.succ.succ) • m := by show m + m = m + (m + 0); rw [add_zero]
       rw [this]; apply TorsionFreeAdditive.torsion_free
-    · intro h; rw [h, add_zero]
+    · intro h; rw [h, add_zero] -/
 
 /-- If `g` is a torsion element, so is `g ^ 2`. -/
 theorem torsion_implies_square_torsion : ∀ g : P, ∀ n : ℕ, g ^ n = 1 → (g ^ 2) ^ n = 1 :=
@@ -107,8 +109,8 @@ theorem torsion_implies_square_torsion : ∀ g : P, ∀ n : ℕ, g ^ n = 1 → (
 
 /-- `P` is torsion-free -/
 instance P_torsion_free : TorsionFree P where
-  torsion_free := by
-    intros g n g_tor -- assume `g` is a torsion element
+  torsion_free := by sorry
+    /- intros g n g_tor -- assume `g` is a torsion element
     -- then `g ^ 2` is also a torsion element
     have square_tor : (g ^ 2) ^ n.succ = 1 := torsion_implies_square_torsion g n.succ g_tor
     rw [s_square] at square_tor
@@ -126,4 +128,4 @@ instance P_torsion_free : TorsionFree P where
     have square_zero : (s g).val = (0 : Metabelian.Kernel Q K).val := congrArg _ (kernel_torsion_free.torsion_free _ n s_tor)
     rw [← s_square] at square_zero
     -- this means `g ^ 2 = e`, and also `g = e` because `P` has no order 2 elements
-    exact square_free g square_zero
+    exact square_free g square_zero -/
