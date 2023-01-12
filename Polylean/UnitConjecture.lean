@@ -13,7 +13,7 @@ section Preliminaries
 
 /-- definition of being trivial, i.e., of the form `a⬝g` for `g` a group element and `a ≠ 0` -/
 def trivialElem {R G : Type _} [Ring R] [DecidableEq R] [Group G] [DecidableEq G] (x : FreeModule R G) : Prop :=
-  ∃ g : G, FreeModule.coordinates g x ≠ 0 ∧ ∀ h : G, FreeModule.coordinates h x ≠ 0 → h = g
+  ∃! g : G, FreeModule.coordinates g x ≠ 0
 
 abbrev 𝔽₂ := Fin 2
 
@@ -75,10 +75,6 @@ open P
 
 /-- the inverse `α'` of the non-trivial unit `α` -/
 def α' := p' + (q' * a) + (r' * b) + (s' * a * b)
-
--- /-- `α` is a unit -/
--- theorem α_unit : IsUnit α := 
---  ⟨⟨α, α', by native_decide, by native_decide⟩, rfl⟩
 
 /-- `α` is  non-trivial -/
 theorem α_nonTrivial : ¬ (trivialElem α) := by
