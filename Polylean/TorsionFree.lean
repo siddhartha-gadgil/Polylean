@@ -1,7 +1,4 @@
 import Polylean.GardamGroup
-import Polylean.IntDomain
-import Polylean.ModArith
-import Polylean.Tactics.ReduceGoal
 import Mathlib.Algebra.GroupPower.Basic
 
 /-
@@ -23,46 +20,28 @@ class TorsionFree (G : Type _) [Group G] where
   torsion_free : ∀ g : G, ∀ n : ℕ, g ^ n.succ = 1 → g = 1
 
 /-- the definition of torsion free additive groups -/
-class   TorsionFreeAdditive (A : Type _) [AddCommGroup A] where
+class AddTorsionFree (A : Type _) [AddGroup A] where
   torsion_free : ∀ a : A, ∀ n : ℕ, n.succ • a = 0 → a = 0
 
-/-- ℤ is torsion-free, since it is an integral domain -/
-instance : TorsionFreeAdditive ℤ where
+/-- ℤ is torsion-free, since it is an integral domain. -/
+instance : AddTorsionFree ℤ where
   torsion_free := by
-    intro a n
-    intro (h : (Int.ofNat (Nat.succ n)) • a = 0)
-    rw [zsmul_int] at h
-    cases (int_domain _ _) h with
-      | inl hyp =>
-        have : Nat.succ n = (0 : Nat) := by injection hyp; assumption
-        contradiction
-      | inr _ => assumption
+    intro a n (h : n.succ * a = 0)
+    cases Int.mul_eq_zero.mp h with
+    | inl hyp => injection hyp; contradiction
+    | inr _ => assumption
 
-/-- the product of torsion-free groups is torsion-free -/
-instance {A B : Type _} [AddCommGroup A] [AddCommGroup B] [TorsionFreeAdditive A] [TorsionFreeAdditive B] :
-  TorsionFreeAdditive (A × B) where
+/-- The product of torsion-free additive groups is torsion-free. -/
+instance {A B : Type _} [AddGroup A] [AddGroup B] [AddTorsionFree A] [AddTorsionFree B] : AddTorsionFree (A × B) where
   torsion_free := by
     intro (a, b) n
-    have scal_mul_pair : ∀ m : ℕ, m • (a, b) = (m • a, m • b) := by
-      intro m
-      induction m with
-        | zero =>
-          repeat (rw [smul_zero])
-          rw [DirectSum.zero_pair]
-        | succ m ih =>
-          repeat (rw [smul_succ])
-          rw [ih, DirectSum.add]
-    rw [scal_mul_pair, DirectSum.zero_pair, prod_eq, prod_eq]
-    intro ⟨_, _⟩; apply And.intro <;> (apply TorsionFreeAdditive.torsion_free; assumption)
+    rw [show n.succ • (a, b) = (n.succ • a, n.succ • b) from rfl, Prod.ext_iff, Prod.ext_iff]
+    intro ⟨_, _⟩; apply And.intro <;> 
+      (apply AddTorsionFree.torsion_free; assumption)
 
-/-- a group isomorphic to a torsion-free group is torsion-free -/
-instance iso_torsion_free {A B : Type _} [AddCommGroup A] [AddCommGroup B] [IsoAB : AddCommGroup.Isomorphism A B] [TorsionFreeAdditive A] : TorsionFreeAdditive B where
-  torsion_free := by
-    intro b n h
-    have : n.succ • (IsoAB.inv b) = 0 := by rw [hom_mul, h]; simp
-    have : (IsoAB.map ∘ IsoAB.inv) b = IsoAB.map 0 := congrArg IsoAB.map $ TorsionFreeAdditive.torsion_free (IsoAB.inv b) n this
-    rw [IsoAB.idTgt] at this; simp at this
-    assumption
+/-- An additive group isomorphic to a torsion-free additive group is torsion-free. -/
+instance iso_torsion_free {A B : Type _} [AddGroup A] [AddGroup B] (isoAB : A ≃+ B) [AddTorsionFree A] : AddTorsionFree B where
+  torsion_free := by sorry
 
 end TorsionFree
 
@@ -71,7 +50,7 @@ open P
 
 
 /-- the function taking an element of `P` to its square, which lies in the kernel `K` -/
-def s : P → (Metabelian.Kernel Q K)
+def s : P → (Metabelian.Kernel K Q)
   | ((p, q, r), (⟨0, _⟩, ⟨0, _⟩)) => ⟨((p + p, q + q, r + r), (⟨0, _⟩, ⟨0, _⟩)), rfl⟩
   | ((p, q, r), (⟨0, _⟩, ⟨1, _⟩)) => ⟨((0, q + q + 1, 0), (⟨0, _⟩, ⟨0, _⟩)), rfl⟩
   | ((p, q, r), (⟨1, _⟩, ⟨0, _⟩)) => ⟨((p + p + 1, 0, 0), (⟨0, _⟩, ⟨0, _⟩)), rfl⟩
@@ -81,30 +60,29 @@ def s : P → (Metabelian.Kernel Q K)
 theorem s_square : ∀ g : P, g ^ 2 = (s g).val := by
   intro ((p, q, r), x); revert x
   have square_mul {G : Type} [Group G] (g : G) : g ^ 2 = g * g := by
-    show g ^ (Nat.succ 1) = g * g; rw [pow_succ, pow_one]
+    show g ^ (Nat.succ 1) = g * g; rw [pow_succ, pow_one
+  fin_cases
   apply Q.rec <;> rw [s, square_mul, Pmul] <;> reduceGoal <;> simp only [id, DirectSum.add, add_zero, add_neg_self] <;> rfl
 
 /-- ℤ³ is torsion-free -/
-instance torsionfreeℤ3 : TorsionFreeAdditive K := inferInstance
+instance K.torsionfree : AddTorsionFree K := inferInstance
 
 /-- The kernel subgroup of `P` is isomorphic to `ℤ³`-/
-instance isoℤ3kernel : AddCommGroup.Isomorphism K (Metabelian.Kernel Q K) := inferInstance
+instance K.isokernel : K ≃+ (Metabelian.Kernel Q K) := inferInstance
 
 /-- the kernel is torsion-free, as a corollary -/
-instance kernel_torsion_free : TorsionFreeAdditive (Metabelian.Kernel Q K) := inferInstance
+instance kernel_torsion_free : AddTorsionFree (Metabelian.Kernel Q K) := inferInstance
 -- @iso_torsion_free (ℤ × ℤ × ℤ) (Metabelian.Kernel Q K) _ _ isoℤ3kernel torsionfreeℤ3
 
-
 /-- a proof that an odd integer must be non-zero -/
-lemma odd_ne_zero : {a : ℤ} → ¬(a + a + 1 = 0) := by
-  intro a h
-  have hyp := congrArg Int.mod2 h
-  have : ∀ x : Fin 2, x + x = (0 : Fin 2) := fun | ⟨0, _⟩ => rfl | ⟨1, _⟩ => rfl
-  simp [this] at hyp
+lemma odd_ne_zero : {a : ℤ} → ¬(a + a + 1 = 0)
+  | .ofNat x => sorry
+  | .negSucc x => sorry
 
 /-- the only element of `P` with order dividing `2` is the identity -/
 theorem square_free : ∀ g : P, g ^ 2 = 1 → g = 1 := by
   intro ⟨(p, q, r), x⟩
+  rw [s_square]
 
   apply Q.rec (λ x => ((p, q, r), x) ^ 2 = ((0, 0, 0), _) → ((p, q, r), x) = ((0, 0, 0), _))
   <;> rw [s_square, s] <;> simp only [subType.val, prod_eq, zero_of_double_zero, and_false, and_true, true_and] <;> try (apply odd_ne_zero)
@@ -117,7 +95,7 @@ theorem square_free : ∀ g : P, g ^ 2 = 1 → g = 1 := by
       rw [this]; apply TorsionFreeAdditive.torsion_free
     · intro h; rw [h, add_zero]
 
-/-- if `g` is a torsion element, so is `g ^ 2` -/
+/-- If `g` is a torsion element, so is `g ^ 2`. -/
 theorem torsion_implies_square_torsion : ∀ g : P, ∀ n : ℕ, g ^ n = 1 → (g ^ 2) ^ n = 1 :=
   λ g n g_tor =>
     calc (g ^ 2) ^ n = g ^ (2 * n) := by rw [← pow_mul]
