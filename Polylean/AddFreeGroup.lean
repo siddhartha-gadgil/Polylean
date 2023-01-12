@@ -12,11 +12,11 @@ class AddFreeGroup (F : Type _) [AddCommGroup F] (X : Type _) where
   /-- The inclusion map from the basis to the free group. -/
   ι : X → F
   /-- The homomorphism from the free group induced by a map from the basis. -/
-  inducedHom : (A : Type _) → [AddCommGroup A] → (X → A) → (F →+ A)
+  inducedHom : (A : Type) → [AddCommGroup A] → (X → A) → (F →+ A)
   /-- A proof that the induced homomorphism extends the map from the basis. -/
-  induced_extends {A : Type _} [AddCommGroup A] : ∀ f : X → A, (inducedHom A f) ∘ ι = f
+  induced_extends {A : Type} [AddCommGroup A] : ∀ f : X → A, (inducedHom A f) ∘ ι = f
   /-- A proof that any homomorphism extending a map from the basis must be unique. -/
-  unique_extension {A : Type _} [AddCommGroup A] (f g : F →+ A) : f ∘ ι = g ∘ ι → f = g
+  unique_extension {A : Type} [AddCommGroup A] (f g : F →+ A) : f ∘ ι = g ∘ ι → f = g
 
 
 /-- The additive group of integers `ℤ` is the free group on a singleton basis. -/
@@ -37,7 +37,7 @@ instance ℤFree : AddFreeGroup ℤ Unit where
 open EnumDecide in
 /-- Equality of homomorphisms from a free group with a "compact" (i.e., exhaustively searchable) basis is decidable. -/
 @[instance] def decideHomsEqual {F : Type _} [AddCommGroup F] (X : Type _) [DecideForall X] [fgp : AddFreeGroup F X] 
-    {A : Type _} [AddCommGroup A] [DecidableEq A] (f g : F →+ A) : Decidable (f = g) :=
+    {A : Type _} [AddCommGroup A] [DecidableEq A] : DecidableEq (F →+ A) := fun f g =>
   if c : ∀ x : X, f (fgp.ι x) = g (fgp.ι x) then by
     apply Decidable.isTrue
     apply fgp.unique_extension
