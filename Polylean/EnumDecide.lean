@@ -157,6 +157,10 @@ def decideProd {α β : Type}[dfa : DecideForall α][dfb : DecideForall β] (p:�
       intro x y
       exact contra (x, y)
 
+instance {α β : Type}[dfa : DecideForall α][dfb : DecideForall β] :
+  DecideForall (α × β) := 
+  ⟨by apply decideProd⟩
+
 @[instance]
 def decideUnit (p: Unit → Prop)[DecidablePred p] : Decidable (∀ x : Unit, p x) := 
    if c : p (()) then by 
@@ -170,6 +174,9 @@ def decideUnit (p: Unit → Prop)[DecidablePred p] : Decidable (∀ x : Unit, p 
       intro contra
       apply c
       exact contra ()
+
+instance : DecideForall Unit := 
+  ⟨by apply decideUnit⟩
 
 @[instance]
 def decideSum {α β : Type}[dfa : DecideForall α][dfb : DecideForall β](p:α ⊕ β → Prop)[DecidablePred p] : Decidable (∀ x :α ⊕ β, p x) := 
@@ -194,6 +201,10 @@ def decideSum {α β : Type}[dfa : DecideForall α][dfb : DecideForall β](p:α 
       intro x
       exact contra (Sum.inl x) 
       
+instance {α β : Type}[dfa : DecideForall α][dfb : DecideForall β] :
+  DecideForall (α ⊕ β) := 
+  ⟨by apply decideSum⟩
+
 instance funEnum {α β : Type}[dfa : DecideForall α][dfb : DecidableEq β] : DecidableEq (α → β) := fun f g => 
       if c:∀ x:α, f x = g x then
         by
