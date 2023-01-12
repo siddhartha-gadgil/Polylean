@@ -47,6 +47,8 @@ section Elements
 ### The group elements
 -/
 
+namespace K
+
 /-! The generators of the free Abelian group `K`. -/
 
 /-- The first generator of `K`. -/
@@ -55,6 +57,11 @@ abbrev x : K := (1, 0, 0)
 abbrev y : K := (0, 1, 0)
 /-- The third generator of `K`. -/
 abbrev z : K := (0, 0, 1)
+
+end K
+
+
+namespace Q
 
 /-! The elements of the Klein Four group `Q`. -/
 
@@ -66,6 +73,9 @@ abbrev z : K := (0, 0, 1)
 @[match_pattern] abbrev b : Q := (0, 1)
 /-- The product of the generators of `Q`. -/
 @[match_pattern] abbrev c : Q := (1, 1)
+
+end Q
+
 
 end Elements
 
@@ -88,10 +98,10 @@ local infixr:100 " ⊹ " => AddMonoidHom.prodMap
 /-- The action of `Q` on `K` by automorphisms.
 The action can be given a component-wise description in terms of `id` and `neg`, the identity and negation homomorphisms. -/
 @[reducible] def action : Q → (K →+ K)
-  | e =>  .id ℤ  ⊹  .id ℤ  ⊹  .id ℤ
-  | a =>  .id ℤ  ⊹  neg ℤ  ⊹  neg ℤ
-  | b =>  neg ℤ  ⊹  .id ℤ  ⊹  neg ℤ
-  | c =>  neg ℤ  ⊹  neg ℤ  ⊹  .id ℤ
+  | .e =>  .id ℤ  ⊹  .id ℤ  ⊹  .id ℤ
+  | .a =>  .id ℤ  ⊹  neg ℤ  ⊹  neg ℤ
+  | .b =>  neg ℤ  ⊹  .id ℤ  ⊹  neg ℤ
+  | .c =>  neg ℤ  ⊹  neg ℤ  ⊹  .id ℤ
 
 /- A verification that the above action is indeed an action by automorphisms.
   This is done automatically with the machinery of decidable equality of homomorphisms on free groups. -/
@@ -106,6 +116,7 @@ section Cocycle
 
 /-! ### The cocycle -/
 
+open K Q in
 /-- The cocycle in the construction of `P`. -/
 @[reducible] def cocycle : Q → Q → K
   | a , a  => x
