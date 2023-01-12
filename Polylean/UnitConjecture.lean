@@ -1,72 +1,87 @@
-import Polylean.GardamGroup
+import Mathlib.Algebra.Field.Basic
+import Polylean.TorsionFree
 import Polylean.GroupRing
 
 
 /-
-The proof of the theorem `𝔽₂[P]` has non-trivial units. Together with the main result of `TorsionFree` -- that `P` is torsion-free, this completes the formal proof of Gardam's theorem that Kaplansky's Unit Conjecture is false.
+The proof of the theorem `𝔽₂[P]` has non-trivial units. Together with the main result of `TorsionFree` -- that `P` is torsion-free, 
+this completes the formal proof of Gardam's theorem that Kaplansky's Unit Conjecture is false.
 -/
 
 
-section preliminaries
+section Preliminaries
 
-/-- definition of a unit -/
-def unit {R : Type _} [Ring R] (u : R) := ∃ v : R, v * u = (1 : R)
+/-- definition of being trivial, i.e., of the form `a⬝g` for `g` a group element and `a ≠ 0` -/
+def trivialElem {R G : Type _} [Ring R] [DecidableEq R] [Group G] [DecidableEq G] (x : FreeModule R G) : Prop :=
+  ∃ g : G, FreeModule.coordinates g x ≠ 0 ∧ ∀ h : G, FreeModule.coordinates h x ≠ 0 → h = g
 
-/-- definition of being trivial, i.e., of the form `a⬝g` for `g` a group element and `a ≠ 0`-/
-def trivial_element {R G : Type _} [CommRing R] [DecidableEq R] [Group G] [DecidableEq G] (x : FreeModule R G) : Prop :=
-  ∃ g : G, ¬(FreeModule.coordinates g x = 0) ∧ (∀ h : G, ¬(FreeModule.coordinates h x = 0) → h = g)
+abbrev 𝔽₂ := Fin 2
 
-abbrev R := Fin 2
+instance : Field 𝔽₂ where
+  inv := id
+  exists_pair_ne := ⟨0, 1, by decide⟩
+  mul_inv_cancel := fun
+        | 0, h => by contradiction
+        | 1, _ => rfl
+  inv_zero := rfl
+  div_eq_mul_inv := by decide
 
-abbrev P := P.P
+instance ringElem: Coe P.P (𝔽₂[P.P]) where
+    coe g := ⟦[(1, g)]⟧
 
-abbrev RP := FreeModule R P
+end Preliminaries
 
-instance ringElem: Coe P (RP) where
-    coe g :=  ⟦[(1, g)]⟧
+section Constants
 
-end preliminaries
+namespace P
+
+abbrev x : P := (K.x, Q.e)
+abbrev y : P := (K.y, Q.e)
+abbrev z : P := (K.z, Q.e)
+abbrev a : P := ((0, 0, 0), Q.a)
+abbrev b : P := ((0, 0, 0), Q.b)
+
+end P
 
 namespace Gardam
-section constants
 
-abbrev x : P := (P.x, P.e)
-abbrev y : P := (P.y, P.e)
-abbrev z : P := (P.z, P.e)
-abbrev a : P := ((0, 0, 0), P.a)
-abbrev b : P := ((0, 0, 0), P.b)
-abbrev one : RP := 1
+open P
 
+/-! The components of the non-trivial unit `α`. -/
+def p : 𝔽₂[P] := (1 : 𝔽₂[P]) +  x +  y +  x*y +  z⁻¹ + x*z⁻¹ + y*z⁻¹ + x*y*z⁻¹
+def q : 𝔽₂[P] := (x⁻¹*y⁻¹ : 𝔽₂[P]) + x + y⁻¹*z + z
+def r : 𝔽₂[P] := (1 : 𝔽₂[P]) + x + y⁻¹*z + x*y*z
+def s : 𝔽₂[P] := (1 : 𝔽₂[P]) + x*z⁻¹ + x⁻¹*z⁻¹ + y*z⁻¹ + y⁻¹*z⁻¹
 
-/-! The components of the non-trivial unit `α` -/
-def p : RP := one +  x +  y +  x*y +  z⁻¹ + x*z⁻¹ + y*z⁻¹ + x*y*z⁻¹
-def q : RP := (x⁻¹*y⁻¹ : RP) + x + y⁻¹*z + z
-def r: RP := one + x + y⁻¹*z + x*y*z
-def s : RP  := one + x*z⁻¹ + x⁻¹*z⁻¹ + y*z⁻¹ + y⁻¹*z⁻¹
-
-/-- the non-trivial unit `α` -/
-def α := p + (q * a) + (r * b) + (s * a * b)
+/-- The non-trivial unit `α`. -/
+def α : 𝔽₂[P] := p + (q * a) + (r * b) + (s * a * b)
  
-/-! The components of the inverse `α'` of the non-trivial unit `α` -/
-def p' : RP := x⁻¹ * (a⁻¹  * p * a)
-def q' : RP := -(x⁻¹ * q)
-def r' : RP := -(y⁻¹ * r)
-def s' : RP := z⁻¹ * (a⁻¹ * s * a)
+/-! The components of the inverse `α'` of the non-trivial unit `α`. -/
+def p' : 𝔽₂[P] := x⁻¹ * (a⁻¹  * p * a)
+def q' : 𝔽₂[P] := -(x⁻¹ * q)
+def r' : 𝔽₂[P] := -(y⁻¹ * r)
+def s' : 𝔽₂[P] := z⁻¹ * (a⁻¹ * s * a)
 
-end constants
+end Gardam
+
+end Constants
 
 
-section verification
+section Verification
+
+namespace Gardam
+
+open P
 
 /-- the inverse `α'` of the non-trivial unit `α` -/
 def α' := p' + (q' * a) + (r' * b) + (s' * a * b)
 
-
-/-- `α` is a unit -/
-theorem α_is_unit : unit α := ⟨α', by native_decide⟩
+-- /-- `α` is a unit -/
+-- theorem α_unit : IsUnit α := 
+--  ⟨⟨α, α', by native_decide, by native_decide⟩, rfl⟩
 
 /-- `α` is  non-trivial -/
-theorem α_non_trivial : ¬ (trivial_element α) := by
+theorem α_nonTrivial : ¬ (trivialElem α) := by
     intro contra
     let ⟨g, p⟩ := contra
     let eqg := p.right
@@ -79,10 +94,20 @@ theorem α_non_trivial : ¬ (trivial_element α) := by
     rw [← eq₂] at eq₁
     contradiction
 
-/-- the existence of a non-trivial unit in `𝔽₂[P]` -/
-theorem Gardam : ∃ g : RP, unit g ∧ ¬ (trivial_element g) := 
-  ⟨α, And.intro α_is_unit α_non_trivial⟩
+/-- The statement of Kaplansky's Unit Conjecture. -/
+def UnitConjecture : Prop :=
+  ∀ {F : Type _} [Field F] [DecidableEq F] 
+  {G : Type _} [Group G] [DecidableEq G] [TorsionFree G],
+    ∀ u : (F[G])ˣ, trivialElem (u : F[G])
 
-end verification
+/-- The existence of a non-trivial unit in `𝔽₂[P]`. -/
+theorem Counterexample : {u : (𝔽₂[P])ˣ // ¬(trivialElem u.val)} := 
+  ⟨⟨α, α', by native_decide, by native_decide⟩, α_nonTrivial⟩
+
+/-- Giles Gardam's result - Kaplansky's Unit Conjecture is false. -/
+theorem Result : ¬ UnitConjecture :=
+   λ conjecture => Counterexample.prop <| conjecture (F := 𝔽₂) (G := P) Counterexample.val
 
 end Gardam
+
+end Verification
