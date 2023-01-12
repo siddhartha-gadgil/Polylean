@@ -214,7 +214,7 @@ instance formalSumSetoid (R X : Type) [Ring R] [DecidableEq R][DecidableEq X] : 
 abbrev FreeModule (R X : Type) [Ring R] [DecidableEq R][DecidableEq X] :=
   Quotient (formalSumSetoid R X)
 
--- notation "⟦" a "⟧" => Quotient.mk' a
+notation R"["G"]" => FreeModule R G
 
 end QuotientFreeModule
 
@@ -226,7 +226,7 @@ namespace FreeModule
 
 /-- decidable equality for quotient elements in the free module -/
 @[instance]
-def decideEqualQuotient  (s₁ s₂ : FormalSum R X) : Decidable (@Eq (FreeModule R X) ⟦s₁⟧ ⟦s₂⟧) :=
+def decideEqualQuotient  (s₁ s₂ : FormalSum R X) : Decidable (@Eq (R[X]) ⟦s₁⟧ ⟦s₂⟧) :=
   if ch₁ : equalOnSupport s₁.support s₁.coords s₂.coords then
     if ch₂ : equalOnSupport s₂.support s₁.coords s₂.coords then
       Decidable.isTrue
@@ -282,7 +282,7 @@ theorem eql_on_support_of_true {l : List X} {f g : X → R} : beqOnSupport l f g
 /-- boolean equality on support gives equal quotients -/
 theorem eqlquot_of_beq_support (s₁ s₂ : FormalSum R X)
   (c₁ : beqOnSupport s₁.support s₁.coords s₂.coords)
-  (c₂ : beqOnSupport s₂.support s₁.coords s₂.coords) : @Eq (FreeModule R X) ⟦s₁⟧ ⟦s₂⟧ := 
+  (c₂ : beqOnSupport s₂.support s₁.coords s₂.coords) : @Eq (R[X]) ⟦s₁⟧ ⟦s₂⟧ := 
         by
         let ch₁ := eql_on_support_of_true c₁
         let ch₂ := eql_on_support_of_true c₂
@@ -310,18 +310,18 @@ theorem eqlquot_of_beq_support (s₁ s₂ : FormalSum R X)
 /--
 boolean equality for the quotient via lifting
 -/
-def beq_quot : (x₁ x₂ : FreeModule R X) → Bool := by
-  apply Quotient.lift₂ (fun (s₁ s₂ : FormalSum R X) => decide (@Eq (FreeModule R X) ⟦s₁⟧ ⟦s₂⟧))
+def beq_quot : (x₁ x₂ : R[X]) → Bool := by
+  apply Quotient.lift₂ (fun (s₁ s₂ : FormalSum R X) => decide (@Eq (R[X]) ⟦s₁⟧ ⟦s₂⟧))
   intro a₁ b₁ a₂ b₂ eqv₁ eqv₂
-  let eq₁ : Eq (α := FreeModule R X) ⟦a₁⟧ ⟦a₂⟧ := Quot.sound eqv₁
-  let eq₂ : Eq (α := FreeModule R X) ⟦b₁⟧ ⟦b₂⟧ := Quot.sound eqv₂
+  let eq₁ : Eq (α := R[X]) ⟦a₁⟧ ⟦a₂⟧ := Quot.sound eqv₁
+  let eq₂ : Eq (α := R[X]) ⟦b₁⟧ ⟦b₂⟧ := Quot.sound eqv₂
   conv => lhs; congr; rw [eq₁, eq₂]
 
 /--
 Boolean equality for the quotient is equality.
 -/
-def eq_of_beq_true  : ∀ x₁ x₂ : FreeModule R X, x₁.beq_quot x₂ = true → x₁ = x₂ := by
-  apply Quotient.ind₂ (motive := fun (x₁ x₂ : FreeModule R X) => x₁.beq_quot x₂ = true → x₁ = x₂)
+def eq_of_beq_true  : ∀ x₁ x₂ : R[X], x₁.beq_quot x₂ = true → x₁ = x₂ := by
+  apply Quotient.ind₂ (motive := fun (x₁ x₂ : R[X]) => x₁.beq_quot x₂ = true → x₁ = x₂)
   intro s₁ s₂ eqv
   let eql := of_decide_eq_true eqv
   assumption
@@ -329,8 +329,8 @@ def eq_of_beq_true  : ∀ x₁ x₂ : FreeModule R X, x₁.beq_quot x₂ = true 
 /--
 Boolean inequality for the quotient is inequality.
 -/
-def neq_of_beq_false  : ∀ x₁ x₂ : FreeModule R X, x₁.beq_quot x₂ = false → Not (x₁ = x₂) := by
-  apply Quotient.ind₂ (motive := fun (x₁ x₂ : FreeModule R X) => x₁.beq_quot x₂ = false → Not (x₁ = x₂))
+def neq_of_beq_false  : ∀ x₁ x₂ : R[X], x₁.beq_quot x₂ = false → Not (x₁ = x₂) := by
+  apply Quotient.ind₂ (motive := fun (x₁ x₂ : R[X]) => x₁.beq_quot x₂ = false → Not (x₁ = x₂))
   intro s₁ s₂ neqv
   let neql := of_decide_eq_false neqv
   assumption
@@ -338,7 +338,7 @@ def neq_of_beq_false  : ∀ x₁ x₂ : FreeModule R X, x₁.beq_quot x₂ = fal
 /--
 decidable equality for the free module
 -/
-def decEq  (x₁ x₂ : FreeModule R X) : Decidable (x₁ = x₂) := by
+def decEq  (x₁ x₂ : R[X]) : Decidable (x₁ = x₂) := by
   match p : x₁.beq_quot x₂ with
   | true =>
     apply Decidable.isTrue
@@ -352,7 +352,7 @@ def decEq  (x₁ x₂ : FreeModule R X) : Decidable (x₁ = x₂) := by
 /--
 decidable equality for the free module
 -/
-instance {X : Type} [DecidableEq X] : DecidableEq (FreeModule R X) := fun x₁ x₂ => x₁.decEq x₂
+instance {X : Type} [DecidableEq X] : DecidableEq (R[X]) := fun x₁ x₂ => x₁.decEq x₂
 
 /-- coordinates well defined on the quotient  
 -/
@@ -362,7 +362,7 @@ theorem equal_coords_of_approx (s₁ s₂ : FormalSum R X): s₁ ≈ s₂ → s�
     exact congrFun hyp x₀
 
 /-- coordinates for the quotient -/
-def coordinates (x₀ : X) : FreeModule R X →  R := by
+def coordinates (x₀ : X) : R[X] →  R := by
   apply Quotient.lift (fun s : FormalSum R X => s.coords x₀)
   intro a b
   intro hyp
@@ -394,9 +394,9 @@ theorem scmul_coords  (r : R) (s : FormalSum R X) (x₀ : X) : (r * s.coords x�
     simp [scmul, coords, monom_coords_mul, left_distrib, ih]
 
 /-- scalar multiplication on the Free Module-/
-def FreeModule.scmul  : R → FreeModule R X → FreeModule R X := by
+def FreeModule.scmul  : R → R[X] → R[X] := by
   intro r
-  let f : FormalSum R X → FreeModule R X := fun s => ⟦s.scmul r⟧
+  let f : FormalSum R X → R[X] := fun s => ⟦s.scmul r⟧
   apply Quotient.lift f
   intro s₁ s₂
   simp
@@ -432,8 +432,8 @@ theorem append_equiv  (s₁ s₂ t₁ t₂ : FormalSum R X) :(s₁ ≈ s₂) →
 end FormalSum
 
 /-- addition of elements in the free module -/
-def FreeModule.add  : FreeModule R X → FreeModule R X → FreeModule R X := by
-  let f : FormalSum R X → FormalSum R X → FreeModule R X := fun s₁ s₂ => ⟦s₁ ++ s₂⟧
+def FreeModule.add  : R[X] → R[X] → R[X] := by
+  let f : FormalSum R X → FormalSum R X → R[X] := fun s₁ s₂ => ⟦s₁ ++ s₂⟧
   apply Quotient.lift₂ f
   intro a₁ b₁ a₂ b₂
   simp
@@ -445,10 +445,10 @@ def FreeModule.add  : FreeModule R X → FreeModule R X → FreeModule R X := by
   rw [← l₁, ← l₂]
   rw [eq₁, eq₂]
 
-instance  : Add (FreeModule R X) :=
+instance  : Add (R[X]) :=
   ⟨FreeModule.add⟩
 
-instance  : HSMul R (FreeModule R X) (FreeModule R X) :=
+instance  : HSMul R (R[X]) (R[X]) :=
   ⟨FreeModule.scmul⟩
 namespace FormalSum
 
@@ -492,16 +492,16 @@ end FormalSum
 namespace FreeModule
 
 /-- associativity for scalar and ring products -/
-theorem module_action  (a b : R) (x : FreeModule R X) : a • (b • x) = (a * b) • x := by
-  apply @Quotient.ind (motive := fun x : FreeModule R X => a • (b • x) = (a * b) • x)
+theorem module_action  (a b : R) (x : R[X]) : a • (b • x) = (a * b) • x := by
+  apply @Quotient.ind (motive := fun x : R[X] => a • (b • x) = (a * b) • x)
   intro s
   apply Quotient.sound
   rw [FormalSum.action]
   apply eqlCoords.refl
 
 /-- commutativity of addition -/
-theorem addn_comm  (x₁ x₂ : FreeModule R X) : x₁ + x₂ = x₂ + x₁ := by
-  apply @Quotient.ind₂ (motive := fun x₁ x₂ : FreeModule R X => x₁ + x₂ = x₂ + x₁)
+theorem addn_comm  (x₁ x₂ : R[X]) : x₁ + x₂ = x₂ + x₁ := by
+  apply @Quotient.ind₂ (motive := fun x₁ x₂ : R[X] => x₁ + x₂ = x₂ + x₁)
   intro s₁ s₂
   apply Quotient.sound
   apply funext
@@ -511,8 +511,8 @@ theorem addn_comm  (x₁ x₂ : FreeModule R X) : x₁ + x₂ = x₂ + x₁ := b
   rw [← lm₁, ← lm₂]
   simp [add_comm]
 
-theorem add_assoc_aux  (s₁ : FormalSum R X) (x₂ x₃ : FreeModule R X) : (⟦s₁⟧ + x₂) + x₃ = ⟦s₁⟧ + (x₂ + x₃) := by
-  apply @Quotient.ind₂ (motive := fun x₂ x₃ : FreeModule R X => (⟦s₁⟧ + x₂) + x₃ = ⟦s₁⟧ + (x₂ + x₃))
+theorem add_assoc_aux  (s₁ : FormalSum R X) (x₂ x₃ : R[X]) : (⟦s₁⟧ + x₂) + x₃ = ⟦s₁⟧ + (x₂ + x₃) := by
+  apply @Quotient.ind₂ (motive := fun x₂ x₃ : R[X] => (⟦s₁⟧ + x₂) + x₃ = ⟦s₁⟧ + (x₂ + x₃))
   intro x₂ x₃
   apply Quotient.sound
   apply funext
@@ -524,16 +524,16 @@ theorem add_assoc_aux  (s₁ : FormalSum R X) (x₂ x₃ : FreeModule R X) : (�
   simp [add_assoc]
 
 /-- associativity of addition -/
-theorem addn_assoc  (x₁ x₂ x₃ : FreeModule R X) : (x₁ + x₂) + x₃ = x₁ + (x₂ + x₃) := by
-  apply @Quotient.ind (motive := fun x₁ : FreeModule R X => (x₁ + x₂) + x₃ = x₁ + (x₂ + x₃))
+theorem addn_assoc  (x₁ x₂ x₃ : R[X]) : (x₁ + x₂) + x₃ = x₁ + (x₂ + x₃) := by
+  apply @Quotient.ind (motive := fun x₁ : R[X] => (x₁ + x₂) + x₃ = x₁ + (x₂ + x₃))
   intro x₁
   apply add_assoc_aux
 
-def zero : FreeModule R X := ⟦[]⟧
+def zero : R[X] := ⟦[]⟧
 
 /-- adding zero-/
-theorem addn_zero (x: FreeModule R X) : x + zero = x := by
-  apply @Quotient.ind (motive := fun x : FreeModule R X => x + zero = x)
+theorem addn_zero (x: R[X]) : x + zero = x := by
+  apply @Quotient.ind (motive := fun x : R[X] => x + zero = x)
   intro x
   apply Quotient.sound
   apply funext
@@ -542,8 +542,8 @@ theorem addn_zero (x: FreeModule R X) : x + zero = x := by
   simp [add_zero, coords]
 
 /-- adding zero-/
-theorem zero_addn (x: FreeModule R X) : zero + x = x := by
-  apply @Quotient.ind (motive := fun x : FreeModule R X => zero + x = x)
+theorem zero_addn (x: R[X]) : zero + x = x := by
+  apply @Quotient.ind (motive := fun x : R[X] => zero + x = x)
   intro x
   apply Quotient.sound
   apply funext
@@ -552,8 +552,8 @@ theorem zero_addn (x: FreeModule R X) : zero + x = x := by
   simp [add_zero, coords]
 
 /-- distributivity for addition of module elements -/
-theorem elem_distrib  (a : R) (x₁ x₂ : FreeModule R X) : a • (x₁ + x₂) = a • x₁ + a • x₂ := by
-  apply @Quotient.ind₂ (motive := fun x₁ x₂ : FreeModule R X => a • (x₁ + x₂) = a • x₁ + a • x₂)
+theorem elem_distrib  (a : R) (x₁ x₂ : R[X]) : a • (x₁ + x₂) = a • x₁ + a • x₂ := by
+  apply @Quotient.ind₂ (motive := fun x₁ x₂ : R[X] => a • (x₁ + x₂) = a • x₁ + a • x₂)
   intro s₁ s₂
   apply Quotient.sound
   apply funext
@@ -566,8 +566,8 @@ theorem elem_distrib  (a : R) (x₁ x₂ : FreeModule R X) : a • (x₁ + x₂)
   simp [left_distrib]
 
 /-- distributivity with respect to scalars -/
-theorem coeffs_distrib (a b: R)(x: FreeModule R X) : a • x + b • x = (a + b) • x:= by
-  apply @Quotient.ind (motive := fun x : FreeModule R X => 
+theorem coeffs_distrib (a b: R)(x: R[X]) : a • x + b • x = (a + b) • x:= by
+  apply @Quotient.ind (motive := fun x : R[X] => 
     a • x + b • x = (a + b) • x)
   intro s
   apply Quotient.sound
@@ -578,8 +578,8 @@ theorem coeffs_distrib (a b: R)(x: FreeModule R X) : a • x + b • x = (a + b)
   exact l''
 
 /-- multiplication by `1: R` -/
-theorem unit_coeffs (x: FreeModule R X) : (1 : R) • x =  x:= by
-  apply @Quotient.ind (motive := fun x : FreeModule R X => 
+theorem unit_coeffs (x: R[X]) : (1 : R) • x =  x:= by
+  apply @Quotient.ind (motive := fun x : R[X] => 
     (1 : R) • x =  x)
   intro s
   apply Quotient.sound
@@ -590,8 +590,8 @@ theorem unit_coeffs (x: FreeModule R X) : (1 : R) • x =  x:= by
   simp
 
 /-- multiplication by `0 : R` -/
-theorem zero_coeffs (x: FreeModule R X) : (0 : R) • x =  ⟦ [] ⟧:= by
-  apply @Quotient.ind (motive := fun x : FreeModule R X => 
+theorem zero_coeffs (x: R[X]) : (0 : R) • x =  ⟦ [] ⟧:= by
+  apply @Quotient.ind (motive := fun x : R[X] => 
     (0 : R) • x =  ⟦ [] ⟧)
   intro s
   apply Quotient.sound
@@ -602,7 +602,7 @@ theorem zero_coeffs (x: FreeModule R X) : (0 : R) • x =  ⟦ [] ⟧:= by
   simp [coords]
 
 /-- The module is an additive commutative group, mainly proved as a check -/
-instance : AddCommGroup (FreeModule R X) :=
+instance : AddCommGroup (R[X]) :=
   {
     zero := ⟦ []⟧
     add := FreeModule.add
@@ -1152,20 +1152,20 @@ instance prodCube {α β : Type} [na: NormCube α] [nb :NormCube β] :  NormCube
         (nb.cube n).map  (fun b => 
           (a, b)))
 
-def FreeModule.normBound (x: FreeModule R X)[nx : NormCube X] : Nat := by
+def FreeModule.normBound (x: R[X])[nx : NormCube X] : Nat := by
   let f : FormalSum R X → Nat := fun s => s.normSucc (nx.norm)
   apply Quotient.lift f
   apply norm_succ_eq
   exact x
 
 -- this should be viewable directly if `R` and `X` are, as in our case
-def FreeModule.coeffList (x: FreeModule R X)[nx : NormCube X] : List (R × X) := 
+def FreeModule.coeffList (x: R[X])[nx : NormCube X] : List (R × X) := 
    (nx.cube (x.normBound)).filterMap fun x₀ => 
       let a := x.coordinates x₀
       if a =0 then none else some (a, x₀)
 
 -- basic repr 
-instance basicRepr [NormCube X][Repr X][Repr R]: Repr (FreeModule R X) := 
+instance basicRepr [NormCube X][Repr X][Repr R]: Repr (R[X]) := 
   ⟨fun x _ => reprStr (x.coeffList)⟩
 
 end NormRepr

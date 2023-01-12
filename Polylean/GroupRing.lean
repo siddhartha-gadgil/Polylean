@@ -133,7 +133,7 @@ theorem mul_zero_cons (s t : FormalSum R G)(g: G):  mul s ((0, h) :: t) ≈  mul
 
 /-- Quotient in second argument for group ring multiplication 
 -/
-def mulAux : FormalSum R G → FreeModule R G → FreeModule R G := by
+def mulAux : FormalSum R G → R[G] → R[G] := by
   intro s
   apply  Quotient.lift (⟦FormalSum.mul s ·⟧)
   apply func_eql_of_move_equiv
@@ -284,9 +284,9 @@ theorem first_arg_invariant (s₁ s₂ t : FormalSum R G) (rel : ElementaryMove 
           rw [add_comm]    
         
 /-- multiplication for free modules -/
-def mul : FreeModule R G → FreeModule R G → FreeModule R G := by
+def mul : R[G] → R[G] → R[G] := by
   let f  := fun (s : FormalSum R G) => 
-    fun  (t : FreeModule R G) => mulAux  s t 
+    fun  (t : R[G]) => mulAux  s t 
   apply  Quotient.lift f
   apply func_eql_of_move_equiv  
   intro s₁ s₂ rel
@@ -303,13 +303,13 @@ def mul : FreeModule R G → FreeModule R G → FreeModule R G := by
   apply first_arg_invariant
   exact rel
 
-instance groupRingMul : Mul (FreeModule R G) := 
+instance groupRingMul : Mul (R[G]) := 
   ⟨mul⟩
 
-instance : One (FreeModule R G) := 
+instance : One (R[G]) := 
   ⟨⟦[(1, 1)]⟧⟩
 
-instance : AddCommGroup (FreeModule R G) := 
+instance : AddCommGroup (R[G]) := 
   {
     zero := ⟦ [] ⟧
     add := FreeModule.add
@@ -326,7 +326,7 @@ instance : AddCommGroup (FreeModule R G) :=
   }
 
 /-- The group ring is a ring -/
-instance : Ring (FreeModule R G) :=
+instance : Ring (R[G]) :=
   {
     mul := mul
     neg := fun x => (-1 : R) • x
