@@ -17,6 +17,8 @@ namespace P
 
 section Components
 
+declare_aesop_rule_sets [P]
+
 /-! 
 ### The components of the group `P`
 The group `P` is constructed as a Metabelian group with kernel `K := ℤ³` and quotient `Q := ℤ/2 × ℤ/2`. 
@@ -25,6 +27,7 @@ The group `P` is constructed as a Metabelian group with kernel `K := ℤ³` and 
 /-! The *kernel* group -/
 
 /-- The *kernel* group - `ℤ³`, the free Abelian group on three generators. -/
+@[aesop safe (rule_sets [P])]
 abbrev K := ℤ × ℤ × ℤ
 
 instance KGrp : AddCommGroup K := inferInstance
@@ -36,10 +39,10 @@ instance : DecidableEq (K →+ K) := decideHomsEqual (X := Unit ⊕ Unit ⊕ Uni
 /-! The *quotient* group -/
 
 /-- The *quotient* group - `ℤ/2 × ℤ/2`, the Klein Four group. -/
+@[aesop safe (rule_sets [P])]
 abbrev Q := Fin 2 × Fin 2
 
 instance QGrp : AddCommGroup Q := inferInstance
-
 
 section Elements
 
@@ -52,10 +55,13 @@ namespace K
 /-! The generators of the free Abelian group `K`. -/
 
 /-- The first generator of `K`. -/
+@[aesop norm unfold (rule_sets [P])]
 abbrev x : K := (1, 0, 0)
 /-- The second generator of `K`. -/
+@[aesop norm unfold (rule_sets [P])]
 abbrev y : K := (0, 1, 0)
 /-- The third generator of `K`. -/
+@[aesop norm unfold (rule_sets [P])]
 abbrev z : K := (0, 0, 1)
 
 end K
@@ -66,13 +72,17 @@ namespace Q
 /-! The elements of the Klein Four group `Q`. -/
 
 /-- The identity element of `Q`. -/
-@[match_pattern] abbrev e : Q := (0, 0)
+@[aesop norm unfold (rule_sets [P]), match_pattern]
+abbrev e : Q := (⟨0, by decide⟩, ⟨0, by decide⟩)
 /-- The first generator of `Q`. -/
-@[match_pattern] abbrev a : Q := (1, 0)
+@[aesop norm unfold (rule_sets [P]), match_pattern]
+abbrev a : Q := (⟨1, by decide⟩, ⟨0, by decide⟩)
 /-- The second generator of `Q`. -/
-@[match_pattern] abbrev b : Q := (0, 1)
+@[aesop norm unfold (rule_sets [P]), match_pattern]
+abbrev b : Q := (⟨0, by decide⟩, ⟨1, by decide⟩)
 /-- The product of the generators of `Q`. -/
-@[match_pattern] abbrev c : Q := (1, 1)
+@[aesop safe (rule_sets [P]), match_pattern]
+abbrev c : Q := (⟨1, by decide⟩, ⟨1, by decide⟩)
 
 end Q
 
@@ -90,14 +100,18 @@ The action of the group `Q` on the kernel `K` by automorphisms required for cons
 -/
 
 -- An abbreviation for the negation homomorphism on commutative groups.
+@[aesop norm unfold (rule_sets [P])]
 abbrev neg (α : Type _) [SubtractionCommMonoid α] := negAddMonoidHom (α := α)
+
+attribute [aesop norm unfold (rule_sets [P])] negAddMonoidHom
 
 -- A temporary notation for easily describing products of additive monoid homomorphisms.
 local infixr:100 " ⊹ " => AddMonoidHom.prodMap
 
 /-- The action of `Q` on `K` by automorphisms.
 The action can be given a component-wise description in terms of `id` and `neg`, the identity and negation homomorphisms. -/
-@[reducible] def action : Q → (K →+ K)
+@[aesop norm unfold (rule_sets [P]), reducible] 
+def action : Q → (K →+ K)
   | .e =>  .id ℤ  ⊹  .id ℤ  ⊹  .id ℤ
   | .a =>  .id ℤ  ⊹  neg ℤ  ⊹  neg ℤ
   | .b =>  neg ℤ  ⊹  .id ℤ  ⊹  neg ℤ
@@ -118,7 +132,8 @@ section Cocycle
 
 open K Q in
 /-- The cocycle in the construction of `P`. -/
-@[reducible] def cocycle : Q → Q → K
+@[aesop norm unfold (rule_sets [P]), reducible]
+def cocycle : Q → Q → K
   | a , a  => x
   | a , c  => x
   | b , b  => y
@@ -148,6 +163,7 @@ The construction of the group `P` as a Metabelian group from the given action an
 -/
 
 /-- the group `P` constructed via the cocycle construction -/
+@[aesop safe (rule_sets [P])]
 abbrev P := K × Q
 
 instance PGrp : Group P := MetabelianGroup.metabelianGroup cocycle
@@ -159,7 +175,8 @@ instance (priority := high) : Mul P := ⟨PGrp.mul⟩
 instance : DecidableEq P := inferInstanceAs <| DecidableEq (K × Q)
 
 /-- A confirmation that multiplication in `P` is as expected from the Metabelian group structure. -/
-@[simp] theorem mul (k k' : K) (q q' : Q) : (k, q) * (k', q') = (k + action q k' + cocycle q q', q + q') := rfl
+@[aesop norm unfold (rule_sets [P]), simp]
+theorem mul (k k' : K) (q q' : Q) : (k, q) * (k', q') = (k + action q k' + cocycle q q', q + q') := rfl
 
 end MetabelianGroup
 
