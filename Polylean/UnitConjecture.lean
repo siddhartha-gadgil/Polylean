@@ -78,17 +78,14 @@ def α' := p' + (q' * a) + (r' * b) + (s' * a * b)
 
 /-- `α` is  non-trivial -/
 theorem α_nonTrivial : ¬ (trivialElem α) := by
-    intro contra
-    let ⟨g, p⟩ := contra
-    let eqg := p.right
-    have eq₁ : -z = g := by 
-      apply eqg
-      native_decide
-    have eq₂ : x * y = g := by
-      apply eqg
-      native_decide
-    rw [← eq₂] at eq₁
-    contradiction
+    intro ⟨g, _, (eqg : ∀ y, α.coordinates y ≠ 0 → y = g)⟩
+    have : z⁻¹ = g := by
+      apply eqg; native_decide
+    have : x * y = g := by
+      apply eqg; native_decide
+    have : z⁻¹ = x * y := by
+      refine' Eq.trans _ (Eq.symm _) <;> assumption
+    simp at this
 
 /-- The statement of Kaplansky's Unit Conjecture. -/
 def UnitConjecture : Prop :=
