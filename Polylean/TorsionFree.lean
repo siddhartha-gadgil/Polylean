@@ -109,15 +109,7 @@ instance P.torsionFree : TorsionFree P where
     intros g n g_tor -- assume `g` is a torsion element
     -- then `g ^ 2` is also a torsion element
     have square_tor : (g ^ 2) ^ n.succ = ((0, 0, 0), Q.e) := torsion_implies_square_torsion g n.succ g_tor
-    have : ∀ k : K, ∀ m : ℕ, (k, Q.e) ^ m = (m • k, m • Q.e) := by 
-      intro k m
-      induction m
-      case zero => erw [zero_nsmul]; rfl
-      case succ m ih =>
-        show (k, Q.e) * (k, Q.e) ^ m = (_, Q.e + m • Q.e)
-        rw [ih, P.mul]
-        aesop (rule_sets [P]) (add norm [succ_nsmul]) 
-    rw [pow_two, s_square, this (s g) n.succ, Prod.mk.injEq] at square_tor
+    erw [pow_two, s_square, MetabelianGroup.kernel_pow, Prod.mk.injEq] at square_tor
     -- since `g ^ 2 = s g`, we have that `s g` is a torsion element
     have s_tor : n.succ • (s g) = 0 := square_tor.left
     -- since `s g` lies in the kernel and the kernel is torsion-free, `s g = 0`

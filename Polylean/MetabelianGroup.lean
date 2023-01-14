@@ -82,9 +82,18 @@ instance metabelianGroup : Group (K × Q) :=
     div_eq_mul_inv := by intros; rfl
   }
 
+lemma kernel_pow (k : K) (n : ℕ) : (k, (0 : Q)) ^ n = (n • k, (0 : Q)) := by
+  induction n with
+    | zero => rw [pow_zero, zero_nsmul]; rfl
+    | succ m ih => 
+      rw [pow_succ, ih, succ_nsmul]
+      show (k + ((0 : Q) +ᵥ m • k) + c 0 0, 0 + 0) = (k + m • k, 0)
+      rw [zero_vadd, ccl.cocycle_zero, add_zero, add_zero]
+
 end MetabelianGroup
 
 
+/-
 section Exactness
 
 /-
@@ -119,7 +128,6 @@ instance : Submonoid (K × Q) where
     rw [add_zero]
   one_mem' := rfl
 
-/-
 instance : subGroup (λ ((_, q) : K × Q) => q = (0 : Q)) where
   mul_closure := by
     intro ⟨ka, qa⟩ ⟨kb, qb⟩; intro (hqa : qa = 0) (hqb : qb = 0)
