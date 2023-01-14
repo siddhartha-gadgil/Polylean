@@ -11,9 +11,16 @@ this completes the formal proof of Gardam's theorem that Kaplansky's Unit Conjec
 
 section Preliminaries
 
-/-- definition of being trivial, i.e., of the form `a⬝g` for `g` a group element and `a ≠ 0` -/
+/-- The definition of an element of a group ring being trivial, i.e., of the form `a⬝g` for `g` a group element and `a ≠ 0`. -/
 def trivialElem {R G : Type _} [Ring R] [DecidableEq R] [Group G] [DecidableEq G] (x : FreeModule R G) : Prop :=
   ∃! g : G, FreeModule.coordinates g x ≠ 0
+
+/-- The statement of Kaplansky's Unit Conjecture:
+The only units in a group ring, when the group is torsion-free and the ring is a field, are the trivial units. -/
+def UnitConjecture : Prop :=
+  ∀ {F : Type _} [Field F] [DecidableEq F] 
+  {G : Type _} [Group G] [DecidableEq G] [TorsionFree G],
+    ∀ u : (F[G])ˣ, trivialElem (u : F[G])
 
 abbrev 𝔽₂ := Fin 2
 
@@ -26,7 +33,7 @@ instance : Field 𝔽₂ where
   inv_zero := rfl
   div_eq_mul_inv := by decide
 
-instance ringElem: Coe P.P (𝔽₂[P.P]) where
+instance ringElem : Coe P.P (𝔽₂[P.P]) where
     coe g := ⟦[(1, g)]⟧
 
 end Preliminaries
@@ -34,6 +41,10 @@ end Preliminaries
 section Constants
 
 namespace P
+
+/-!
+The main constants of the group `P`.
+-/
 
 abbrev x : P := (K.x, Q.e)
 abbrev y : P := (K.y, Q.e)
@@ -73,10 +84,10 @@ namespace Gardam
 
 open P
 
-/-- the inverse `α'` of the non-trivial unit `α` -/
+/-- The inverse `α'` of the non-trivial unit `α` -/
 def α' := p' + (q' * a) + (r' * b) + (s' * a * b)
 
-/-- `α` is  non-trivial -/
+/-- A proof that `α` is non-trivial. -/
 theorem α_nonTrivial : ¬ (trivialElem α) := by
     intro ⟨g, _, (eqg : ∀ y, α.coordinates y ≠ 0 → y = g)⟩
     have : z⁻¹ = g := by
@@ -87,19 +98,13 @@ theorem α_nonTrivial : ¬ (trivialElem α) := by
       refine' Eq.trans _ (Eq.symm _) <;> assumption
     simp at this
 
-/-- The statement of Kaplansky's Unit Conjecture. -/
-def UnitConjecture : Prop :=
-  ∀ {F : Type _} [Field F] [DecidableEq F] 
-  {G : Type _} [Group G] [DecidableEq G] [TorsionFree G],
-    ∀ u : (F[G])ˣ, trivialElem (u : F[G])
-
-/-- The existence of a non-trivial unit in `𝔽₂[P]`. -/
-theorem Counterexample : {u : (𝔽₂[P])ˣ // ¬(trivialElem u.val)} := 
+/-- A proof of the existence of a non-trivial unit in `𝔽₂[P]`. -/
+def Counterexample : {u : (𝔽₂[P])ˣ // ¬(trivialElem u.val)} := 
   ⟨⟨α, α', by native_decide, by native_decide⟩, α_nonTrivial⟩
 
 /-- Giles Gardam's result - Kaplansky's Unit Conjecture is false. -/
 theorem Result : ¬ UnitConjecture :=
-   λ conjecture => Counterexample.prop <| conjecture (F := 𝔽₂) (G := P) Counterexample.val
+   fun conjecture => Counterexample.prop <| conjecture (F := 𝔽₂) (G := P) Counterexample.val
 
 end Gardam
 
