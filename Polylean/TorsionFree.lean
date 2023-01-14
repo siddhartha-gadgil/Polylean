@@ -1,9 +1,11 @@
 import Polylean.GardamGroup
 import Mathlib.Algebra.GroupPower.Basic
 
-/-
+/-!
+## Torsion-freeness of `P`
+
 This file contains a proof that the group `P` defined is in fact torsion-free.
- .
+
 Roughly, the steps are as follows (further details can be found in the corresponding `.md` file):
 1. Define a function `s : Q -> K -> K` taking a group element `(q, k)` to its square `(s q k, 0)`. This element lies in the kernel as the group `ℤ₂ × ℤ₂` is annihilated by `2`.
 2. Show that elements of the form `((a, b, c), (0, 0))` do not have torsion. This argument requires proving (something very close to) the fact that `ℤ` is an integral domain.
@@ -15,11 +17,12 @@ Roughly, the steps are as follows (further details can be found in the correspon
 
 section TorsionFree
 
-/-- the definition of a torsion-free group -/
+/-- The definition of a torsion-free group.
+A group is *torsion-free* if the only element with non-trivial torsion is the identity element. -/
 class TorsionFree (G : Type _) [Group G] where
   torsionFree : ∀ g : G, ∀ n : ℕ, g ^ n.succ = 1 → g = 1
 
-/-- the definition of torsion free additive groups -/
+/-- The definition of torsion-free additive groups. -/
 class AddTorsionFree (A : Type _) [AddGroup A] where
   torsionFree : ∀ a : A, ∀ n : ℕ, n.succ • a = 0 → a = 0
 
@@ -44,7 +47,7 @@ end TorsionFree
 
 open P
 
-/-- the function taking an element of `P` to its square, which lies in the kernel `K` -/
+/-- The function taking an element of `P` to its square, which lies in the kernel `K`. -/
 @[aesop norm unfold (rule_sets [P]), reducible]
 def s : P → K
   | ((p, q, r), .e) => (p + p, q + q, r + r)
@@ -54,7 +57,7 @@ def s : P → K
 
 set_option pp.instances true
 
-/-- proof that the above function satsifies the property of taking an element to its square -/
+/-- A proof that the function `s` indeed takes an element of `P` to its square in `K`. -/
 @[aesop norm apply (rule_sets [P]), simp]
 theorem s_square : ∀ g : P, g * g = (s g, .e)
   | ((p, q, r), x) =>
@@ -62,7 +65,7 @@ theorem s_square : ∀ g : P, g * g = (s g, .e)
     | .e | .a | .b | .c => by
       aesop (rule_sets [P])
 
-/-- ℤ³ is torsion-free -/
+/-- `ℤ³` is torsion-free. -/
 instance K.torsionFree : AddTorsionFree K := inferInstance
 
 namespace Int
@@ -74,23 +77,25 @@ lemma add_twice_eq_mul_two {a : ℤ} : a + a = a * 2 := by
 
 attribute [local simp] add_twice_eq_mul_two
 
+/-- No odd integer is zero. -/
 lemma odd_ne_zero : ∀ a : ℤ, ¬(a + a + 1 = 0) := by
   intro a h
   have : (a + a + 1) % 2 = 0 % 2 := congrArg (· % 2) h
   simp [Int.add_emod] at this
 
+/-- If the sum of an integer with itself is zero, then the integer is itself zero. -/
 lemma zero_of_twice_zero : ∀ a : ℤ, a + a = 0 → a = 0 := by simp
 
 end Int
 
-/-- the only element of `P` with order dividing `2` is the identity -/
+/-- The only element of `P` with order dividing `2` is the identity. -/
 theorem square_free : ∀ {g : P}, g * g = (1 : P) → g = (1 : P)
   | ((p, q, r), x) => by
     match x with
     | .e => aesop (rule_sets [P]) (add norm [Int.zero_of_twice_zero])
     | .a | .b | .c => aesop (rule_sets [P]) (add norm [Int.odd_ne_zero])
 
-/-- If `g` is a torsion element, so is `g ^ 2`. -/
+/-- If `g` is a torsion element of a group, then so is `g ^ 2`. -/
 lemma torsion_implies_square_torsion {G : Type _} [Group G] (g : G) (n : ℕ) (g_tor : g ^ n = 1) : (g ^ 2) ^ n = 1 :=
   calc  (g ^ 2) ^ n  = g ^ (2 * n) := by rw [← pow_mul]
               _      = g ^ (n * 2) := by rw [mul_comm]
@@ -98,7 +103,7 @@ lemma torsion_implies_square_torsion {G : Type _} [Group G] (g : G) (n : ℕ) (g
               _      = (1 : G) ^ 2 := by rw [← g_tor]
               _      = (1 : G)     := by simp
 
-/-- `P` is torsion-free -/
+/-- `P` is torsion-free. -/
 instance P.torsionFree : TorsionFree P where
   torsionFree := by
     intros g n g_tor -- assume `g` is a torsion element
