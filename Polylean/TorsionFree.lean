@@ -65,9 +65,30 @@ theorem s_square : ∀ g : P, g * g = (s g, .e)
 /-- ℤ³ is torsion-free -/
 instance K.torsionFree : AddTorsionFree K := inferInstance
 
+namespace Int
+
+/-! Some basic lemmas about integers needed to prove facts about `P`. -/
+
+lemma add_twice_eq_mul_two {a : ℤ} : a + a = a * 2 := by
+  rw [show 2 = 1 + 1 by rfl, mul_add, mul_one]
+
+attribute [local simp] add_twice_eq_mul_two
+
+lemma odd_ne_zero : ∀ a : ℤ, ¬(a + a + 1 = 0) := by
+  intro a h
+  have : (a + a + 1) % 2 = 0 % 2 := congrArg (· % 2) h
+  simp [Int.add_emod] at this
+
+lemma zero_of_twice_zero : ∀ a : ℤ, a + a = 0 → a = 0 := by simp
+
+end Int
+
 /-- the only element of `P` with order dividing `2` is the identity -/
 theorem square_free : ∀ {g : P}, g * g = (1 : P) → g = (1 : P)
-  | ((p, q, r), x) => sorry
+  | ((p, q, r), x) => by
+    match x with
+    | .e => aesop (rule_sets [P]) (add norm [Int.zero_of_twice_zero])
+    | .a | .b | .c => aesop (rule_sets [P]) (add norm [Int.odd_ne_zero])
 
 /-- If `g` is a torsion element, so is `g ^ 2`. -/
 lemma torsion_implies_square_torsion {G : Type _} [Group G] (g : G) (n : ℕ) (g_tor : g ^ n = 1) : (g ^ 2) ^ n = 1 :=
