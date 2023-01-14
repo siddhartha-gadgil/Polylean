@@ -179,6 +179,9 @@ instance : DecidableEq P := inferInstanceAs <| DecidableEq (K × Q)
 @[aesop norm (rule_sets [P]), simp]
 theorem mul (k k' : K) (q q' : Q) : (k, q) * (k', q') = (k + action q k' + cocycle q q', q + q') := rfl
 
+@[aesop norm (rule_sets [P])]
+theorem one : (1 : P) = ((0, 0, 0), Q.e) := rfl 
+
 end MetabelianGroup
 
 end P
