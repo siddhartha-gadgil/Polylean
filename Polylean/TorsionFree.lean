@@ -17,15 +17,15 @@ section TorsionFree
 
 /-- the definition of a torsion-free group -/
 class TorsionFree (G : Type _) [Group G] where
-  torsion_free : ∀ g : G, ∀ n : ℕ, g ^ n.succ = 1 → g = 1
+  torsionFree : ∀ g : G, ∀ n : ℕ, g ^ n.succ = 1 → g = 1
 
 /-- the definition of torsion free additive groups -/
 class AddTorsionFree (A : Type _) [AddGroup A] where
-  torsion_free : ∀ a : A, ∀ n : ℕ, n.succ • a = 0 → a = 0
+  torsionFree : ∀ a : A, ∀ n : ℕ, n.succ • a = 0 → a = 0
 
 /-- ℤ is torsion-free, since it is an integral domain. -/
 instance : AddTorsionFree ℤ where
-  torsion_free := by
+  torsionFree := by
     intro a n (h : n.succ * a = 0)
     cases Int.mul_eq_zero.mp h with
     | inl hyp => injection hyp; contradiction
@@ -33,11 +33,11 @@ instance : AddTorsionFree ℤ where
 
 /-- The product of torsion-free additive groups is torsion-free. -/
 instance {A B : Type _} [AddGroup A] [AddGroup B] [AddTorsionFree A] [AddTorsionFree B] : AddTorsionFree (A × B) where
-  torsion_free := by
+  torsionFree := by
     intro (a, b) n
     rw [show n.succ • (a, b) = (n.succ • a, n.succ • b) from rfl, Prod.ext_iff, Prod.ext_iff]
-    intro ⟨_, _⟩; apply And.intro <;> 
-      (apply AddTorsionFree.torsion_free; assumption)
+    intro ⟨_, _⟩; refine' ⟨_, _⟩ <;> 
+      (apply AddTorsionFree.torsionFree; assumption)
 
 end TorsionFree
 
@@ -60,37 +60,42 @@ theorem s_square : ∀ g : P, g * g = (s g, .e)
   | ((p, q, r), x) =>
     match x with 
     | .e | .a | .b | .c => by
-      all_goals (aesop (rule_sets [P]))
+      aesop (rule_sets [P])
 
 /-- ℤ³ is torsion-free -/
-instance K.torsionfree : AddTorsionFree K := inferInstance
+instance K.torsionFree : AddTorsionFree K := inferInstance
 
 /-- the only element of `P` with order dividing `2` is the identity -/
-theorem square_free : ∀ g : P, g * g = 1 → g = 1
-  | ((p, q, r), x) => by simp
+theorem square_free : ∀ {g : P}, g * g = (1 : P) → g = (1 : P)
+  | ((p, q, r), x) => sorry
 
 /-- If `g` is a torsion element, so is `g ^ 2`. -/
-lemma torsion_implies_square_torsion {G : Type _} [Group G] (g : G) (n : ℕ) (g_tor : g ^ n = 1) : (g * g) ^ n = 1 :=
-    calc (g * g) ^ n = (g ^ 2) ^ n := by rw [pow_two]
-              _      = g ^ (2 * n) := by rw [← pow_mul]
+lemma torsion_implies_square_torsion {G : Type _} [Group G] (g : G) (n : ℕ) (g_tor : g ^ n = 1) : (g ^ 2) ^ n = 1 :=
+  calc  (g ^ 2) ^ n  = g ^ (2 * n) := by rw [← pow_mul]
               _      = g ^ (n * 2) := by rw [mul_comm]
               _      = (g ^ n) ^ 2 := by rw [pow_mul]
               _      = (1 : G) ^ 2 := by rw [← g_tor]
               _      = (1 : G)     := by simp
 
 /-- `P` is torsion-free -/
-instance P_torsion_free : TorsionFree P where
-  torsion_free := by
+instance P.torsionFree : TorsionFree P where
+  torsionFree := by
     intros g n g_tor -- assume `g` is a torsion element
-    refine' square_free g _
     -- then `g ^ 2` is also a torsion element
-    have square_tor := torsion_implies_square_torsion g n.succ g_tor
-    have : (s g, Q.e) ^ n.succ = (s g ^ n.succ, Q.e ^ n.succ) := sorry
-    rw [s_square] at square_tor
+    have square_tor : (g ^ 2) ^ n.succ = ((0, 0, 0), Q.e) := torsion_implies_square_torsion g n.succ g_tor
+    have : ∀ k : K, ∀ m : ℕ, (k, Q.e) ^ m = (m • k, m • Q.e) := by 
+      intro k m
+      induction m
+      case zero => erw [zero_nsmul]; rfl
+      case succ m ih =>
+        show (k, Q.e) * (k, Q.e) ^ m = (_, Q.e + m • Q.e)
+        rw [ih, P.mul]
+        aesop (rule_sets [P]) (add norm [succ_nsmul]) 
+    rw [pow_two, s_square, this (s g) n.succ, Prod.mk.injEq] at square_tor
     -- since `g ^ 2 = s g`, we have that `s g` is a torsion element
-    have s_tor : (s g) ^ n.succ = 1 := sorry
+    have s_tor : n.succ • (s g) = 0 := square_tor.left
     -- since `s g` lies in the kernel and the kernel is torsion-free, `s g = 0`
-    have square_zero : (s g).val = (0 : Metabelian.Kernel Q K).val := congrArg _ (kernel_torsion_free.torsion_free _ n s_tor)
+    have square_zero : (s g, Q.e) = (0, Q.e) := congrArg (·, Q.e) (K.torsionFree.torsionFree (s g) n s_tor)
     rw [← s_square] at square_zero
     -- this means `g ^ 2 = e`, and also `g = e` because `P` has no order 2 elements
-    exact square_free g square_zero
+    exact square_free square_zero
