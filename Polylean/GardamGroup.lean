@@ -163,19 +163,20 @@ The construction of the group `P` as a Metabelian group from the given action an
 -/
 
 /-- the group `P` constructed via the cocycle construction -/
-@[aesop safe (rule_sets [P])]
-abbrev P := K × Q
+@[aesop norm unfold (rule_sets [P])]
+def P := K × Q
 
-instance PGrp : Group P := MetabelianGroup.metabelianGroup cocycle
+instance (priority := high) PGrp : Group P := MetabelianGroup.metabelianGroup cocycle
 
 -- Priorities to resolve the conflict between the direct product and Metabelian group structure on `K × Q` 
-instance (priority := high) : HMul P P P := ⟨PGrp.mul⟩
-instance (priority := high) : Mul P := ⟨PGrp.mul⟩
+instance (priority := high) : HMul (K × Q) (K × Q) (K × Q) := ⟨PGrp.mul⟩
+instance (priority := high) : Mul (K × Q) := ⟨PGrp.mul⟩
+instance (priority := high + 1) : Pow (K × Q) ℕ := PGrp.toMonoid.Pow
 
 instance : DecidableEq P := inferInstanceAs <| DecidableEq (K × Q)
 
 /-- A confirmation that multiplication in `P` is as expected from the Metabelian group structure. -/
-@[aesop norm unfold (rule_sets [P]), simp]
+@[aesop norm (rule_sets [P]), simp]
 theorem mul (k k' : K) (q q' : Q) : (k, q) * (k', q') = (k + action q k' + cocycle q q', q + q') := rfl
 
 end MetabelianGroup
