@@ -1,9 +1,10 @@
-/-
+/-!
 Automatically decide statements of the form `∀ x : X, P x` on a finite type `X` by enumeration.
 -/
 
 namespace EnumDecide
 
+/-- It is possible to check whether a given decidable predicate holds for all natural numbers below a given bound. -/
 def decideBelow (p:Nat → Prop)[DecidablePred p](bound: Nat): Decidable (∀ n : Nat, n < bound → p n) := 
     match bound with
     | 0 => by
@@ -22,7 +23,6 @@ def decideBelow (p:Nat → Prop)[DecidablePred p](bound: Nat): Decidable (∀ n 
           | inl eql => 
             have eql' : n = k := by
                 injection eql
-                assumption
             simp [eql']
             assumption
           | inr lt => 
@@ -69,7 +69,6 @@ def decideBelowFin {m: Nat}(p:Fin m → Prop)[DecidablePred p](bound: Nat): Deci
               have eql' : n = ⟨k, ineq⟩ := by
                   apply Fin.eq_of_val_eq
                   injection eql
-                  assumption
               simp [eql']
               assumption
             | inr lt => 
@@ -88,7 +87,7 @@ def decideBelowFin {m: Nat}(p:Fin m → Prop)[DecidablePred p](bound: Nat): Deci
         else
           by 
           apply Decidable.isTrue
-          intro ⟨n, nbd⟩ bd
+          intro ⟨n, nbd⟩ _
           have ineq' : m ≤ k := by
             apply Nat.le_of_succ_le_succ
             apply Nat.gt_of_not_le ineq 
@@ -105,6 +104,7 @@ def decideBelowFin {m: Nat}(p:Fin m → Prop)[DecidablePred p](bound: Nat): Deci
           exact contra n bd'
         contradiction
 
+/-- It is possible to decide whether a predicate holds for all elements of `Fin n`. -/
 def decideFin {m: Nat}(p:Fin m → Prop)[DecidablePred p]: Decidable (∀ n : Fin m, p n) := 
   match decideBelowFin p m with 
   | Decidable.isTrue hyp => 
@@ -116,9 +116,11 @@ def decideFin {m: Nat}(p:Fin m → Prop)[DecidablePred p]: Decidable (∀ n : Fi
     apply Decidable.isFalse
     intro contra
     apply hyp
-    intro ⟨n, ineq⟩ bd
+    intro ⟨n, ineq⟩ _
     exact contra ⟨n, ineq⟩   
 
+/-- A typeclass for "exhaustively verifiable types", i.e., 
+  types for which it is possible to decide whether a given (decidable) predicate holds for all its elements. -/
 class DecideForall (α : Type) where
   decideForall (p : α → Prop) [DecidablePred p]: 
     Decidable (∀ x : α, p x)  
@@ -138,6 +140,8 @@ theorem Zmod3.assoc :
 end Examples
 
 section CompositeEnumeration
+
+@[instance]
 def decideProd {α β : Type}[dfa : DecideForall α][dfb : DecideForall β] (p:α × β → Prop)[DecidablePred p] : Decidable (∀ xy :α × β, p xy) := 
     if c: (∀ x: α, ∀ y : β, p (x, y)) 
     then
@@ -157,6 +161,7 @@ instance {α β : Type}[dfa : DecideForall α][dfb : DecideForall β] :
   DecideForall (α × β) := 
   ⟨by apply decideProd⟩
 
+@[instance]
 def decideUnit (p: Unit → Prop)[DecidablePred p] : Decidable (∀ x : Unit, p x) := 
    if c : p (()) then by 
       apply Decidable.isTrue
@@ -173,6 +178,7 @@ def decideUnit (p: Unit → Prop)[DecidablePred p] : Decidable (∀ x : Unit, p 
 instance : DecideForall Unit := 
   ⟨by apply decideUnit⟩
 
+@[instance]
 def decideSum {α β : Type}[dfa : DecideForall α][dfb : DecideForall β](p:α ⊕ β → Prop)[DecidablePred p] : Decidable (∀ x :α ⊕ β, p x) := 
     if c: ∀x: α, p (Sum.inl x) then 
        if c': ∀y: β , p (Sum.inr y) then 

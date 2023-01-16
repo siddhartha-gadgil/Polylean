@@ -90,7 +90,7 @@ def ProvedBound.prepend{w : Word} (x: Letter)
 
 -- `l(e) ≤ 0`
 def ProvedBound.emptyWord: ProvedBound [] :=
-  ⟨0, fun l emp _ _ _ => by rw [emp]; apply Nat.le_refl⟩
+  ⟨0, fun l emp _ _ _ => by rw [emp]⟩
 
 -- the best proved bound for a word
 def ProvedBound.min {w: Word}: ProvedBound w → List (ProvedBound w) → 
