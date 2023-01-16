@@ -18,9 +18,7 @@ The group `P` is a so called _Metabelian Group_, an extension of an abelian grou
 
 * In the file `GardamGroup.lean`, the specific construction of `P` is given using the general construction of Metabelian groups.
 * In the file `MetabelianGroup.lean`, Metabelian Groups are constructed based on appropriate data, and proved to be groups.
-* The data for a Metabelian group includes a _Group Action_. These are defined and their basic properties proved in `GroupAction.lean`.
-* Product groups are defined, as a special case, in `ProductGroups.lean`.
-* Homomorphisms are defined in `Morphisms.lean` and some properties are proved.
+* The data for a Metabelian group includes a _group action_ and a _cocycle_. These are defined and their basic properties proved in `Cocycle.lean`.
 
 ## Constructing group rings
 
@@ -34,7 +32,7 @@ A group ring $K[G]$ is the free module on $K$ with basis elements of a group $G$
 We set things up to use typeclasses to deduce decidable equality, both by finite enumeration and by checking equality on a basis for finitely generated abelian groups.
 
 * In `EnumDecide.lean` we set up the typeclasses for deducing decidable equality, and prove the basic cases.
-* In `FreeAbelianGroup.lean` we define bases of free abelian groups via a universal property, show that products of $\mathbb{Z}$ have bases, show that homormorphisms can be defined by giving functions on a basis, and show that we have decidable equality for homomorphisms on finitely generated free abelian groups.
+* In `AddFreeGroup.lean` we define bases of free abelian groups via a universal property, show that products of $\mathbb{Z}$ have bases, show that homormorphisms can be defined by giving functions on a basis, and show that we have decidable equality for homomorphisms on finitely generated free abelian groups.
 
 
 
