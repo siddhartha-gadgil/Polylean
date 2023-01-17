@@ -132,8 +132,7 @@ theorem Quotient.projection_surj : Function.Surjective (Quotient.projection c) :
 
 /-- A proof that the image of the first map is the kernel of the second map. -/
 theorem exact_seq : MonoidHom.mrange (Kernel.inclusion c) = MonoidHom.mker (Quotient.projection c) := by
-  ext ⟨_, _⟩; rw [MonoidHom.mem_mker]
-  aesop (rule_sets [Metabelian])
+  ext ⟨_, _⟩; aesop (rule_sets [Metabelian]) (add norm [MonoidHom.mem_mker])
 
 end Exactness
 
