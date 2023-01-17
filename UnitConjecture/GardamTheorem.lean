@@ -3,13 +3,18 @@ import UnitConjecture.TorsionFree
 import UnitConjecture.GroupRing
 
 
-/-
+/-!
+
+## Giles Gardam's result
+
 The proof of the theorem `𝔽₂[P]` has non-trivial units. Together with the main result of `TorsionFree` -- that `P` is torsion-free, 
 this completes the formal proof of Gardam's theorem that Kaplansky's Unit Conjecture is false.
 -/
 
 
 section Preliminaries
+
+/-! ### Preliminaries -/
 
 /-- The definition of an element of a free module being trivial, i.e., of the form `k•x` for `x : X` and `k ≠ 0`. -/
 def trivialElem {R X : Type _} [Ring R] [DecidableEq X] (a : FreeModule R X) : Prop :=
@@ -22,6 +27,7 @@ def UnitConjecture : Prop :=
   {G : Type _} [Group G] [DecidableEq G] [TorsionFree G],
     ∀ u : (F[G])ˣ, trivialElem (u : F[G])
 
+/-- The finite field on two elements. -/
 abbrev 𝔽₂ := Fin 2
 
 instance : Field 𝔽₂ where
@@ -80,6 +86,12 @@ end Constants
 
 section Verification
 
+/-! 
+### Verification
+
+The main verification of Giles Gardam's result. 
+-/
+
 namespace Gardam
 
 open P
@@ -97,6 +109,11 @@ theorem α_nonTrivial : ¬ (trivialElem α) := by
     have : z⁻¹ = x * y := by
       refine' Eq.trans _ (Eq.symm _) <;> assumption
     simp at this
+
+/-! The fact that the counter-example `α` is in fact a unit of the group ring `𝔽₂[P]` is verified by 
+  computing the product of `α` with its inverse `α'` and checking that the result is `(1 : 𝔽₂[P])`.
+
+  The computational aspects of the group ring implementation and the Metabelian construction are used here. -/
 
 /-- A proof of the existence of a non-trivial unit in `𝔽₂[P]`. -/
 def Counterexample : {u : (𝔽₂[P])ˣ // ¬(trivialElem u.val)} := 

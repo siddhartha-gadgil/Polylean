@@ -77,7 +77,7 @@ abbrev a : Q := (⟨1, by decide⟩, ⟨0, by decide⟩)
 /-- The second generator of `Q`. -/
 @[aesop norm unfold (rule_sets [P]), match_pattern]
 abbrev b : Q := (⟨0, by decide⟩, ⟨1, by decide⟩)
-/-- The product of the generators of `Q`. -/
+/-- The product of the first two generators of `Q`. -/
 @[aesop safe (rule_sets [P]), match_pattern]
 abbrev c : Q := (⟨1, by decide⟩, ⟨1, by decide⟩)
 

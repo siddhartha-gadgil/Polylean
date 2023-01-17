@@ -2,9 +2,15 @@ import Mathlib.Algebra.Ring.Basic
 import Mathlib.Algebra.Group.Defs
 
 /-!
-Free module over a ring `R` over a set `X`. It is assumed that both `R` and `X` have decidable equality. This is to obtain decidable equality for the elements of the module, which we do. We choose our definition to allow both such computations and to prove results.
+Free module over a ring `R` over a set `X`. It is assumed that both `R` and `X` have decidable equality. 
+This is to obtain decidable equality for the elements of the module, which we do (`FreeModule.decEq`).
+We choose our definition to allow both such computations and to prove results.
 
-The definition is as a quotient of *Formal Sums*, which are simply lists of pairs `(a,x)` where `a` is a coefficient in `R` and `x` is a term in `X`. We associate to such a formal sum a coordinate function `X → R`. We see that having the same coordinate functions gives an equivalence relation on the formal sums. The free module is then defined as the corresponding quotient of such formal sums.
+The definition is as a quotient of *Formal Sums* (`FormalSum`), 
+which are simply lists of pairs `(a,x)` where `a` is a coefficient in `R` and `x` is a term in `X`. 
+We associate to such a formal sum a coordinate function `X → R` (`FormalSum.coords`). 
+We see that having the same coordinate functions gives an equivalence relation on the formal sums. 
+The free module (`FreeModule`) is then defined as the corresponding quotient of such formal sums.
 
 We also give an alternative description via moves, which is more convenient for universal properties.
 -/
@@ -45,7 +51,7 @@ theorem monom_coords_mul (x₀ : X) (a b : R) : monomCoeff R X x₀ (a * b, x) =
       rw [monomCoeff])
   cases x == x₀ <;> simp
 
-/-- coordinates for a formal sum with one term with scalar `0`.
+/-- Coordinates for a formal sum with one term with scalar `0`.
 -/
 theorem monom_coords_at_zero (x₀ x : X) : monomCoeff R X x₀ (0, x) = 0 := by
   rw [monomCoeff]

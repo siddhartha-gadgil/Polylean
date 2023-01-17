@@ -4,8 +4,18 @@ import UnitConjecture.Tactics.ReduceGoal
 import Aesop
 
 /-!
-The definition of an action of one group on another by automorphisms. 
-This is done as a typeclass representing the property of being an action by automorphisms.
+## Group actions by automorphisms and Cocycles
+The definitions of cocycles and group actions by automorphisms, which are required for the Metabelian construction.
+
+## Overview
+- `AutAction` - the definition of an action of one group on another by automorphisms. 
+  This is done as a typeclass representing the property of being an action by automorphisms.
+- `Cocycle` - the definition of a *cocycle* associated with a certain action by automorphisms.
+  This is also done as a typeclass with the function as an explicit argument and the action as a field of the structure.
+-/
+
+/-!
+### Actions by automorphisms
 -/
 
 /-- An action of an additive group on another additive group by automorphisms. 
@@ -61,6 +71,10 @@ lemma vadd_of_neg : ∀ {a : A} {b : B}, a +ᵥ (-b) = - (a +ᵥ b) := by aesop 
 
 end AutAction
 
+
+/-!
+### Cocycles
+-/
 
 /--
 A cocycle associated with a certain action of `Q` on `K` via automorphisms is a function from `Q × Q` to `K` satisfying

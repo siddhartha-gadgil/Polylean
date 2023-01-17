@@ -1,5 +1,20 @@
 /-!
-Automatically decide statements of the form `∀ x : X, P x` on a finite type `X` by enumeration.
+## Decision by enumeration
+
+For a type `X` that is finite (or more generally, *compact*), it is possible to automatically decide
+any statement of the form `∀ x : X, P x` by enumeration when `P` is a decidable predicate on `X` 
+(i.e., a predicate for the individual propositions `P x` are decidable for any given `x : X`).
+
+## Overview
+
+The `EnumDecide.decideForall` typeclass defines the property of a type being exhaustively checkable.
+
+Results in this file include 
+- `EnumDecide.decideFin` - the type `Fin n` (the canonical finite set with `n` elements) is checkable for any `n : ℕ`.
+- `EnumDecide.decideUnit` - the single-element type is exhaustively checkable.
+- `EnumDecide.decideProd`, `EnumDecide.decideSum` - the product and direct sum of two exhaustively checkable. 
+- `EnumDecide.funEnum` - the type of functions from an exhaustively checkable type to 
+                          a type with decidable equality is exhaustively checkable.  
 -/
 
 namespace EnumDecide
@@ -121,14 +136,14 @@ def decideFin {m: Nat}(p:Fin m → Prop)[DecidablePred p]: Decidable (∀ n : Fi
 
 /-- A typeclass for "exhaustively verifiable types", i.e., 
   types for which it is possible to decide whether a given (decidable) predicate holds for all its elements. -/
-class DecideForall (α : Type) where
+class DecideForall (α : Type _) where
   decideForall (p : α → Prop) [DecidablePred p]: 
     Decidable (∀ x : α, p x)  
 
 instance {k: Nat} : DecideForall (Fin k) := 
   ⟨by apply decideFin⟩
 
-instance {α : Type}[dfa: DecideForall α]{p : α → Prop}[DecidablePred p]: Decidable (∀ x : α, p x) := dfa.decideForall p
+instance {α : Type _}[dfa: DecideForall α]{p : α → Prop}[DecidablePred p]: Decidable (∀ x : α, p x) := dfa.decideForall p
 
 section Examples
 example : ∀ x : Fin 3, x + 0 = x := by decide
@@ -142,7 +157,7 @@ end Examples
 section CompositeEnumeration
 
 @[instance]
-def decideProd {α β : Type}[dfa : DecideForall α][dfb : DecideForall β] (p:α × β → Prop)[DecidablePred p] : Decidable (∀ xy :α × β, p xy) := 
+def decideProd {α β : Type _}[dfa : DecideForall α][dfb : DecideForall β] (p:α × β → Prop)[DecidablePred p] : Decidable (∀ xy :α × β, p xy) := 
     if c: (∀ x: α, ∀ y : β, p (x, y)) 
     then
       by
@@ -157,7 +172,7 @@ def decideProd {α β : Type}[dfa : DecideForall α][dfb : DecideForall β] (p:�
       intro x y
       exact contra (x, y)
 
-instance {α β : Type}[dfa : DecideForall α][dfb : DecideForall β] :
+instance {α β : Type _}[dfa : DecideForall α][dfb : DecideForall β] :
   DecideForall (α × β) := 
   ⟨by apply decideProd⟩
 
@@ -179,7 +194,7 @@ instance : DecideForall Unit :=
   ⟨by apply decideUnit⟩
 
 @[instance]
-def decideSum {α β : Type}[dfa : DecideForall α][dfb : DecideForall β](p:α ⊕ β → Prop)[DecidablePred p] : Decidable (∀ x :α ⊕ β, p x) := 
+def decideSum {α β : Type _}[dfa : DecideForall α][dfb : DecideForall β](p:α ⊕ β → Prop)[DecidablePred p] : Decidable (∀ x :α ⊕ β, p x) := 
     if c: ∀x: α, p (Sum.inl x) then 
        if c': ∀y: β , p (Sum.inr y) then 
        by
@@ -201,11 +216,11 @@ def decideSum {α β : Type}[dfa : DecideForall α][dfb : DecideForall β](p:α 
       intro x
       exact contra (Sum.inl x) 
       
-instance {α β : Type}[dfa : DecideForall α][dfb : DecideForall β] :
+instance {α β : Type _}[dfa : DecideForall α][dfb : DecideForall β] :
   DecideForall (α ⊕ β) := 
   ⟨by apply decideSum⟩
 
-instance funEnum {α β : Type}[dfa : DecideForall α][dfb : DecidableEq β] : DecidableEq (α → β) := fun f g => 
+instance funEnum {α β : Type _}[dfa : DecideForall α][dfb : DecidableEq β] : DecidableEq (α → β) := fun f g => 
       if c:∀ x:α, f x = g x then
         by
         apply Decidable.isTrue

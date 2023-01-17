@@ -4,6 +4,23 @@ import Mathlib.Data.Int.Cast.Lemmas
 import Mathlib.Algebra.Ring.Basic
 import UnitConjecture.EnumDecide
 
+/-!
+
+## Free groups
+
+The definition of a free group on a basis, along with a few properties.
+
+Free groups are defined constructively to allow automatic equality checking of 
+homomorphisms on finitely generated free groups.
+
+## Overview
+- `AddFreeGroup` - the main definition.
+- `decideHomsEqual` - the crucial result that allows the 
+  automatic comparison of homomorphisms by checking their values on the basis.
+- `ℤFree` - a proof that the additive group of integers is a free group on the one-element type.
+- `prodFree` - a proof that the product of free groups is free.
+-/
+
 /-- Free (Additive) Groups, implemented as a typeclass.
     A free additive group with a basis `X` is an additive group `F` with an inclusion map `ι : X → F`,
     such that any map `f : X → A` from the basis to any Abelian group `A`
@@ -35,7 +52,7 @@ instance ℤFree : AddFreeGroup ℤ Unit where
 
 
 open EnumDecide in
-/-- Equality of homomorphisms from a free group with a "compact" (i.e., exhaustively searchable) basis is decidable. -/
+/-- Equality of homomorphisms from a free group on an exhaustively searchable basis is decidable. -/
 @[instance] def decideHomsEqual {F : Type _} [AddCommGroup F] {X : Type _} [DecideForall X] [fgp : AddFreeGroup F X] 
     {A : Type _} [AddCommGroup A] [DecidableEq A] : DecidableEq (F →+ A) := fun f g =>
   if c : ∀ x : X, f (fgp.ι x) = g (fgp.ι x) then by

@@ -7,15 +7,18 @@ import Mathlib.Algebra.GroupPower.Basic
 This file contains a proof that the group `P` defined is in fact torsion-free.
 
 Roughly, the steps are as follows (further details can be found in the corresponding `.md` file):
-1. Define a function `s : Q -> K -> K` taking a group element `(q, k)` to its square `(s q k, 0)`. This element lies in the kernel as the group `ℤ₂ × ℤ₂` is annihilated by `2`.
-2. Show that elements of the form `((a, b, c), (0, 0))` do not have torsion. This argument requires proving (something very close to) the fact that `ℤ` is an integral domain.
-3. Show that no element of `P` has order precisely `2`. This is an argument by cases on the `Q` part of elements of `P`.
-4. Finally, if an element `g : P` is in the kernel of the `n`-th power homomorphism, then so is `g^2`. But from the above statements, we see that `g^2` is of the form `(k, 0)` and hence
-   either `g^2 = e` or `n = 0` (as elements of this form cannot have torsion). If `g^2 = e`, then `g = e` as `P` does not contain any order `2` elements. Otherwise, `n = 0`.
-5. Together, this shows that `P` is torsion-free.
+1. Define a function `sq : P -> K` taking a group element `(q, k)` to its square. This element lies in the kernel as the group `ℤ/2 × ℤ/2` has exponent `2`.
+2. Show that elements in `K`, which are integer triples of the form `(a, b, c)`, do not have torsion. This requires the fact that the group `ℤ`, and hence `ℤ³`, is torsion-free.
+3. Show that no element of `P` has order precisely `2`. This is an argument by cases on the `Q` part of a general element of `P`.
+4. Finally, show that if an element `g : G` of a group `G` satisfies `g ^ n = (1 : G)`, then it also satisfies `(g ^ 2) ^ n = (1 : G)`.
+5. Together, these statements show that `P` is torsion-free.
 -/
 
 section TorsionFree
+
+/-!
+### Torsion-free groups
+-/
 
 /-- The definition of a torsion-free group. -/
 class TorsionFree (G : Type _) [Group G] where
@@ -45,6 +48,7 @@ instance {A B : Type _} [AddGroup A] [AddGroup B] [AddTorsionFree A] [AddTorsion
 
 end TorsionFree
 
+/-! ### **Step 1:** Defining the square of an element of `P`. -/
 
 /-- The function taking an element of `P` to its square, which lies in the kernel `K`. -/
 @[aesop norm unfold (rule_sets [P]), reducible]
@@ -64,8 +68,12 @@ theorem sq_square : ∀ g : P, g * g = (P.sq g, .e)
     | .e | .a | .b | .c => by
       aesop (rule_sets [P])
 
+/-! ### **Step 2:** Proving that `K` (= `ℤ³`) is torsion-free. -/ 
+
 /-- `ℤ³` is torsion-free. -/
 instance K.torsionFree : AddTorsionFree K := inferInstance
+
+/-! ### **Step 3:** Showing that no element of `P` has order precisely two. -/
 
 namespace Int
 
@@ -94,6 +102,8 @@ theorem square_free : ∀ {g : P}, g * g = (1 : P) → g = (1 : P)
     | .e => aesop (rule_sets [P]) (add norm [Int.zero_of_twice_zero])
     | .a | .b | .c => aesop (rule_sets [P]) (add norm [Int.odd_ne_zero])
 
+/-! ### **Step 4:** Showing that if the `n`-th power of a group element is trivial, then so is that of its square. -/
+
 /-- If `g` is a torsion element of a group, then so is `g ^ 2`. -/
 lemma torsion_implies_square_torsion {G : Type _} [Group G] (g : G) (n : ℕ) (g_tor : g ^ n = 1) : (g ^ 2) ^ n = 1 :=
   calc  (g ^ 2) ^ n  = g ^ (2 * n) := by rw [← pow_mul]
@@ -101,6 +111,8 @@ lemma torsion_implies_square_torsion {G : Type _} [Group G] (g : G) (n : ℕ) (g
               _      = (g ^ n) ^ 2 := by rw [pow_mul]
               _      = (1 : G) ^ 2 := by rw [← g_tor]
               _      = (1 : G)     := by simp
+
+/-! ### **Step 5:** Putting the facts together. -/
 
 /-- `P` is torsion-free. -/
 instance P.torsionFree : TorsionFree P where
