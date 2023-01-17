@@ -103,8 +103,9 @@ def Counterexample : {u : (𝔽₂[P])ˣ // ¬(trivialElem u.val)} :=
   ⟨⟨α, α', by native_decide, by native_decide⟩, α_nonTrivial⟩
 
 /-- Giles Gardam's result - Kaplansky's Unit Conjecture is false. -/
-theorem Result : ¬ UnitConjecture :=
-   fun conjecture => Counterexample.prop <| conjecture (F := 𝔽₂) (G := P) Counterexample.val
+theorem GardamTheorem : ¬ UnitConjecture :=
+   fun conjecture => Counterexample.prop <| 
+    conjecture (F := 𝔽₂) (G := P) Counterexample.val
 
 end Gardam
 

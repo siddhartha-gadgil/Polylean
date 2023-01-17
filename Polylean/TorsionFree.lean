@@ -51,9 +51,9 @@ open P
 @[aesop norm unfold (rule_sets [P]), reducible]
 def s : P → K
   | ((p, q, r), .e) => (p + p, q + q, r + r)
-  | ((p, q, r), .b) => (0, q + q + 1, 0)
-  | ((p, q, r), .a) => (p + p + 1, 0, 0)
-  | ((p, q, r), .c) => (0, 0, r + r + 1)
+  | ((_, q, _), .b) => (0, q + q + 1, 0)
+  | ((p, _, _), .a) => (p + p + 1, 0, 0)
+  | ((_, _, r), .c) => (0, 0, r + r + 1)
 
 set_option pp.instances true
 
