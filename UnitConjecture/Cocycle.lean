@@ -1,6 +1,6 @@
 import Mathlib.Algebra.Group.Defs
 import Mathlib.GroupTheory.GroupAction.Defs
-import Polylean.Tactics.ReduceGoal
+import UnitConjecture.Tactics.ReduceGoal
 import Aesop
 
 /-!

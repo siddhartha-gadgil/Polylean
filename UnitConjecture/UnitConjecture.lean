@@ -1,6 +1,6 @@
 import Mathlib.Algebra.Field.Basic
-import Polylean.TorsionFree
-import Polylean.GroupRing
+import UnitConjecture.TorsionFree
+import UnitConjecture.GroupRing
 
 
 /-

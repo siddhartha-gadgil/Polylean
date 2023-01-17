@@ -1,4 +1,4 @@
-import Polylean.FreeModule
+import UnitConjecture.FreeModule
 
 /-
 Group ring given a group. The ring structures is constructed using the (implicit) universal property of R-modules. As a check it is proved to be a Ring.

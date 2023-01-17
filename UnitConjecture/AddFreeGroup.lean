@@ -2,7 +2,7 @@ import Mathlib.Algebra.GroupPower.Lemmas
 import Mathlib.Algebra.Group.Prod
 import Mathlib.Data.Int.Cast.Lemmas
 import Mathlib.Algebra.Ring.Basic
-import Polylean.EnumDecide
+import UnitConjecture.EnumDecide
 
 /-- Free (Additive) Groups, implemented as a typeclass.
     A free additive group with a basis `X` is an additive group `F` with an inclusion map `ι : X → F`,

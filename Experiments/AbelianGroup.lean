@@ -1,4 +1,4 @@
-import Polylean.FreeAbelianGroup
+import UnitConjecture.FreeAbelianGroup
 
 def induced_map {A : Type _} [AddCommGroup A] (x y z : A) : ℤ × ℤ × ℤ → A :=
  let f : Unit ⊕ Unit ⊕ Unit → A := (fun | Sum.inl _ => x | Sum.inr (Sum.inl _) => y | Sum.inr (Sum.inr _) => z)

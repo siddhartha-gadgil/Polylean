@@ -1,7 +1,7 @@
 import Mathlib.Data.Fin.Basic
 import Mathlib.Algebra.Hom.Group
-import Polylean.MetabelianGroup
-import Polylean.AddFreeGroup
+import UnitConjecture.MetabelianGroup
+import UnitConjecture.AddFreeGroup
 
 /-!
 ## The construction of the group `P`
