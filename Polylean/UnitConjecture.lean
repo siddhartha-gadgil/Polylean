@@ -11,9 +11,9 @@ this completes the formal proof of Gardam's theorem that Kaplansky's Unit Conjec
 
 section Preliminaries
 
-/-- The definition of an element of a group ring being trivial, i.e., of the form `a⬝g` for `g` a group element and `a ≠ 0`. -/
-def trivialElem {R G : Type _} [Ring R] [DecidableEq R] [Group G] [DecidableEq G] (x : FreeModule R G) : Prop :=
-  ∃! g : G, FreeModule.coordinates g x ≠ 0
+/-- The definition of an element of a free module being trivial, i.e., of the form `k•x` for `x : X` and `k ≠ 0`. -/
+def trivialElem {R X : Type _} [Ring R] [DecidableEq X] (a : FreeModule R X) : Prop :=
+  ∃! x : X, FreeModule.coordinates x a ≠ 0
 
 /-- The statement of Kaplansky's Unit Conjecture:
 The only units in a group ring, when the group is torsion-free and the ring is a field, are the trivial units. -/
@@ -33,7 +33,7 @@ instance : Field 𝔽₂ where
   inv_zero := rfl
   div_eq_mul_inv := by decide
 
-instance ringElem : Coe P.P (𝔽₂[P.P]) where
+instance ringElem : Coe P (𝔽₂[P]) where
     coe g := ⟦[(1, g)]⟧
 
 end Preliminaries

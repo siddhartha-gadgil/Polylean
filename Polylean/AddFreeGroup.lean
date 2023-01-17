@@ -36,7 +36,7 @@ instance ℤFree : AddFreeGroup ℤ Unit where
 
 open EnumDecide in
 /-- Equality of homomorphisms from a free group with a "compact" (i.e., exhaustively searchable) basis is decidable. -/
-@[instance] def decideHomsEqual {F : Type _} [AddCommGroup F] (X : Type _) [DecideForall X] [fgp : AddFreeGroup F X] 
+@[instance] def decideHomsEqual {F : Type _} [AddCommGroup F] {X : Type _} [DecideForall X] [fgp : AddFreeGroup F X] 
     {A : Type _} [AddCommGroup A] [DecidableEq A] : DecidableEq (F →+ A) := fun f g =>
   if c : ∀ x : X, f (fgp.ι x) = g (fgp.ι x) then by
     apply Decidable.isTrue
@@ -56,10 +56,12 @@ variable {A B : Type _} [AddCommGroup A] [AddCommGroup B]
 variable {X_A X_B : Type _}
 variable [FAb_A : AddFreeGroup A X_A] [FAb_B : AddFreeGroup B X_B]
 
+/-- The inclusion map from the direct sum of the bases of two free groups into their product. -/
 def ι : (X_A ⊕ X_B) → A × B
   | Sum.inl x_a => (FAb_A.ι x_a, 0)
   | Sum.inr x_b => (0, FAb_B.ι x_b)
 
+/-- The group homomorphism from the product of two free groups induced by a map from the basis. -/
 def inducedProdHom (G : Type _) [AddCommGroup G] (f : X_A ⊕ X_B → G) : A × B →+ G :=
     let f_A : X_A → G := f ∘ Sum.inl
     let f_B : X_B → G := f ∘ Sum.inr

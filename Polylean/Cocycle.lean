@@ -27,7 +27,7 @@ attribute [aesop norm (rule_sets [AutAction])] id_action
 attribute [aesop norm (rule_sets [AutAction])] compatibility
 
 /-- An action by automorphisms of additive groups is an additive group action. -/
-instance AutAction.toAddAction : AddAction A B where
+instance toAddAction : AddAction A B where
   vadd := fun a b => α a b
   zero_vadd := (by aesop (rule_sets [AutAction]) : ∀ b : B, α 0 b = b)
   add_vadd := by

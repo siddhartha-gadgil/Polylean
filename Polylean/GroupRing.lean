@@ -114,7 +114,7 @@ theorem mul_monom_add(b₁ b₂ : R)(h x₀ : G)(s: FormalSum R G): coords (mulM
       rw [← add_assoc]
 
 /-- multiplication equivalent when adding term with `0` coefficient -/
-theorem mul_zero_cons (s t : FormalSum R G)(g: G):  mul s ((0, h) :: t) ≈  mul s t := by
+theorem mul_zero_cons (s t : FormalSum R G) :  mul s ((0, h) :: t) ≈  mul s t := by
     induction s
     case nil =>
       simp [mul, mulMonom]

@@ -12,9 +12,6 @@ This is done via the cocycle construction, using the explicit action and cocycle
 Section 3.1 of Giles Gardam's paper (https://arxiv.org/abs/2102.11818).
 -/
 
-namespace P
-
-
 section Components
 
 declare_aesop_rule_sets [P]
@@ -99,13 +96,13 @@ section Action
 The action of the group `Q` on the kernel `K` by automorphisms required for constructing `P`. 
 -/
 
--- An abbreviation for the negation homomorphism on commutative groups.
+/-- An abbreviation for the negation homomorphism on commutative groups. -/
 @[aesop norm unfold (rule_sets [P])]
 abbrev neg (α : Type _) [SubtractionCommMonoid α] := negAddMonoidHom (α := α)
 
 attribute [aesop norm unfold (rule_sets [P])] negAddMonoidHom
 
--- A temporary notation for easily describing products of additive monoid homomorphisms.
+/-- A temporary notation for easily describing products of additive monoid homomorphisms. -/
 local infixr:100 " ⊹ " => AddMonoidHom.prodMap
 
 /-- The action of `Q` on `K` by automorphisms.
@@ -117,7 +114,7 @@ def action : Q → (K →+ K)
   | .b =>  neg ℤ  ⊹  .id ℤ  ⊹  neg ℤ
   | .c =>  neg ℤ  ⊹  neg ℤ  ⊹  .id ℤ
 
-/- A verification that the above action is indeed an action by automorphisms.
+/-- A verification that the above action is indeed an action by automorphisms.
   This is done automatically with the machinery of decidable equality of homomorphisms on free groups. -/
 instance : AutAction Q K action :=
   { id_action := rfl
@@ -177,11 +174,9 @@ instance : DecidableEq P := inferInstanceAs <| DecidableEq (K × Q)
 
 /-- A confirmation that multiplication in `P` is as expected from the Metabelian group structure. -/
 @[aesop norm (rule_sets [P]), simp]
-theorem mul (k k' : K) (q q' : Q) : (k, q) * (k', q') = (k + action q k' + cocycle q q', q + q') := rfl
+theorem P.mul (k k' : K) (q q' : Q) : (k, q) * (k', q') = (k + action q k' + cocycle q q', q + q') := rfl
 
 @[aesop norm (rule_sets [P])]
-theorem one : (1 : P) = ((0, 0, 0), Q.e) := rfl 
+theorem P.one : (1 : P) = ((0, 0, 0), Q.e) := rfl 
 
 end MetabelianGroup
-
-end P
