@@ -17,13 +17,14 @@ Roughly, the steps are as follows (further details can be found in the correspon
 
 section TorsionFree
 
-/-- The definition of a torsion-free group.
-A group is *torsion-free* if the only element with non-trivial torsion is the identity element. -/
+/-- The definition of a torsion-free group. -/
 class TorsionFree (G : Type _) [Group G] where
+  /-- A group is *torsion-free* if the only element with non-trivial torsion is the identity element. -/
   torsionFree : ∀ g : G, ∀ n : ℕ, g ^ n.succ = 1 → g = 1
 
 /-- The definition of torsion-free additive groups. -/
 class AddTorsionFree (A : Type _) [AddGroup A] where
+  /-- An additive group is *torsion-free* if the only element with non-trivial torsion is the identity element. -/
   torsionFree : ∀ a : A, ∀ n : ℕ, n.succ • a = 0 → a = 0
 
 /-- ℤ is torsion-free, since it is an integral domain. -/
@@ -45,21 +46,19 @@ instance {A B : Type _} [AddGroup A] [AddGroup B] [AddTorsionFree A] [AddTorsion
 end TorsionFree
 
 
-open P
-
 /-- The function taking an element of `P` to its square, which lies in the kernel `K`. -/
 @[aesop norm unfold (rule_sets [P]), reducible]
-def s : P → K
+def P.sq : P → K
   | ((p, q, r), .e) => (p + p, q + q, r + r)
   | ((_, q, _), .b) => (0, q + q + 1, 0)
   | ((p, _, _), .a) => (p + p + 1, 0, 0)
   | ((_, _, r), .c) => (0, 0, r + r + 1)
 
-set_option pp.instances true
+open P
 
-/-- A proof that the function `s` indeed takes an element of `P` to its square in `K`. -/
+/-- A proof that the function `sq` indeed takes an element of `P` to its square in `K`. -/
 @[aesop norm apply (rule_sets [P]), simp]
-theorem s_square : ∀ g : P, g * g = (s g, .e)
+theorem sq_square : ∀ g : P, g * g = (P.sq g, .e)
   | ((p, q, r), x) =>
     match x with 
     | .e | .a | .b | .c => by
@@ -109,11 +108,11 @@ instance P.torsionFree : TorsionFree P where
     intros g n g_tor -- assume `g` is a torsion element
     -- then `g ^ 2` is also a torsion element
     have square_tor : (g ^ 2) ^ n.succ = ((0, 0, 0), Q.e) := torsion_implies_square_torsion g n.succ g_tor
-    erw [pow_two, s_square, MetabelianGroup.kernel_pow, Prod.mk.injEq] at square_tor
+    erw [pow_two, sq_square, MetabelianGroup.kernel_pow, Prod.mk.injEq] at square_tor
     -- since `g ^ 2 = s g`, we have that `s g` is a torsion element
-    have s_tor : n.succ • (s g) = 0 := square_tor.left
+    have s_tor : n.succ • (sq g) = 0 := square_tor.left
     -- since `s g` lies in the kernel and the kernel is torsion-free, `s g = 0`
-    have square_zero : (s g, Q.e) = (0, Q.e) := congrArg (·, Q.e) (K.torsionFree.torsionFree (s g) n s_tor)
-    rw [← s_square] at square_zero
+    have square_zero : (sq g, Q.e) = (0, Q.e) := congrArg (·, Q.e) (K.torsionFree.torsionFree (sq g) n s_tor)
+    rw [← sq_square] at square_zero
     -- this means `g ^ 2 = e`, and also `g = e` because `P` has no order 2 elements
     exact square_free square_zero
