@@ -1,7 +1,6 @@
 import Lean.Meta 
 import Lean.Elab
 import Mathlib.Algebra.Group.Defs
-import Polylean.Tactics.ReduceGoal
 import Std
 import Lean
 import Experiments.ProdSeq
