@@ -1,5 +1,4 @@
 import Polylean.UnitConjecture
-import Polylean.TorsionFree
 
 /-!
 # Formalization: Gardam's disproof of the Kaplansky Unit Conjecture
