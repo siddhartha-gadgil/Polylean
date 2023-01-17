@@ -3,12 +3,14 @@ import Mathlib.GroupTheory.Submonoid.Operations
 import UnitConjecture.Cocycle
 
 /-!
-Metabelian groups are group extensions `1 → K → G → Q → 1` with both the kernel and the quotient Abelian. Such an extension is determined by data:
+Metabelian groups are group extensions `1 → K → G → Q → 1` with both the kernel and the quotient Abelian. 
+Such an extension is determined by data:
 
 * a group action of `Q` on `K` by automorphisms
 * a cocyle `c: Q → Q → K`
 
-We define the cocycle condition and construct a group structure on a structure extending `K × Q`. The main step is to show that the cocyle condition implies associativity.
+We define the cocycle condition and construct a group structure on a structure extending `K × Q`. 
+The main step is to show that the cocyle condition implies associativity.
 -/
 
 namespace MetabelianGroup
@@ -99,8 +101,8 @@ section Exactness
 /-!
 ### Exactness
 
-A proof that the Metabelian group `G` constructed as above indeed lies in middle of the short exact sequence
-`1 → K → G → Q → 1`.
+A proof that the Metabelian group `G` constructed as above indeed lies in middle of 
+the short exact sequence `1 → K → G → Q → 1`.
 -/
 
 /-- The inclusion map from the kernel to the Metabelian group. -/
