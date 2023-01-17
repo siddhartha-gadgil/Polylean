@@ -4,8 +4,8 @@ import UnitConjecture.GardamTheorem
 # Formalization: Gardam's disproof of the Kaplansky Unit Conjecture
 
 This library contains the formalization of the [disproof](https://arxiv.org/abs/2102.11818) of the Kaplansky Unit Conjecture by Giles Gardam in a paper in the Annals of Mathematics.
-Here is an outline of the code:
-![](UnitConjecture/depgraph.dot.svg)
+Here is an outline of the code (with picture?):
+![](https://github.com/siddhartha-gadgil/Polylean/blob/main/UnitConjecture/depgraph.dot.svg)
 
 ## The Proof
 
