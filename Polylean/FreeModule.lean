@@ -804,7 +804,7 @@ theorem equiv_e_of_zero_coeffs  (s : FormalSum R X) (hyp : ∀ x : X, s.coords x
               rw [lf] at hx
               simp [zero_add] at hx
               assumption
-        have dec : t.length < (h :: t).length := by
+        have _ : t.length < (h :: t).length := by
           simp [List.length_cons]
         let step : t ≃ [] := by
           apply equiv_e_of_zero_coeffs
@@ -841,7 +841,7 @@ theorem equiv_e_of_zero_coeffs  (s : FormalSum R X) (hyp : ∀ x : X, s.coords x
               simp [coords, monomCoeff, lf] at ceq
               rw [hx] at ceq
               exact ceq
-        have d : ys.length < (h :: t).length := by
+        have _ : ys.length < (h :: t).length := by
           simp [List.length_cons]
           apply Nat.le_trans lIneqStep
           apply Nat.le_succ
@@ -885,7 +885,7 @@ theorem equiv_of_equal_coeffs  (s₁ s₂ : FormalSum R X) (hyp : ∀ x : X, s�
           apply ElementaryMove.zeroCoeff
           apply Eq.symm
           assumption
-        have dec : t.length < (h :: t).length := by
+        have _ : t.length < (h :: t).length := by
           simp [List.length_cons]
         have eq₂ : t ≃ s₂ := by
           apply equiv_of_equal_coeffs t s₂
@@ -909,7 +909,7 @@ theorem equiv_of_equal_coeffs  (s₁ s₂ : FormalSum R X) (hyp : ∀ x : X, s�
             rw [cf₂] at cfs
             let cfs' := fun (x : X) => Eq.trans (hyp x) (Eq.symm (cfs x))
             simp [coords] at cfs'
-            have dec : t.length < (h :: t).length := by
+            have _ : t.length < (h :: t).length := by
               simp [List.length_cons]
             let step := equiv_of_equal_coeffs t ys cfs'
             let step' := cons_equiv_of_equiv t ys a₀ x₀ step
@@ -926,7 +926,7 @@ theorem equiv_of_equal_coeffs  (s₁ s₂ : FormalSum R X) (hyp : ∀ x : X, s�
               apply cons_equiv_of_equiv
               assumption
             have eq₃ : s₃ ≃ s₂ := by
-              have bd : ys.length + 1 < t.length + 1 := by
+              have _ : ys.length + 1 < t.length + 1 := by
                 apply Nat.succ_lt_succ
                 exact ineqn
               apply equiv_of_equal_coeffs
