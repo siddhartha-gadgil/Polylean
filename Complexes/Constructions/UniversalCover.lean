@@ -1,5 +1,6 @@
 import Complexes.Structures.FreeGroupoid
 
+/-
 instance Groupoid.Star {S : Sort _} [G : Groupoid S] (X : S) : Groupoid (Σ Y : S, X ⟶ Y) where
   hom := λ ⟨Y, g⟩ ⟨Z, h⟩ => {f : Y ⟶ Z // g ≫ f = h}
   id := λ {_} => ⟨𝟙, by simp⟩
@@ -36,4 +37,4 @@ instance FreeGroupoid.UniversalQuiver
     {S : Type _} [Q : Quiver S] [G : Groupoid S] (X : S) [FG : FreeGroupoid Q G]
     : Quiver (Σ Y : S, G.hom X Y) where
   hom := λ ⟨Y, g⟩ ⟨Z, h⟩ => {f : Q.hom Y Z // g ≫ (FG.map f) = h}
-
+-/
