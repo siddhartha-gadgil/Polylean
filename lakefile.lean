@@ -8,7 +8,6 @@ package Polylean {
 @[default_target]
 lean_lib UnitConjecture
 
-@[default_target]
 lean_lib ConjInvLength
 
 lean_lib Complexes
