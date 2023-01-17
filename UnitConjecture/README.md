@@ -3,6 +3,8 @@
 This folder contains the formalization of the [disproof](https://arxiv.org/abs/2102.11818) of the Kaplansky Unit Conjecture by Giles Gardam in a paper in the Annals of Mathematics.
 Here is an outline of the code:
 
+![](depgraph.dot.svg)
+
 ## The Proof
 
 Gardam proved that for a group `P` (the *Promislow* or *Hantzsche–Wendt* group), we have the following:

@@ -1,0 +1,28 @@
+digraph mygraph {
+  fontname="Helvetica,Arial,sans-serif"
+  node [fontname="Helvetica,Arial,sans-serif"]
+  edge [fontname="Helvetica,Arial,sans-serif"]
+  node [
+		style=filled
+		shape=rect
+		pencolor="#00000044" // frames color
+		fontname="Helvetica,Arial,sans-serif"
+		shape=ellipse
+		fillcolor="#00ff0022"
+	];
+  "GardamTheorem"
+  "GardamTheorem" -> "GroupRing"
+  "GardamTheorem" -> "TorsionFree"
+  "GroupRing"
+  "TorsionFree"
+  "GroupRing" -> "FreeModule"
+  "TorsionFree" -> "GardamGroup"
+  "FreeModule"
+  "GardamGroup"
+  "GardamGroup" -> "AddFreeGroup"
+  "GardamGroup" -> "MetabelianGroup"
+  "AddFreeGroup"
+  "MetabelianGroup"
+  "AddFreeGroup" -> "EnumDecide"
+  "MetabelianGroup" -> "Cocyle"   
+}
