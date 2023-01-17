@@ -1,5 +1,5 @@
 import Mathlib.Algebra.Hom.Group
-import Mathlib.GroupTheory.Submonoid.Basic
+import Mathlib.GroupTheory.Submonoid.Operations
 import UnitConjecture.Cocycle
 
 /-!
@@ -82,6 +82,9 @@ instance metabelianGroup : Group (K × Q) :=
     div_eq_mul_inv := by intros; rfl
   }
 
+@[aesop norm unfold (rule_sets [Metabelian])]
+theorem mul_def {k k' : K} {q q' : Q} : (k, q) * (k', q') = (k + (q +ᵥ k') + c q q', q + q') := rfl
+
 lemma kernel_pow (k : K) (n : ℕ) : (k, (0 : Q)) ^ n = (n • k, (0 : Q)) := by
   induction n with
     | zero => rw [pow_zero, zero_nsmul]; rfl
@@ -89,5 +92,47 @@ lemma kernel_pow (k : K) (n : ℕ) : (k, (0 : Q)) ^ n = (n • k, (0 : Q)) := by
       rw [pow_succ, ih, succ_nsmul]
       show (k + ((0 : Q) +ᵥ m • k) + c 0 0, 0 + 0) = (k + m • k, 0)
       rw [zero_vadd, ccl.cocycle_zero, add_zero, add_zero]
+
+
+section Exactness
+
+/-!
+### Exactness
+
+A proof that the Metabelian group `G` constructed as above indeed lies in middle of the short exact sequence
+`1 → K → G → Q → 1`.
+-/
+
+/-- The inclusion map from the kernel to the Metabelian group. -/
+@[aesop norm unfold (rule_sets [Metabelian])]
+def Kernel.inclusion : (Multiplicative K) →* (K × Q) :=
+  { toFun := (·, (0 : Q)),
+    map_one' := rfl,
+    map_mul' := by
+      intro k k'
+      show (k * k', 0) = (_ + c 0 0, 0 + 0)
+      aesop (rule_sets [Metabelian, Cocycle]) }
+
+/-- A proof that the inclusion map is injective. -/
+theorem Kernel.inclusion_inj : Function.Injective (Kernel.inclusion c) := by
+  intros _ _; simp [Kernel.inclusion]
+
+/--- The projection map from the Metabelian group to the quotient. -/
+@[aesop norm unfold (rule_sets [Metabelian])]
+def Quotient.projection : K × Q →* (Multiplicative Q) :=
+  { toFun := Prod.snd,
+    map_one' := rfl
+    map_mul' := by intro ⟨_, _⟩ ⟨_, _⟩; rfl }
+
+/-- A proof that the projection map is surjective. -/
+theorem Quotient.projection_surj : Function.Surjective (Quotient.projection c) := by
+  intro q; use ⟨(0 : K), q⟩
+
+/-- A proof that the image of the first map is the kernel of the second map. -/
+theorem exact_seq : MonoidHom.mrange (Kernel.inclusion c) = MonoidHom.mker (Quotient.projection c) := by
+  ext ⟨_, _⟩; rw [MonoidHom.mem_mker]
+  aesop (rule_sets [Metabelian])
+
+end Exactness
 
 end MetabelianGroup
