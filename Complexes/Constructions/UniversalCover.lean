@@ -1,4 +1,4 @@
-import Polylean.Complexes.Structures.FreeGroupoid
+import Complexes.Structures.FreeGroupoid
 
 instance Groupoid.Star {S : Sort _} [G : Groupoid S] (X : S) : Groupoid (Σ Y : S, X ⟶ Y) where
   hom := λ ⟨Y, g⟩ ⟨Z, h⟩ => {f : Y ⟶ Z // g ≫ f = h}

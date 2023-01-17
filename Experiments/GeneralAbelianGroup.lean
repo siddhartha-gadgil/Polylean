@@ -1,5 +1,5 @@
 import Polylean.FreeAbelianGroup
-import Polylean.Experiments.AddTree
+import Experiments.AddTree
 
 section ArraysAndLists
 

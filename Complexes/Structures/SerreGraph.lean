@@ -1,4 +1,4 @@
-import Polylean.Complexes.Structures.Quiver
+import Complexes.Structures.Quiver
 
 /-- Serre's definition of an undirected graph. -/
 class SerreGraph (V : Sort _) extends Quiver V where

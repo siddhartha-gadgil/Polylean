@@ -1,4 +1,4 @@
-import Polylean.Complexes.Structures.Groupoid
+import Complexes.Structures.Groupoid
 
 /-- The definition of a free groupoid with basis `Q`. -/
 class FreeGroupoid.Struct {S : Sort _} (Q : Quiver S) (G : Groupoid S) where

@@ -1,4 +1,4 @@
-import Polylean.Complexes.Structures.Category
+import Complexes.Structures.Category
 
 /-- A `Groupoid` is defined as a `Category` in which every morphism has an inverse satisfying certain conditions. -/
 class Groupoid (S : Sort _) extends Category S where

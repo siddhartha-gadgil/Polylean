@@ -4,13 +4,13 @@ import Mathlib.Algebra.Group.Defs
 import Polylean.Tactics.ReduceGoal
 import Std
 import Lean
-import Polylean.Experiments.ProdSeq
+import Experiments.ProdSeq
 open Lean Meta Elab Nat Term Std ProdSeq
 
 
 def Lean.Expr.simplify(e: Expr) : MetaM Expr := do 
     let r ← simp e (← Simp.Context.mkDefault)
-    return r.expr
+    return r.1.expr
 
 
 def hOp? (fname: Name)(e : Expr)  : MetaM (Option (Expr × Expr)) := do

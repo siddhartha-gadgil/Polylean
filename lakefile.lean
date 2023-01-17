@@ -10,6 +10,9 @@ lean_lib Polylean
 
 lean_lib ConjInvLength
 
+lean_lib Complexes
+
+lean_lib Experiments
 
 @[default_target]
 lean_exe polymath

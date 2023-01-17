@@ -1,4 +1,4 @@
-import Polylean.Experiments.FreeAbelianMeta
+import Experiments.FreeAbelianMeta
 
 /-
 This file contains examples of the abelian group simplification tactic in action.

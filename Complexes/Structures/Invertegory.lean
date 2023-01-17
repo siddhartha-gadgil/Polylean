@@ -1,4 +1,4 @@
-import Polylean.Complexes.Structures.Category
+import Complexes.Structures.Category
 
 /-- An `Invertegory` is meant to be an intermediate between a `Category` and a `Groupoid`. 
   It is a category in which every morphism has a formal inverse, but the inverse is not required to satisfy any properties. 

@@ -1,4 +1,4 @@
-import Polylean.Complexes.Structures.SerreGraph
+import Complexes.Structures.SerreGraph
 
 class CombinatorialTwoComplex (V : Sort _) extends SerreGraph V where  
   relator : {v : V} → Loop v → Sort _

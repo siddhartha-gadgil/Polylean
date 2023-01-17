@@ -262,7 +262,7 @@ theorem induct_homotopy_inverse_mult {G : Graph V E} {x y z : V} (p q : EdgePath
 theorem homotopy_inverse {G : Graph V E} {x y : V} (p₁ p₂: EdgePath G x y) (q₁ q₂ : EdgePath G y x) (h₁ : q₁ = inverse p₁) (h₂ : q₂ = inverse p₂) : homotopy p₁ p₂ → homotopy q₁ q₂ := by 
   intro h₀
   let func : EdgePath G x y → ht G y x := by intro p ; exact htclass (inverse p)
-    have g : (s₁ s₂ : EdgePath G x y) → (h : basicht s₁ s₂) →  homotopy (inverse s₁) (inverse s₂) := by 
+  have g : (s₁ s₂ : EdgePath G x y) → (h : basicht s₁ s₂) →  homotopy (inverse s₁) (inverse s₂) := by 
       intro s₁ s₂ h
       induction h with 
         | consht x => simp[inverse, homotopy_rfl]

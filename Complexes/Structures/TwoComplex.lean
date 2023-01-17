@@ -1,4 +1,4 @@
-import Polylean.Complexes.Structures.Groupoid
+import Complexes.Structures.Groupoid
 
 /-! 
   A two-complex is defined in terms of two pieces of data:

@@ -1,5 +1,5 @@
-import Polylean.Complexes.Structures.CombinatorialTwoComplex
-import Polylean.Complexes.Structures.Groupoid
+import Complexes.Structures.CombinatorialTwoComplex
+import Complexes.Structures.Groupoid
 import Mathlib.Algebra.Group.Defs
 
 /-- The fundamental groupoid of a two-complex. -/

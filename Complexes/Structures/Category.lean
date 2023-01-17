@@ -1,4 +1,4 @@
-import Polylean.Complexes.Structures.Quiver
+import Complexes.Structures.Quiver
 
 /-- The definition of a `CategoryStruct`, a barebones structure for a category containing none of the axioms (following `mathlib`). -/
 class CategoryStruct (Obj : Sort _) extends Quiver Obj where

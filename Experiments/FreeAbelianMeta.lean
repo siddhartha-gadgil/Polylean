@@ -4,8 +4,8 @@ import Mathlib.Algebra.Group.Defs
 import Polylean.Tactics.ReduceGoal
 import Std
 import Lean
-import Polylean.Experiments.ProdSeq
-import Polylean.Experiments.GeneralAbelianGroup
+import Experiments.ProdSeq
+import Experiments.GeneralAbelianGroup
 open Lean Meta Elab Nat Term Std ProdSeq ToExpr
 
 instance (n: ℕ) : Inhabited (ℤ ^ n) := ⟨zeros n⟩
