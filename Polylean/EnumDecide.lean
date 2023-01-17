@@ -1,53 +1,136 @@
-import Mathlib.Data.Fintype.Basic
-
 /-!
 Automatically decide statements of the form `∀ x : X, P x` on a finite type `X` by enumeration.
 -/
 
-set_option autoImplicit false
-
 namespace EnumDecide
+
+/-- It is possible to check whether a given decidable predicate holds for all natural numbers below a given bound. -/
+def decideBelow (p:Nat → Prop)[DecidablePred p](bound: Nat): Decidable (∀ n : Nat, n < bound → p n) := 
+    match bound with
+    | 0 => by
+      apply Decidable.isTrue
+      intro n bd 
+      contradiction
+    | k + 1 => 
+      let prev := decideBelow p k
+      match prev with
+      | Decidable.isTrue hyp => 
+        if c:p k then 
+          by
+          apply Decidable.isTrue
+          intro n bd
+          cases Nat.eq_or_lt_of_le bd with
+          | inl eql => 
+            have eql' : n = k := by
+                injection eql
+            simp [eql']
+            assumption
+          | inr lt => 
+            have lt' : n < k := by
+                apply Nat.le_of_succ_le_succ
+                assumption
+            exact hyp n lt'
+        else 
+          by
+          apply Decidable.isFalse
+          intro contra
+          have lem : p k := by
+            apply contra k
+            apply Nat.le_refl
+          contradiction
+      | Decidable.isFalse hyp => by
+        apply Decidable.isFalse
+        intro contra
+        have lem : ∀ (n : Nat), n < k → p n := by
+          intro n bd
+          have bd' : n < k + 1 := by
+            apply Nat.le_step
+            exact bd
+          exact contra n bd'
+        contradiction
+
+def decideBelowFin {m: Nat}(p:Fin m → Prop)[DecidablePred p](bound: Nat): Decidable (∀ n : Fin m, n < bound → p n) := 
+    match bound with
+    | 0 => by
+      apply Decidable.isTrue
+      intro n bd 
+      contradiction
+    | k + 1 => 
+      let prev := decideBelowFin p k
+      match prev with
+      | Decidable.isTrue hyp => 
+        if ineq : k < m then
+          if c:p ⟨k, ineq⟩ then 
+            by
+            apply Decidable.isTrue
+            intro n bd
+            cases Nat.eq_or_lt_of_le bd with
+            | inl eql => 
+              have eql' : n = ⟨k, ineq⟩ := by
+                  apply Fin.eq_of_val_eq
+                  injection eql
+              simp [eql']
+              assumption
+            | inr lt => 
+              have lt' : n < k := by
+                  apply Nat.le_of_succ_le_succ
+                  assumption
+              exact hyp n lt'
+          else 
+            by
+            apply Decidable.isFalse
+            intro contra
+            have lem : p ⟨k, ineq⟩ := by
+              apply contra ⟨k, ineq⟩
+              apply Nat.le_refl
+            contradiction
+        else
+          by 
+          apply Decidable.isTrue
+          intro ⟨n, nbd⟩ _
+          have ineq' : m ≤ k := by
+            apply Nat.le_of_succ_le_succ
+            apply Nat.gt_of_not_le ineq 
+          have ineq'' := Nat.le_trans nbd ineq'
+          exact hyp ⟨n, nbd⟩ ineq''
+      | Decidable.isFalse hyp => by
+        apply Decidable.isFalse
+        intro contra
+        have lem : ∀ (n : Fin m), n < k → p n := by
+          intro n bd
+          have bd' : n < k + 1 := by
+            apply Nat.le_step
+            exact bd
+          exact contra n bd'
+        contradiction
+
+/-- It is possible to decide whether a predicate holds for all elements of `Fin n`. -/
+def decideFin {m: Nat}(p:Fin m → Prop)[DecidablePred p]: Decidable (∀ n : Fin m, p n) := 
+  match decideBelowFin p m with 
+  | Decidable.isTrue hyp => 
+    by
+    apply Decidable.isTrue
+    intro ⟨n, ineq⟩
+    exact hyp ⟨n, ineq⟩ ineq
+  | Decidable.isFalse hyp => by
+    apply Decidable.isFalse
+    intro contra
+    apply hyp
+    intro ⟨n, ineq⟩ _
+    exact contra ⟨n, ineq⟩   
 
 /-- A typeclass for "exhaustively verifiable types", i.e., 
   types for which it is possible to decide whether a given (decidable) predicate holds for all its elements. -/
 class DecideForall (α : Type) where
-  decideForall (p : α → Prop) [DecidablePred p] : 
-    Decidable (∀ x : α, p x)
+  decideForall (p : α → Prop) [DecidablePred p]: 
+    Decidable (∀ x : α, p x)  
 
-instance {α : Sort _} {p : α → Prop} [DecidablePred p] [dfa : DecideForall α] : Decidable (∀ x : α, p x) := dfa.decideForall p
+instance {k: Nat} : DecideForall (Fin k) := 
+  ⟨by apply decideFin⟩
 
-
-variable {α : Sort _} (p : α → Prop) [DecidablePred p]
-
-/-- It is possible to check whether a decidable predicate holds for all elements of a list. -/
-@[instance] def decideList : (l : List α) → Decidable (∀ a ∈ l, p a)
-  | [] => .isTrue <| by intros; contradiction
-  | a :: as =>
-    if h : p a then
-      match decideList as with
-      | .isTrue _ => .isTrue <| by simp [h]; assumption
-      | .isFalse ih => .isFalse <| by simp [h, ih]
-    else .isFalse <| by simp [h]
-
-/-- It is possible to check whether a decidable predicate holds for all elements of a multiset. -/
-@[instance] def decideMultiset (s : Multiset α) : Decidable (∀ a ∈ s, p a) := 
-  s.rec (decideList _) <| by intros; simp
-
-def decideFintype [Fintype α] : Decidable (∀ a : α, p a) := by
-  have : (∀ a : α, p a) ↔ (∀ a ∈ Finset.univ.val, p a) := by
-    have : ∀ a : α, (p a ↔ (a ∈ Finset.univ → p a)) := by intros; simp
-    conv =>
-      lhs
-      ext
-      rw [this]
-  rw [this]; exact inferInstance
-
-instance [Fintype α] : DecideForall α := ⟨fun p ↦ decideFintype p⟩
-
-instance {k : ℕ} : DecideForall (Fin k) := inferInstance
+instance {α : Type}[dfa: DecideForall α]{p : α → Prop}[DecidablePred p]: Decidable (∀ x : α, p x) := dfa.decideForall p
 
 section Examples
-
 example : ∀ x : Fin 3, x + 0 = x := by decide
 
 example : ∀ x y : Fin 3, x + y = y + x := by decide
