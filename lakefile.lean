@@ -8,6 +8,9 @@ package Polylean {
 @[default_target]
 lean_lib Polylean
 
+lean_lib ConjInvLength
+
+
 @[default_target]
 lean_exe polymath
 

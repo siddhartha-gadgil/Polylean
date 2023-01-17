@@ -1,4 +1,4 @@
-import Polylean.ProvedBound
+import ConjInvLength.ProvedBound
 
 inductive ProofTree : Word → Type where
   | emptyWord : ProofTree []
@@ -23,8 +23,7 @@ def ProofTree.provedBound: (w: Word) → ProofTree w → ProvedBound w :=
     | ProofTree.normalized x => 
         ⟨1, by
               intros l emp norm conj triang
-              rw [norm x]
-              apply Nat.le_refl⟩
+              rw [norm x]⟩
     | ProofTree.conjugate x w t => 
           let pb := provedBound w t
           ⟨pb.bound, by
@@ -82,6 +81,8 @@ def proofTree : (w: Word) → ProofTree w := fun w =>
   match h:w with
   | [] => ProofTree.emptyWord
   | x :: ys =>
+    have : ys.length < (x :: ys).length := by
+      simp
     let head := ProofTree.prepend x (proofTree ys)
     let splits := provedSplits x⁻¹  ys
     have wl:  w.length = ys.length + 1 := by
@@ -102,6 +103,7 @@ def proofTree : (w: Word) → ProofTree w := fun w =>
         (proofTree ps.fst) (proofTree ps.snd))
     ProofTree.min head tail
 termination_by  _ w => w.length
+decreasing_by assumption
 
 open Letter
 

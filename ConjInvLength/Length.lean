@@ -1,5 +1,5 @@
 import Std 
-import Polylean.ConjInvLength.LengthBound
+import ConjInvLength.LengthBound
 open Std
 open Letter
 
