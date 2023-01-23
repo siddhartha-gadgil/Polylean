@@ -70,7 +70,7 @@ theorem sq_square : ∀ g : P, g * g = (P.sq g, .e)
 
 /-! ### **Step 2:** Proving that `K` (= `ℤ³`) is torsion-free. -/ 
 
-/-- `ℤ³` is torsion-free. -/
+/-- The kernel `ℤ³` is torsion-free. -/
 instance K.torsionFree : AddTorsionFree K := inferInstance
 
 /-! ### **Step 3:** Showing that no element of `P` has order precisely two. -/
@@ -110,7 +110,7 @@ lemma torsion_implies_square_torsion {G : Type _} [Group G] (g : G) (n : ℕ) (g
               _      = g ^ (n * 2) := by rw [mul_comm]
               _      = (g ^ n) ^ 2 := by rw [pow_mul]
               _      = (1 : G) ^ 2 := by rw [← g_tor]
-              _      = (1 : G)     := by simp
+              _      = (1 : G)     := by rw [one_pow]
 
 /-! ### **Step 5:** Putting the facts together. -/
 
