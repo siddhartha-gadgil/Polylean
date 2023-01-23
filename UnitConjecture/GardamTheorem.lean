@@ -97,7 +97,7 @@ namespace Gardam
 open P
 
 /-- The inverse `α'` of the non-trivial unit `α` -/
-def α' := p' + (q' * a) + (r' * b) + (s' * a * b)
+def α' : 𝔽₂[P] := p' + (q' * a) + (r' * b) + (s' * a * b)
 
 /-- A proof that `α` is non-trivial. -/
 theorem α_nonTrivial : ¬ (trivialElem α) := by
