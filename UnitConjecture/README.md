@@ -10,7 +10,7 @@ Here is an outline of the code:
 Gardam proved that for a group `P` (the *Promislow* or *Hantzsche–Wendt* group), we have the following:
 
 * `P` is torsion free; this is proved in `TorsionFree.lean`
-* `P` has non-trivial units; this is proved in `UnitConjecture.lean`
+* `P` has non-trivial units; this is proved in `GardamTheorem.lean`
 
 The rest of the code is required to construct $P$, construct group rings, and to prove the required properties.
 
