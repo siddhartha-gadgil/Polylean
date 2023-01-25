@@ -163,20 +163,24 @@ The construction of the group `P` as a Metabelian group from the given action an
 @[aesop norm unfold (rule_sets [P])]
 def P := K × Q
 
+namespace P
+
 instance (priority := high) PGrp : Group P := MetabelianGroup.metabelianGroup cocycle
 
 -- Priorities to resolve the conflict between the direct product and Metabelian group structure on `K × Q` 
-instance (priority := high) : HMul (K × Q) (K × Q) (K × Q) := ⟨PGrp.mul⟩
-instance (priority := high) : Mul (K × Q) := ⟨PGrp.mul⟩
-instance (priority := high + 1) : Pow (K × Q) ℕ := PGrp.toMonoid.Pow
+scoped instance (priority := high) : HMul (K × Q) (K × Q) (K × Q) := ⟨PGrp.mul⟩
+scoped instance (priority := high) : Mul (K × Q) := ⟨PGrp.mul⟩
+scoped instance (priority := high + 1) : Pow (K × Q) ℕ := PGrp.toMonoid.Pow
 
 instance : DecidableEq P := inferInstanceAs <| DecidableEq (K × Q)
 
 /-- A confirmation that multiplication in `P` is as expected from the Metabelian group structure. -/
 @[aesop norm (rule_sets [P]), simp]
-theorem P.mul (k k' : K) (q q' : Q) : (k, q) * (k', q') = (k + action q k' + cocycle q q', q + q') := rfl
+theorem mul (k k' : K) (q q' : Q) : (k, q) * (k', q') = (k + action q k' + cocycle q q', q + q') := rfl
 
 @[aesop norm (rule_sets [P])]
-theorem P.one : (1 : P) = ((0, 0, 0), Q.e) := rfl 
+theorem one : (1 : P) = ((0, 0, 0), Q.e) := rfl 
+
+end P
 
 end MetabelianGroup
