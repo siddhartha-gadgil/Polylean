@@ -1,14 +1,21 @@
 import UnitConjecture.FreeModule
 
-/-
-Group ring given a group. The ring structures is constructed using the (implicit) universal property of R-modules. As a check it is proved to be a Ring.
+/-!
+# Group Rings
+
+We construct the Group ring `R[G]` given a group `G` and a ring `R`, both having decidable equality. The ring structures is constructed using the (implicit) universal property of `R`-modules. As a check on our definitions, `R[G]` is proved to be a Ring.
+
+We first define multiplication on formal sums. We prove many properties that are used both to show invariance under elementary moves and to prove that `R[G]` is a ring.
+
 -/
 
 variable {R : Type} [Ring R] [DecidableEq R]
 
 variable {G: Type} [Group G] [DecidableEq G]
 
-/-! Multiplying formal sums -/
+/-! 
+## Multiplication on formal sums
+-/
 section FormalSumMul
 
 /-- multiplication by a monomial -/
@@ -23,7 +30,9 @@ def FormalSum.mul(fst: FormalSum R G) : FormalSum R G → FormalSum R G
   (FormalSum.mulMonom  b h fst) ++ (mul fst ys)
 end FormalSumMul
 
-/-! Group Ring
+/-! 
+
+## Properties of multiplication on formal sums
 -/
 namespace GroupRing
 
@@ -130,6 +139,9 @@ theorem mul_zero_cons (s t : FormalSum R G) :  mul s ((0, h) :: t) ≈  mul s t 
       let l := mul_monom_zero h x₀ tail
       rw [l]
 
+/-!
+## Induced product on the quotient 
+-/
 
 /-- Quotient in second argument for group ring multiplication 
 -/
@@ -302,6 +314,10 @@ def mul : R[G] → R[G] → R[G] := by
   simp
   apply first_arg_invariant
   exact rel
+
+/-!
+## The Ring Structure
+-/
 
 instance groupRingMul : Mul (R[G]) := 
   ⟨mul⟩
