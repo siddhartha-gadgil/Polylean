@@ -71,7 +71,7 @@ def r : 𝔽₂[P] := (1 : 𝔽₂[P]) + x + y⁻¹*z + x*y*z
 def s : 𝔽₂[P] := (1 : 𝔽₂[P]) + x*z⁻¹ + x⁻¹*z⁻¹ + y*z⁻¹ + y⁻¹*z⁻¹
 
 /-- The non-trivial unit `α`. -/
-def α : 𝔽₂[P] := p + (q * a) + (r * b) + (s * a * b)
+def α : 𝔽₂[P] := p  +  q * a  +  r * b  +  s * a * b
  
 /-! The components of the inverse `α'` of the non-trivial unit `α`. -/
 def p' : 𝔽₂[P] := x⁻¹ * (a⁻¹  * p * a)
@@ -80,7 +80,7 @@ def r' : 𝔽₂[P] := -(y⁻¹ * r)
 def s' : 𝔽₂[P] := z⁻¹ * (a⁻¹ * s * a)
 
 /-- The inverse `α'` of the non-trivial unit `α`. -/
-def α' : 𝔽₂[P] := p' + (q' * a) + (r' * b) + (s' * a * b)
+def α' : 𝔽₂[P] := p'  +  q' * a  +  r' * b  +  s' * a * b
 
 end Gardam
 
