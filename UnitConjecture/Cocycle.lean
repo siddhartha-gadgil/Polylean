@@ -1,6 +1,5 @@
 import Mathlib.Algebra.Group.Defs
 import Mathlib.GroupTheory.GroupAction.Defs
-import UnitConjecture.Tactics.ReduceGoal
 import Aesop
 
 /-!
@@ -20,7 +19,7 @@ The definitions of cocycles and group actions by automorphisms, which are requir
 
 /-- An action of an additive group on another additive group by automorphisms. 
     There is a closely related typeclass `DistribMulAction` in `Mathlib` that uses multiplicative notation. -/
-class AutAction (A B : Type _) [AddGroup A] [AddGroup B] (α : A → (B →+ B)) where
+class AutAction {A B : Type _} [AddGroup A] [AddGroup B] (α : A → (B →+ B)) where
   /-- The automorphism corresponding to the zero element is the identity. -/
   id_action : α 0 = .id _
   /-- The compatibility of group addition with the action by automorphisms. -/
@@ -29,7 +28,7 @@ class AutAction (A B : Type _) [AddGroup A] [AddGroup B] (α : A → (B →+ B))
 
 namespace AutAction
 
-variable (A B : Type _) [AddGroup A] [AddGroup B] (α : A → (B →+ B)) [AutAction A B α]
+variable {A B : Type _} [AddGroup A] [AddGroup B] (α : A → (B →+ B)) [AutAction α]
 
 declare_aesop_rule_sets [AutAction]
 
@@ -77,15 +76,13 @@ end AutAction
 -/
 
 /--
-A cocycle associated with a certain action of `Q` on `K` via automorphisms is a function from `Q × Q` to `K` satisfying
-a certain requirement known as the "cocycle condition". This allows one to define an associative multiplication operation on the set `K × Q` as shown below.
-The requirement `c 0 0 = (0 : K)` is not strictly necessary and mainly for convenience.
--/
+A cocycle associated with a certain action of `Q` on `K` via automorphisms is a 
+function from `Q × Q` to `K` satisfying a certain requirement known as the "cocycle condition". -/
 class Cocycle {Q K : Type _} [AddGroup Q] [AddGroup K] (c : Q → Q → K) where
   /-- An action of the quotient on the kernel by automorphisms. -/
   α : Q → (K →+ K)
   /-- A typeclass instance for the action by automorphisms. -/
-  [autAct : AutAction Q K α]
+  autAct : AutAction α
   /-- The value of the cocycle is zero when its inputs are zero, as a convention. -/
   cocycle_zero : c 0 0 = (0 : K)
   /-- The *cocycle condition*. -/
@@ -106,7 +103,7 @@ variable (c : Q → Q → K) [ccl : Cocycle c]
 attribute [aesop norm (rule_sets [Cocycle])] Cocycle.cocycle_zero
 attribute [aesop norm (rule_sets [Cocycle])] Cocycle.cocycle_condition
 
-instance : AutAction Q K ccl.α := ccl.autAct
+instance : AutAction ccl.α := ccl.autAct
 
 @[aesop norm (rule_sets [Cocycle])]
 lemma left_id {q : Q} : c 0 q = (0 : K) := by
