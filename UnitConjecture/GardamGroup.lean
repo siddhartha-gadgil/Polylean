@@ -103,16 +103,16 @@ abbrev neg (α : Type _) [SubtractionCommMonoid α] := negAddMonoidHom (α := α
 attribute [aesop norm unfold (rule_sets [P])] negAddMonoidHom
 
 /-- A temporary notation for easily describing products of additive monoid homomorphisms. -/
-local infixr:100 " ⊹ " => AddMonoidHom.prodMap
+local infixr:100 " × " => AddMonoidHom.prodMap
 
 /-- The action of `Q` on `K` by automorphisms.
 The action can be given a component-wise description in terms of `id` and `neg`, the identity and negation homomorphisms. -/
 @[aesop norm unfold (rule_sets [P]), reducible] 
 def action : Q → (K →+ K)
-  | .e =>  .id ℤ  ⊹  .id ℤ  ⊹  .id ℤ
-  | .a =>  .id ℤ  ⊹  neg ℤ  ⊹  neg ℤ
-  | .b =>  neg ℤ  ⊹  .id ℤ  ⊹  neg ℤ
-  | .c =>  neg ℤ  ⊹  neg ℤ  ⊹  .id ℤ
+  | .e =>  .id ℤ  ×  .id ℤ  ×  .id ℤ
+  | .a =>  .id ℤ  ×  neg ℤ  ×  neg ℤ
+  | .b =>  neg ℤ  ×  .id ℤ  ×  neg ℤ
+  | .c =>  neg ℤ  ×  neg ℤ  ×  .id ℤ
 
 /-- A verification that the above action is indeed an action by automorphisms.
   This is done automatically with the machinery of decidable equality of homomorphisms on free groups. -/
