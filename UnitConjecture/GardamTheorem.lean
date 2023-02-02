@@ -79,6 +79,9 @@ def q' : 𝔽₂[P] := -(x⁻¹ * q)
 def r' : 𝔽₂[P] := -(y⁻¹ * r)
 def s' : 𝔽₂[P] := z⁻¹ * (a⁻¹ * s * a)
 
+/-- The inverse `α'` of the non-trivial unit `α`. -/
+def α' : 𝔽₂[P] := p' + (q' * a) + (r' * b) + (s' * a * b)
+
 end Gardam
 
 end Constants
@@ -95,9 +98,6 @@ The main verification of Giles Gardam's result.
 namespace Gardam
 
 open P
-
-/-- The inverse `α'` of the non-trivial unit `α` -/
-def α' : 𝔽₂[P] := p' + (q' * a) + (r' * b) + (s' * a * b)
 
 /-- A proof that `α` is non-trivial. -/
 theorem α_nonTrivial : ¬ (trivialElem α) := by
