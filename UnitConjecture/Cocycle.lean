@@ -3,7 +3,7 @@ import Mathlib.GroupTheory.GroupAction.Defs
 import Aesop
 
 /-!
-## Group actions by automorphisms and Cocycles
+## Cocycles and Group actions by automorphisms
 The definitions of cocycles and group actions by automorphisms, which are required for the Metabelian construction.
 
 ## Overview
