@@ -38,11 +38,8 @@ attribute [aesop norm (rule_sets [AutAction])] compatibility
 /-- An action by automorphisms of additive groups is an additive group action. -/
 instance toAddAction : AddAction A B where
   vadd := fun a b => α a b
-  zero_vadd := (by aesop (rule_sets [AutAction]) : ∀ b : B, α 0 b = b)
-  add_vadd := by
-    intros a a' b
-    show α (a + a') b = α a (α a' b)
-    aesop (rule_sets [AutAction])
+  zero_vadd := by aesop (rule_sets [AutAction]) (add norm unfold [HVAdd.hVAdd])
+  add_vadd  := by aesop (rule_sets [AutAction]) (add norm unfold [HVAdd.hVAdd])
 
 /-!
 Some easy consequences of the definition of an action by automorphisms.
