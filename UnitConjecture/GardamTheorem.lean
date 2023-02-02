@@ -99,7 +99,7 @@ namespace Gardam
 
 open P
 
-/-- A proof that `α` is non-trivial. -/
+/-- A proof that the unit is non-trivial. -/
 theorem α_nonTrivial : ¬ (trivialElem α) := by
     intro ⟨g, _, (eqg : ∀ y, α.coordinates y ≠ 0 → y = g)⟩
     have : z⁻¹ = g := by
