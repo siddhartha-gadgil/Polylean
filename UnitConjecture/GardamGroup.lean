@@ -116,7 +116,7 @@ def action : Q → (K →+ K)
 
 /-- A verification that the above action is indeed an action by automorphisms.
   This is done automatically with the machinery of decidable equality of homomorphisms on free groups. -/
-instance : AutAction Q K action :=
+instance : AutAction action :=
   { id_action := rfl
     compatibility := by decide }
 
