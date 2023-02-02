@@ -3,6 +3,9 @@ import Mathlib.GroupTheory.Submonoid.Operations
 import UnitConjecture.Cocycle
 
 /-!
+
+## Metabelian groups
+
 Metabelian groups are group extensions `1 → K → G → Q → 1` with both the kernel and the quotient Abelian. 
 Such an extension is determined by data:
 
@@ -69,7 +72,7 @@ theorem mul_assoc : ∀ (g g' g'' : K × Q), mul c (mul c g g') g'' =  mul c g (
       exact ccl.cocycle_condition q q' q''
     · apply add_assoc
 
--- A proof that `K × Q` can be given a group structure using the above multiplication operation
+/-- A group structure on `K × Q` using the above multiplication operation. -/
 instance metabelianGroup : Group (K × Q) :=
   {
     mul := mul c,
@@ -84,16 +87,13 @@ instance metabelianGroup : Group (K × Q) :=
     div_eq_mul_inv := by intros; rfl
   }
 
-@[aesop norm unfold (rule_sets [Metabelian])]
+@[aesop norm simp (rule_sets [Metabelian])]
 theorem mul_def {k k' : K} {q q' : Q} : (k, q) * (k', q') = (k + (q +ᵥ k') + c q q', q + q') := rfl
 
 lemma kernel_pow (k : K) (n : ℕ) : (k, (0 : Q)) ^ n = (n • k, (0 : Q)) := by
-  induction n with
-    | zero => rw [pow_zero, zero_nsmul]; rfl
-    | succ m ih => 
-      rw [pow_succ, ih, succ_nsmul]
-      show (k + ((0 : Q) +ᵥ m • k) + c 0 0, 0 + 0) = (k + m • k, 0)
-      rw [zero_vadd, ccl.cocycle_zero, add_zero, add_zero]
+  induction n <;>
+      aesop (rule_sets [Metabelian, Cocycle]) 
+      (add norm simp [pow_zero, pow_succ, zero_nsmul, succ_nsmul])
 
 
 section Exactness
@@ -110,10 +110,7 @@ the short exact sequence `1 → K → G → Q → 1`.
 def Kernel.inclusion : (Multiplicative K) →* (K × Q) :=
   { toFun := (·, (0 : Q)),
     map_one' := rfl,
-    map_mul' := by
-      intro k k'
-      show (k * k', 0) = (_ + c 0 0, 0 + 0)
-      aesop (rule_sets [Metabelian, Cocycle]) }
+    map_mul' := by aesop (rule_sets [Metabelian, Cocycle]) }
 
 /-- A proof that the inclusion map is injective. -/
 theorem Kernel.inclusion_inj : Function.Injective (Kernel.inclusion c) := by
