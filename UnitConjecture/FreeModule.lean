@@ -25,18 +25,24 @@ section FormalSumCoords
 
 /-! 
 
-## I. Formal sums and coordinate functions 
-
-In this section, we
-  * define formal sums as List (R × X)
-  * define coordinate functions X → R for formal sums
-  * define (weak) support, relate non-zero coordinates and decide equality 
+## Formal sums
 -/
+
+
 
 /-- A *formal sum* represents an `R`-linear combination of finitely many elements of `X`.
   This is implemented as a list `R × X`, which associates to each element `X` of the list a coefficient from `R`. -/
 abbrev FormalSum (R X : Type _) [Ring R] :=
   List (R × X)
+
+/-!
+## Coordinate functions and Supports
+
+* We define coordinate functions X → R for formal sums.
+* We define (weak) support, relate non-zero coordinates.
+* We prove decidable equality on a list (easy fact).
+
+-/
 
 /-!
 ### Coordinate functions
@@ -193,9 +199,12 @@ theorem eq_mem_of_equalOnList  (l : List X) (f g : X → R) (x : X)(mhyp : x ∈
 end FormalSumCoords
 
 /-! 
-## II. Quotient Free Module 
-  * define relation by having equal coordinates
-  * show this is an equivalence relation and take quotient -/
+## Quotient Free Module 
+
+
+* We define relation by having equal coordinates
+* We show this is an equivalence relation and define the quotient 
+-/
 section QuotientFreeModule
 
 
@@ -248,11 +257,12 @@ end QuotientFreeModule
 section DecidableEqQuotFreeModule
 
 /-! 
-## III. Decidable equality on quotient free modules
+## Decidable equality on quotient free modules
   
 We show that the free module `F[X]` has decidable equality. This has two steps:
-  * show decidable equality for images of formal sums.
-  * lift to quotient (by relating to formal sums).
+  
+* show decidable equality for images of formal sums.
+* lift to quotient (by relating to formal sums).
 
 We also show that the coordinate functions are defined on the quotient. -/
   
@@ -411,7 +421,7 @@ end FreeModule
 end DecidableEqQuotFreeModule
 
 /-! 
-## IV. Module structure  
+## Module structure  
 
 We define the module structure on the quotient of the free module by the equivalence relation.
 
@@ -692,7 +702,7 @@ end FreeModule
 end ModuleStruture
 
 /-! 
-# V. Equivalent definition of the relation via moves 
+## Equivalent definition of the relation via moves 
 
 For conceptual results such as the universal property (needed for the group ring structure) it is useful to define the relation on the free module in terms of moves. We do this, and show that this is the same as the relation defined by equality of coordinates.
 
@@ -1018,7 +1028,7 @@ theorem equiv_of_equal_coeffs  (s₁ s₂ : FormalSum R X) (hyp : ∀ x : X, s�
   assumption
 
 /-!
-### Functions invariant under moves pass to the quotient.
+## Functions invariant under moves pass to the quotient.
 -/
 /-- Lifting functions to the move induced quotient. -/
 theorem func_eql_of_move_equiv  {β : Sort u} (f : FormalSum R X → β) : (∀ s₁ s₂ : FormalSum R X, ElementaryMove R X s₁ s₂ → f s₁ = f s₂) → (∀ s₁ s₂ : FormalSum R X, s₁ ≈ s₂ → f s₁ = f s₂) :=
@@ -1043,7 +1053,7 @@ end ElementaryMoves
 section NormRepr
 
 /-! 
-# VI. Basic `Repr`
+## Basic `Repr`
 
 An instance of `Repr` on Free Modules, mainly for debugging (fairly crude). This is implemented by constructing a norm ball containing all the non-zero coordinates, and then making a list of non-zero coordinates
 -/
