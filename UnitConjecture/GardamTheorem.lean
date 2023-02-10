@@ -137,64 +137,49 @@ theorem trivialElem_trivial' {R G : Type _} [Ring R] [Group G] [DecidableEq G] (
   apply Iff.intro
   · rw [trivialElem]
     intro ⟨x, hyp⟩
-    simp at hyp
-    let hyp₁ := hyp.left
-    let hyp₂ := hyp.right
+    let ⟨hyp₁, hyp₂⟩ := hyp
     use FreeModule.coordinates x ⟦p⟧
     use x
     apply And.intro
-    · apply funext
-      intro x₁
-      simp [FreeModule.coordinates, FormalSum.coords, monomCoeff]
+    · funext x₁
+      simp only [FormalSum.coords, monomCoeff, FreeModule.coordinates, Quotient.lift_mk, add_zero]
       by_cases x = x₁
       · simp [h]
       · let hyp₃ := hyp₂ x₁ 
-        simp [h, FreeModule.coordinates, FormalSum.coords, monomCoeff] at hyp₃
+        simp only [h, FreeModule.coordinates, Quot.lift_mk, ne_eq] at hyp₃
         let neqLem : ((x == x₁) = false) := 
-          by 
-            apply beq_false_of_ne
-            assumption
-        simp [neqLem]
+          by apply beq_false_of_ne; assumption
+        simp only [neqLem]
         by_cases FormalSum.coords p x₁ = 0
         · assumption
-        · simp [h] at hyp₃
+        · simp only [Quotient.lift_mk, h, not_false_iff, forall_true_left] at hyp₃
           have := Eq.symm hyp₃    
           contradiction 
     · assumption
   · intro ⟨a, g, hyp⟩
-    simp [trivialElem]
+    simp only [trivialElem, ne_eq]
     use g
     apply And.intro
     · intro h
-      simp [FreeModule.coordinates, FormalSum.coords, monomCoeff] at h
+      simp only [FreeModule.coordinates, Quotient.lift_mk] at h
       have : p.coords = FormalSum.coords [(a, g)] := hyp.left
       rw [this] at h
-      simp [FreeModule.coordinates, FormalSum.coords, monomCoeff] at h
+      simp only [FormalSum.coords, monomCoeff, beq_self_eq_true, add_zero] at h
       have := hyp.right
       contradiction
-    · intro x
-      intro h
-      simp [FreeModule.coordinates, FormalSum.coords, monomCoeff] at h
+    · intro x h
+      simp only [FreeModule.coordinates, Quotient.lift_mk] at h
       have : p.coords = FormalSum.coords [(a, g)] := hyp.left
       rw [this] at h
-      simp [FreeModule.coordinates, FormalSum.coords, monomCoeff] at h
+      simp only [FormalSum.coords, monomCoeff, add_zero] at h
       by_cases c:x = g
       · assumption
-      · have neq : (g == x) = false := by 
-          apply beq_false_of_ne
-          intro contra 
-          have := Eq.symm contra
-          contradiction
-        simp [neq] at h
-
-#check Quotient.inductionOn
+      · have neq : (g == x) = false := by aesop
+        simp only [neq, not_true] at h
 
 /-- Our definition of tiviality of `p : R[G]` coincides with the direct definition `p = a ⬝ g` with `a ≠ 0` -/
 theorem trivialElem_trivial {R G : Type _} [Ring R] [Group G] [DecidableEq G]: ∀  (p : FreeModule R G),  
     trivialElem  p  ↔  ∃ a: R, ∃ g : G, p = (a * g) ∧ (a ≠ 0) := by
   rw [groupRingMul]
   apply Quotient.ind
-  simp [Quotient.exact]
-  intro p
-  let lem := trivialElem_trivial' p
-  simp [lem]
+  simp only [trivialElem_trivial', ne_eq, exists_and_right, Quotient.eq, forall_const]
