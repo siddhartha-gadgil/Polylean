@@ -511,18 +511,39 @@ def baseInclusionHom  (G : Type) [Group G] [DecidableEq G] : G →* R[G] :=
     map_mul' := 
     by
       intro _ _
-      show Quotient.mk _ _ = Quotient.mk _ _
       apply Quotient.sound
       funext x
       simp [FormalSum.coords]
   }
 
-def baseInclusionHom_injective'  (G : Type) [Group G][DecidableEq G] (hR : (1 : R) ≠ (0 : R)) : Function.Injective (baseInclusionHom (R := R) G) := by
+theorem baseInclusionHom_injective'  (G : Type) [Group G] [DecidableEq G] (hR : (1 : R) ≠ (0 : R)) : Function.Injective (baseInclusionHom (R := R) G) := by
   intro _ _ 
   apply baseInclusion_injective (1 : R) hR (X := G)
 
-def baseInclusionHom_injective {F : Type} [Field F] [DecidableEq F] (G : Type) [Group G][DecidableEq G] : Function.Injective (baseInclusionHom (R := F) G) := by
+theorem baseInclusionHom_injective {F : Type} [Field F] [DecidableEq F] (G : Type) [Group G][DecidableEq G] : Function.Injective (baseInclusionHom (R := F) G) := by
   intro _ _ 
   apply baseInclusionHom_injective'
   have : (0 : F) ≠ (1 : F) := zero_ne_one
   simp_all only [ne_eq, zero_ne_one, not_false_iff, one_ne_zero]
+
+def coeffInclusionHom  (G : Type) [Group G] [DecidableEq G] : R →+* R[G] :=
+  { toFun := coeffInclusion 1, 
+    map_one' := rfl, 
+    map_mul' := 
+    by
+      intro _ _
+      apply Quotient.sound
+      funext x
+      simp [FormalSum.coords],
+    map_zero' := by
+      apply Quotient.sound
+      funext x
+      simp [FormalSum.coords, monomCoeff, add_zero]
+      split <;> rfl,
+    map_add' := by
+      intro _ _
+      apply Quotient.sound
+      funext x
+      simp only [FormalSum.coords, monomCoeff]
+      split <;> simp only [add_zero]
+  }
