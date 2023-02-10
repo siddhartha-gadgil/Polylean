@@ -508,7 +508,7 @@ end GroupRing
 -/
 set_option autoImplicit false
 
-
+/-- Product `R → G → R[G]`, `r ↦ g ↦ r ⬝ g`; used only in verification results -/
 instance groupRingMul {R G : Type _} [Ring R] [Group G] [DecidableEq G]
  : HMul R G (FreeModule R G) := ⟨fun r g ↦ ⟦[(r, g)]⟧⟩
 
@@ -525,6 +525,7 @@ def groupInclusionHom  (G : Type) [Group G] [DecidableEq G] : G →* R[G] :=
       simp [FormalSum.coords]
   }
 
+/-- As a function `groupInclusionHom` is `g ↦ 1 ⬝ g`-/
 theorem groupInclusionHom_formula (G : Type) [Group G] [DecidableEq G] :
   (groupInclusionHom (R := R) G).toFun = 
     fun g : G ↦ (1 : R) * g := rfl
@@ -564,6 +565,7 @@ def ringInclusionHom  (G : Type) [Group G] [DecidableEq G] : R →+* R[G] :=
       split <;> simp only [add_zero]
   }
 
+/-- As a function, `ringInclusionHom` is `r ↦ r ⬝ 1` -/
 theorem ringInclusionHom_formula (G : Type) [Group G] [DecidableEq G] :
   (ringInclusionHom (R := R) G).toFun = 
     fun r : R ↦ r * (1 : G) := rfl

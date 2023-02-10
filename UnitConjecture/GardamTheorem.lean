@@ -189,6 +189,7 @@ theorem trivialElem_trivial' {R G : Type _} [Ring R] [Group G] [DecidableEq G] (
 
 #check Quotient.inductionOn
 
+/-- Our definition of tiviality of `p : R[G]` coincides with the direct definition `p = a ⬝ g` with `a ≠ 0` -/
 theorem trivialElem_trivial {R G : Type _} [Ring R] [Group G] [DecidableEq G]: ∀  (p : FreeModule R G),  
     trivialElem  p  ↔  ∃ a: R, ∃ g : G, p = (a * g) ∧ (a ≠ 0) := by
   rw [groupRingMul]
