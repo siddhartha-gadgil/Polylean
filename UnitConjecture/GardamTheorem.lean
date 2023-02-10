@@ -20,6 +20,61 @@ section Preliminaries
 def trivialElem {R X : Type _} [Ring R] [DecidableEq X] (a : FreeModule R X) : Prop :=
   ∃! x : X, FreeModule.coordinates x a ≠ 0
 
+theorem trivialElem_trivial' {R G : Type _} [Ring R] [Group G] [DecidableEq G] (p : FormalSum R G) : 
+    trivialElem  ⟦p⟧  ↔  ∃ a: R, ∃ g : G, p ≈ [(a, g)] ∧ (a ≠ 0) := by
+  apply Iff.intro
+  · rw [trivialElem]
+    intro ⟨x, hyp⟩
+    simp at hyp
+    let hyp₁ := hyp.left
+    let hyp₂ := hyp.right
+    use FreeModule.coordinates x ⟦p⟧
+    use x
+    apply And.intro
+    · apply funext
+      intro x₁
+      simp [FreeModule.coordinates, FormalSum.coords, monomCoeff]
+      by_cases x = x₁
+      · simp [h]
+      · let hyp₃ := hyp₂ x₁ 
+        simp [h, FreeModule.coordinates, FormalSum.coords, monomCoeff] at hyp₃
+        let neqLem : ((x == x₁) = false) := 
+          by 
+            apply beq_false_of_ne
+            assumption
+        simp [neqLem]
+        by_cases FormalSum.coords p x₁ = 0
+        · assumption
+        · simp [h] at hyp₃
+          have := Eq.symm hyp₃    
+          contradiction 
+    · assumption
+  · intro ⟨a, g, hyp⟩
+    simp [trivialElem]
+    use g
+    apply And.intro
+    · intro h
+      simp [FreeModule.coordinates, FormalSum.coords, monomCoeff] at h
+      have : p.coords = FormalSum.coords [(a, g)] := hyp.left
+      rw [this] at h
+      simp [FreeModule.coordinates, FormalSum.coords, monomCoeff] at h
+      have := hyp.right
+      contradiction
+    · intro x
+      intro h
+      simp [FreeModule.coordinates, FormalSum.coords, monomCoeff] at h
+      have : p.coords = FormalSum.coords [(a, g)] := hyp.left
+      rw [this] at h
+      simp [FreeModule.coordinates, FormalSum.coords, monomCoeff] at h
+      by_cases c:x = g
+      · assumption
+      · have neq : (g == x) = false := by 
+          apply beq_false_of_ne
+          intro contra 
+          have := Eq.symm contra
+          contradiction
+        simp [neq] at h
+
 /-- The statement of Kaplansky's Unit Conjecture:
 The only units in a group ring, when the group is torsion-free and the ring is a field, are the trivial units. -/
 def UnitConjecture : Prop :=
