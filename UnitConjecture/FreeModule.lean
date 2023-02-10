@@ -131,25 +131,6 @@ theorem nonzero_coord_in_support  (s : FormalSum R X) : ∀ x : X, 0 ≠ s.coord
       apply List.elem_eq_true_of_mem
       exact step
 
-theorem monom_injection_elem (a : R)(non_zero: a ≠ 0) (x₀ x₁ : X) : coords [(a, x₀)] = coords [(a, x₁)] → x₀ = x₁ := by
-  intro hyp
-  have sup₀ : support [(a, x₀)] = [x₀] := by
-    rfl
-  have c₁ : coords [(a, x₁)] x₁ = a := by
-    simp [coords, monomCoeff]
-  rw [← c₁] at non_zero
-  symm at non_zero
-  rw [← hyp] at non_zero
-  let lem := nonzero_coord_in_support [(a, x₀)] x₁ non_zero
-  simp [support] at lem
-  apply Eq.symm
-  assumption
-
-theorem monom_injection_coeff (x : X) (a₀ a₁ : R) : coords [(a₀, x)] = coords [(a₁, x)] → a₀ = a₁ := by
-  intro hyp
-  let h₁ := congrFun hyp x
-  simp [coords, monomCoeff] at h₁
-  assumption
 /-!
 ### Equality of coordinates on a list
 
@@ -438,27 +419,6 @@ def coordinates (x₀ : X) : R[X] →  R := by
 
 end FreeModule
 end DecidableEqQuotFreeModule
-
-def coeffInclusion (x₀ : X) : R → R[X] := 
-  fun a₀ => ⟦[(a₀, x₀)]⟧
-
-theorem coeffInclusion_injective (x₀ : X)
- (a₀ a₁ : R) : coeffInclusion x₀ a₀ =
-                coeffInclusion x₀ a₁  →  a₀ = a₁ := by
-  intro hyp
-  simp [coeffInclusion] at hyp
-  exact monom_injection_coeff x₀ a₀ a₁ hyp
-
-def baseInclusion (a₀ : R) : X → R[X] := 
-  fun x₀ => ⟦[(a₀, x₀)]⟧
-
-theorem baseInclusion_injective (a₀ : R) (non_zero : a₀ ≠ 0)
- (x₀ x₁ : R) : baseInclusion  a₀ x₀ =
-                baseInclusion a₀ x₁  →  x₀ = x₁ := by
-  intro hyp
-  simp [baseInclusion] at hyp
-  exact monom_injection_elem a₀ non_zero x₀ x₁ hyp
-
 
 /-! 
 ## Module structure  
@@ -1090,6 +1050,69 @@ theorem func_eql_of_move_equiv  {β : Sort u} (f : FormalSum R X → β) : (∀ 
 end FormalSum
 end ElementaryMoves
 
+section Injectivity
+/-!
+## Injectivity of inclusions
+
+We show that, under appropriate hypotheses, two inclusions into Free Modules are injective. 
+
+* If `a : R` is nonzero, then `x : X ↦ ⟦[(a, x)]⟧` is injective.
+* If `x: X`, then `a : R ↦ ⟦[(a, x)]⟧` is injective.
+
+These are used in proving injectivity results for related functions on group rings, which act as a check on the correctness of the definitions.
+-/
+open FormalSum
+
+/-- For `a: R` and `a ≠ 0`,  injectivity of the the function `x: X ↦ [(a, x)]` up to equivalence  -/
+theorem monom_elem_eq_of_coord_eq_nonzero (a : R)(non_zero: a ≠ 0) (x₀ x₁ : X) : coords [(a, x₀)] = coords [(a, x₁)] → x₀ = x₁ := by
+  intro hyp
+  have sup₀ : support [(a, x₀)] = [x₀] := by
+    rfl
+  have c₁ : coords [(a, x₁)] x₁ = a := by
+    simp [coords, monomCoeff]
+  rw [← c₁] at non_zero
+  symm at non_zero
+  rw [← hyp] at non_zero
+  let lem := nonzero_coord_in_support [(a, x₀)] x₁ non_zero
+  simp [support] at lem
+  apply Eq.symm
+  assumption
+
+/-- For `x : X`, injectivity of the the function `a: R ↦ [(a, x)]` up to equivalence  -/
+theorem monom_coeff_eq_of_coord_eq (x : X) (a₀ a₁ : R) : coords [(a₀, x)] = coords [(a₁, x)] → a₀ = a₁ := by
+  intro hyp
+  let h₁ := congrFun hyp x
+  simp [coords, monomCoeff] at h₁
+  assumption
+
+
+/-- For `x: X`, the functions `a : R ↦ ⟦[(a, x)]⟧`-/
+def coeffInclusion (x₀ : X) : R → R[X] := 
+  fun a₀ => ⟦[(a₀, x₀)]⟧
+
+/-- Injectivity of `coeffInclusion` -/
+theorem coeffInclusion_injective (x₀ : X)
+ (a₀ a₁ : R) : coeffInclusion x₀ a₀ =
+                coeffInclusion x₀ a₁  →  a₀ = a₁ := by
+  intro hyp
+  simp [coeffInclusion] at hyp
+  exact monom_coeff_eq_of_coord_eq x₀ a₀ a₁ hyp
+
+/-- For `a: A`, the function `x: X ↦ ⟦[(a, x)]⟧`-/
+def baseInclusion (a₀ : R) : X → R[X] := 
+  fun x₀ => ⟦[(a₀, x₀)]⟧
+
+/-- Injectivity of `baseInclusion a` give `a ≠0`   -/
+theorem baseInclusion_injective (a₀ : R) (non_zero : a₀ ≠ 0)
+ (x₀ x₁ : R) : baseInclusion  a₀ x₀ =
+                baseInclusion a₀ x₁  →  x₀ = x₁ := by
+  intro hyp
+  simp [baseInclusion] at hyp
+  exact monom_elem_eq_of_coord_eq_nonzero a₀ non_zero x₀ x₁ hyp
+
+
+
+end Injectivity
 section NormRepr
 
 /-! 
