@@ -501,3 +501,16 @@ instance : Ring (R[G]) :=
   }
   
 end GroupRing
+
+def baseInclusionHom {G : Type _} [Group G] [DecidableEq G] : G →* R[G] :=
+  { toFun := baseInclusion 1, 
+    map_one' := rfl, 
+    map_mul' := 
+    by
+      intro _ _
+      show Quotient.mk _ _ = Quotient.mk _ _
+      apply Quotient.sound
+      funext x
+      simp [FormalSum.coords]
+  }
+
