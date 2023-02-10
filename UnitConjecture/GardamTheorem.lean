@@ -16,8 +16,8 @@ section Preliminaries
 
 /-! ### Preliminaries -/
 
-/-- The definition of an element of a free module being trivial, i.e., of the form `k•x` for `x : X` and `k ≠ 0`. -/
-def trivialElem {R X : Type _} [Ring R] [DecidableEq X] (a : FreeModule R X) : Prop :=
+/-- The definition of an element of a free module being trivial but not zero, i.e., of the form `k•x` for `x : X` and `k ≠ 0`. -/
+def trivialNonZeroElem {R X : Type _} [Ring R] [DecidableEq X] (a : FreeModule R X) : Prop :=
   ∃! x : X, FreeModule.coordinates x a ≠ 0
 
 /-- The statement of Kaplansky's Unit Conjecture:
@@ -25,7 +25,7 @@ The only units in a group ring, when the group is torsion-free and the ring is a
 def UnitConjecture : Prop :=
   ∀ {F : Type _} [Field F] [DecidableEq F] 
   {G : Type _} [Group G] [DecidableEq G] [TorsionFree G],
-    ∀ u : (F[G])ˣ, trivialElem (u : F[G])
+    ∀ u : (F[G])ˣ, trivialNonZeroElem (u : F[G])
 
 /-- The finite field on two elements. -/
 abbrev 𝔽₂ := Fin 2
@@ -100,7 +100,7 @@ namespace Gardam
 open P
 
 /-- A proof that the unit is non-trivial. -/
-theorem α_nonTrivial : ¬ (trivialElem α) := by
+theorem α_nonTrivial : ¬ (trivialNonZeroElem α) := by
     intro ⟨g, _, (eqg : ∀ y, α.coordinates y ≠ 0 → y = g)⟩
     have : z⁻¹ = g := by
       apply eqg; native_decide
@@ -116,7 +116,7 @@ theorem α_nonTrivial : ¬ (trivialElem α) := by
   The computational aspects of the group ring implementation and the Metabelian construction are used here. -/
 
 /-- A proof of the existence of a non-trivial unit in `𝔽₂[P]`. -/
-def Counterexample : {u : (𝔽₂[P])ˣ // ¬(trivialElem u.val)} := 
+def Counterexample : {u : (𝔽₂[P])ˣ // ¬(trivialNonZeroElem u.val)} := 
   ⟨⟨α, α', by native_decide, by native_decide⟩, α_nonTrivial⟩
 
 /-- Giles Gardam's result - Kaplansky's Unit Conjecture is false. -/
@@ -129,13 +129,13 @@ end Gardam
 end Verification
 
 /-!
-We check that our definition of triviality is correct by showing it equivalent to a more direct definition.
+We check that our definition of "trivial but not zero" is correct by showing it equivalent to a more direct definition.
 -/
 
-theorem trivialElem_trivial' {R G : Type _} [Ring R] [Group G] [DecidableEq G] (p : FormalSum R G) : 
-    trivialElem  ⟦p⟧  ↔  ∃ a: R, ∃ g : G, p ≈ [(a, g)] ∧ (a ≠ 0) := by
+theorem trivialNonZeroElem_trivial_nonzeroAux {R G : Type _} [Ring R] [Group G] [DecidableEq G] (p : FormalSum R G) : 
+    trivialNonZeroElem  ⟦p⟧  ↔  ∃ a: R, ∃ g : G, p ≈ [(a, g)] ∧ (a ≠ 0) := by
   apply Iff.intro
-  · rw [trivialElem]
+  · rw [trivialNonZeroElem]
     intro ⟨x, hyp⟩
     simp at hyp
     let hyp₁ := hyp.left
@@ -162,7 +162,7 @@ theorem trivialElem_trivial' {R G : Type _} [Ring R] [Group G] [DecidableEq G] (
           contradiction 
     · assumption
   · intro ⟨a, g, hyp⟩
-    simp [trivialElem]
+    simp [trivialNonZeroElem]
     use g
     apply And.intro
     · intro h
@@ -190,11 +190,10 @@ theorem trivialElem_trivial' {R G : Type _} [Ring R] [Group G] [DecidableEq G] (
 #check Quotient.inductionOn
 
 /-- Our definition of tiviality of `p : R[G]` coincides with the direct definition `p = a ⬝ g` with `a ≠ 0` -/
-theorem trivialElem_trivial {R G : Type _} [Ring R] [Group G] [DecidableEq G]: ∀  (p : FreeModule R G),  
-    trivialElem  p  ↔  ∃ a: R, ∃ g : G, p = (a * g) ∧ (a ≠ 0) := by
+theorem trivialNonZeroElem_trivial_nonzero {R G : Type _} [Ring R] [Group G] [DecidableEq G]: ∀  (p : FreeModule R G),  
+    trivialNonZeroElem  p  ↔  ∃ a: R, ∃ g : G, p = (a * g) ∧ (a ≠ 0) := by
   rw [groupRingMul]
   apply Quotient.ind
   simp [Quotient.exact]
   intro p
-  let lem := trivialElem_trivial' p
-  simp [lem]
+  simp [trivialNonZeroElem_trivial_nonzeroAux p]
