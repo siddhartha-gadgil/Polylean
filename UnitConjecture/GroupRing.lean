@@ -1,4 +1,5 @@
 import UnitConjecture.FreeModule
+import Mathlib.Algebra.Field.Basic
 
 /-!
 # Group Rings
@@ -502,7 +503,9 @@ instance : Ring (R[G]) :=
   
 end GroupRing
 
-def baseInclusionHom {G : Type _} [Group G] [DecidableEq G] : G →* R[G] :=
+set_option autoImplicit false
+
+def baseInclusionHom  (G : Type) [Group G] [DecidableEq G] : G →* R[G] :=
   { toFun := baseInclusion 1, 
     map_one' := rfl, 
     map_mul' := 
@@ -514,3 +517,12 @@ def baseInclusionHom {G : Type _} [Group G] [DecidableEq G] : G →* R[G] :=
       simp [FormalSum.coords]
   }
 
+def baseInclusionHom_injective'  (G : Type) [Group G][DecidableEq G] (hR : (1 : R) ≠ (0 : R)) : Function.Injective (baseInclusionHom (R := R) G) := by
+  intro _ _ 
+  apply baseInclusion_injective (1 : R) hR (X := G)
+
+def baseInclusionHom_injective {F : Type} [Field F] [DecidableEq F] (G : Type) [Group G][DecidableEq G] : Function.Injective (baseInclusionHom (R := F) G) := by
+  intro _ _ 
+  apply baseInclusionHom_injective'
+  have : (0 : F) ≠ (1 : F) := zero_ne_one
+  simp_all only [ne_eq, zero_ne_one, not_false_iff, one_ne_zero]

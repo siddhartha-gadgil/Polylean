@@ -1104,7 +1104,7 @@ def baseInclusion (a₀ : R) : X → R[X] :=
 
 /-- Injectivity of `baseInclusion a` give `a ≠0`   -/
 theorem baseInclusion_injective (a₀ : R) (non_zero : a₀ ≠ 0)
- (x₀ x₁ : R) : baseInclusion  a₀ x₀ =
+ (x₀ x₁ : X) : baseInclusion  a₀ x₀ =
                 baseInclusion a₀ x₁  →  x₀ = x₁ := by
   intro hyp
   simp [baseInclusion] at hyp
