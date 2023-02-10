@@ -508,6 +508,11 @@ end GroupRing
 -/
 set_option autoImplicit false
 
+
+instance groupRingMul {R G : Type _} [Ring R] [Group G] [DecidableEq G]
+ : HMul R G (FreeModule R G) := ⟨fun r g ↦ ⟦[(r, g)]⟧⟩
+
+
 /-- Monoid homomorphism from `G` to `R[G]` given by `g ↦ 1 ⬝ g` -/
 def groupInclusionHom  (G : Type) [Group G] [DecidableEq G] : G →* R[G] :=
   { toFun := baseInclusion 1, 
@@ -519,6 +524,10 @@ def groupInclusionHom  (G : Type) [Group G] [DecidableEq G] : G →* R[G] :=
       funext x
       simp [FormalSum.coords]
   }
+
+theorem groupInclusionHom_formula (G : Type) [Group G] [DecidableEq G] :
+  (groupInclusionHom (R := R) G).toFun = 
+    fun g : G ↦ (1 : R) * g := rfl
 
 /-- The monoid homomorphism `G → R[G]`, `g ↦ 1 ⬝ g` is injective if `1 ≠ 0` in `R`  -/
 theorem groupInclusionHom_injective'   (hR : (1 : R) ≠ (0 : R)) : Function.Injective (groupInclusionHom (R := R) G) := by
@@ -554,6 +563,10 @@ def ringInclusionHom  (G : Type) [Group G] [DecidableEq G] : R →+* R[G] :=
       simp only [FormalSum.coords, monomCoeff]
       split <;> simp only [add_zero]
   }
+
+theorem ringInclusionHom_formula (G : Type) [Group G] [DecidableEq G] :
+  (ringInclusionHom (R := R) G).toFun = 
+    fun r : R ↦ r * (1 : G) := rfl
 
 /-- The ring homomorphism `R → R[G]` given by `a ↦  a ⬝ 1` is injective -/
 theorem ringInclusionHom_injective'  
