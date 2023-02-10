@@ -503,9 +503,13 @@ instance : Ring (R[G]) :=
   
 end GroupRing
 
+/-!
+## Inclusions of the group and ring into the group ring
+-/
 set_option autoImplicit false
 
-def baseInclusionHom  (G : Type) [Group G] [DecidableEq G] : G →* R[G] :=
+/-- Monoid homomorphism from `G` to `R[G]` given by `g ↦ 1 ⬝ g` -/
+def groupInclusionHom  (G : Type) [Group G] [DecidableEq G] : G →* R[G] :=
   { toFun := baseInclusion 1, 
     map_one' := rfl, 
     map_mul' := 
@@ -516,17 +520,20 @@ def baseInclusionHom  (G : Type) [Group G] [DecidableEq G] : G →* R[G] :=
       simp [FormalSum.coords]
   }
 
-theorem baseInclusionHom_injective'  (G : Type) [Group G] [DecidableEq G] (hR : (1 : R) ≠ (0 : R)) : Function.Injective (baseInclusionHom (R := R) G) := by
+/-- The monoid homomorphism `G → R[G]`, `g ↦ 1 ⬝ g` is injective if `1 ≠ 0` in `R`  -/
+theorem groupInclusionHom_injective'   (hR : (1 : R) ≠ (0 : R)) : Function.Injective (groupInclusionHom (R := R) G) := by
   intro _ _ 
   apply baseInclusion_injective (1 : R) hR (X := G)
 
-theorem baseInclusionHom_injective {F : Type} [Field F] [DecidableEq F] (G : Type) [Group G][DecidableEq G] : Function.Injective (baseInclusionHom (R := F) G) := by
+/-- For a field `F` the monoid homomorphism `G → F[G]`, `g ↦ 1 ⬝ g` is injective. -/
+theorem groupInclusionHom_injective {F : Type} [Field F] [DecidableEq F] (G : Type) [Group G][DecidableEq G] : Function.Injective (groupInclusionHom (R := F) G) := by
   intro _ _ 
-  apply baseInclusionHom_injective'
+  apply groupInclusionHom_injective'
   have : (0 : F) ≠ (1 : F) := zero_ne_one
   simp_all only [ne_eq, zero_ne_one, not_false_iff, one_ne_zero]
 
-def coeffInclusionHom  (G : Type) [Group G] [DecidableEq G] : R →+* R[G] :=
+/-- The ring homomorphism `R → R[G]` given by `a ↦  a ⬝ 1`-/
+def ringInclusionHom  (G : Type) [Group G] [DecidableEq G] : R →+* R[G] :=
   { toFun := coeffInclusion 1, 
     map_one' := rfl, 
     map_mul' := 
@@ -547,3 +554,9 @@ def coeffInclusionHom  (G : Type) [Group G] [DecidableEq G] : R →+* R[G] :=
       simp only [FormalSum.coords, monomCoeff]
       split <;> simp only [add_zero]
   }
+
+/-- The ring homomorphism `R → R[G]` given by `a ↦  a ⬝ 1` is injective -/
+theorem ringInclusionHom_injective'  
+  (G : Type) [Group G] [DecidableEq G] : Function.Injective (ringInclusionHom (R := R) G) := by 
+  intro _ _
+  apply coeffInclusion_injective
