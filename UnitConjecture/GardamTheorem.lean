@@ -189,8 +189,12 @@ theorem trivialElem_trivial' {R G : Type _} [Ring R] [Group G] [DecidableEq G] (
 
 #check Quotient.inductionOn
 
+instance groupRingMul {R G : Type _} [Ring R] [Group G] [DecidableEq G]
+ : HMul R G (FreeModule R G) := ⟨fun r g ↦ ⟦[(r, g)]⟧⟩
+
 theorem trivialElem_trivial {R G : Type _} [Ring R] [Group G] [DecidableEq G]: ∀  (p : FreeModule R G),  
-    trivialElem  p  ↔  ∃ a: R, ∃ g : G, p = ⟦ [(a, g)] ⟧ ∧ (a ≠ 0) := by
+    trivialElem  p  ↔  ∃ a: R, ∃ g : G, p = (a * g) ∧ (a ≠ 0) := by
+  rw [groupRingMul]
   apply Quotient.ind
   simp [Quotient.exact]
   intro p
