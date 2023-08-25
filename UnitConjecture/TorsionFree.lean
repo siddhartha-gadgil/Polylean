@@ -66,6 +66,8 @@ theorem sq_square : ∀ g : P, g * g = (P.sq g, .e)
   | ((p, q, r), x) =>
     match x with 
     | .e | .a | .b | .c => by
+      aesop (rule_sets [P]) (options := { warnOnNonterminal := false })
+      rw [P.mul]
       aesop (rule_sets [P])
 
 /-! ### **Step 2:** Proving that `K` (= `ℤ³`) is torsion-free. -/ 
@@ -80,7 +82,7 @@ namespace Int
 /-! Some basic lemmas about integers needed to prove facts about `P`. -/
 
 lemma add_twice_eq_mul_two {a : ℤ} : a + a = a * 2 := by
-  rw [show 2 = 1 + 1 by rfl, mul_add, mul_one]
+  rw [show (2 : ℤ) = 1 + 1 by rfl, mul_add, mul_one]
 
 attribute [local simp] add_twice_eq_mul_two
 
@@ -99,8 +101,19 @@ end Int
 theorem square_free : ∀ {g : P}, g * g = (1 : P) → g = (1 : P)
   | ((p, q, r), x) => by
     match x with
-    | .e => aesop (rule_sets [P]) (add norm [Int.zero_of_twice_zero])
-    | .a | .b | .c => aesop (rule_sets [P]) (add norm [Int.odd_ne_zero])
+    | .e =>
+      intro h 
+      aesop (rule_sets [P]) (add norm [Int.zero_of_twice_zero]) (options := { warnOnNonterminal := false })
+      rw [Prod.mk.injEq] at h
+      rw [Prod.mk.injEq] at h
+      rw [Prod.mk.injEq] at h
+      aesop (rule_sets [P]) (add norm [Int.zero_of_twice_zero])
+    | .a | .b | .c => 
+      intro h
+      aesop (rule_sets [P]) (add norm [Int.odd_ne_zero]) (options := { warnOnNonterminal := false })
+      all_goals (rw [Prod.mk.injEq] at h; rw [Prod.mk.injEq] at h; rw [Prod.mk.injEq] at h)
+      aesop (rule_sets [P]) (add norm [Int.odd_ne_zero])
+
 
 /-! ### **Step 4:** Showing that if the `n`-th power of a group element is trivial, then so is that of its square. -/
 
