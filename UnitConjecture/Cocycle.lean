@@ -1,6 +1,6 @@
 import Mathlib.Algebra.Group.Defs
 import Mathlib.GroupTheory.GroupAction.Defs
-import Aesop
+import UnitConjecture.Tactics.AesopRuleSets
 
 /-!
 ## Cocycles and Group actions by automorphisms
@@ -28,19 +28,21 @@ class AutAction {A B : Type _} [AddGroup A] [AddGroup B] (α : A → (B →+ B))
 
 namespace AutAction
 
+attribute [aesop norm (rule_sets [AutAction])] id_action compatibility
+
 variable {A B : Type _} [AddGroup A] [AddGroup B] (α : A → (B →+ B)) [AutAction α]
 
-declare_aesop_rule_sets [AutAction]
-
-attribute [aesop norm (rule_sets [AutAction])] id_action
-attribute [aesop norm (rule_sets [AutAction])] compatibility
-
+set_option synthInstance.checkSynthOrder false in -- HACK
 /-- An action by automorphisms of additive groups is an additive group action. -/
 instance toAddAction : AddAction A B where
-  vadd := fun a b => α a b
-  zero_vadd := by aesop (rule_sets [AutAction]) (add norm unfold [HVAdd.hVAdd])
-  add_vadd  := by aesop (rule_sets [AutAction]) (add norm unfold [HVAdd.hVAdd])
-
+  vadd := (α ·)
+  zero_vadd p := by
+    show α _ _ = _
+    aesop (rule_sets [AutAction])
+  add_vadd g₁ g₂ p := by
+    show α (_ + _) _ = α _ (α _ _)
+    aesop (rule_sets [AutAction])
+    
 /-!
 Some easy consequences of the definition of an action by automorphisms.
 -/
@@ -91,8 +93,6 @@ namespace Cocycle
 /-!
 A few deductions from the cocycle condition.
 -/
-
-declare_aesop_rule_sets [Cocycle]
 
 variable {Q K : Type _} [AddGroup Q] [AddGroup K]
 variable (c : Q → Q → K) [ccl : Cocycle c]
