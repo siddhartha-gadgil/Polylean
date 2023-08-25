@@ -51,6 +51,7 @@ instance ℤFree : AddFreeGroup ℤ Unit where
     rwa [← zmultiplesHom_symm_apply, ← zmultiplesHom_symm_apply, Equiv.apply_eq_iff_eq] at hyp'
 
 
+set_option synthInstance.checkSynthOrder false -- HACK
 open EnumDecide in
 /-- Equality of homomorphisms from a free group on an exhaustively searchable basis is decidable. -/
 @[instance] def decideHomsEqual {F : Type _} [AddCommGroup F] {X : Type _} [DecideForall X] [fgp : AddFreeGroup F X] 
