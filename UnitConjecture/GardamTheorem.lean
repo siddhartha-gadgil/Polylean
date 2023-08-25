@@ -1,4 +1,5 @@
 import Mathlib.Algebra.Field.Basic
+import Mathlib.Data.ZMod.Defs
 import UnitConjecture.TorsionFree
 import UnitConjecture.GroupRing
 
@@ -34,8 +35,8 @@ instance : Field 𝔽₂ where
   inv := id
   exists_pair_ne := ⟨0, 1, by decide⟩
   mul_inv_cancel := fun
-        | 0, h => by contradiction
-        | 1, _ => rfl
+    | 0 => by intro; contradiction
+    | 1 => by intro; rfl
   inv_zero := rfl
   div_eq_mul_inv := by decide
 
