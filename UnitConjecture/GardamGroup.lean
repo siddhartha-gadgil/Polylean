@@ -14,8 +14,6 @@ Section 3.1 of Giles Gardam's paper (https://arxiv.org/abs/2102.11818).
 
 section Components
 
-declare_aesop_rule_sets [P]
-
 /-! 
 ### The components of the group `P`
 The group `P` is constructed as a Metabelian group with kernel `K := ℤ³` and quotient `Q := ℤ/2 × ℤ/2`. 
@@ -69,17 +67,17 @@ namespace Q
 /-! The elements of the Klein Four group `Q`. -/
 
 /-- The identity element of `Q`. -/
-@[aesop norm unfold (rule_sets [P]), match_pattern]
-abbrev e : Q := (⟨0, by decide⟩, ⟨0, by decide⟩)
+@[match_pattern]
+def e : Q := (⟨0, by decide⟩, ⟨0, by decide⟩)
 /-- The first generator of `Q`. -/
-@[aesop norm unfold (rule_sets [P]), match_pattern]
-abbrev a : Q := (⟨1, by decide⟩, ⟨0, by decide⟩)
+@[match_pattern]
+def a : Q := (⟨1, by decide⟩, ⟨0, by decide⟩)
 /-- The second generator of `Q`. -/
-@[aesop norm unfold (rule_sets [P]), match_pattern]
-abbrev b : Q := (⟨0, by decide⟩, ⟨1, by decide⟩)
+@[match_pattern]
+def b : Q := (⟨0, by decide⟩, ⟨1, by decide⟩)
 /-- The product of the first two generators of `Q`. -/
-@[aesop safe (rule_sets [P]), match_pattern]
-abbrev c : Q := (⟨1, by decide⟩, ⟨1, by decide⟩)
+@[match_pattern]
+def c : Q := (⟨1, by decide⟩, ⟨1, by decide⟩)
 
 end Q
 
