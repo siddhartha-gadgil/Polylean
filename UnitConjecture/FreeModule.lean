@@ -541,7 +541,6 @@ theorem act_sum (a b : R) (s : FormalSum R X) : (s.scmul a) ++ (s.scmul b) ≈  
     simp [scmul, coords, right_distrib, monom_coords_hom]
     rw [← append_coords] at il₁ 
     rw [← il₁]
-    simp
     conv =>
       lhs
       rw [add_assoc]
@@ -877,7 +876,6 @@ theorem equiv_e_of_zero_coeffs  (s : FormalSum R X) (hyp : ∀ x : X, s.coords x
         rw [zero_add] at hyp₀
         have tail_coeffs : ∀ x : X, coords t x = 0 := by
           intro x
-          simp [coords]
           exact
             if c : (x₀ = x) then by
               rw [← c]
@@ -909,7 +907,6 @@ theorem equiv_e_of_zero_coeffs  (s : FormalSum R X) (hyp : ∀ x : X, s.coords x
         let ⟨ys, eqnStep, lIneqStep⟩ := nonzero_coeff_has_complement x₀ t non_zero
         have tail_coeffs : ∀ x : X, coords ys x = 0 := by
           intro x
-          simp [coords]
           exact
             if c : (x₀ = x) then by
               rw [← c]
@@ -1122,7 +1119,6 @@ An instance of `Repr` on Free Modules, mainly for debugging (fairly crude). This
 -/
 
 theorem fst_le_max (a b : Nat): a ≤ max a b  := by
-    simp [max]
     exact if c:a ≤ b 
           then by
               unfold max
@@ -1138,7 +1134,6 @@ theorem fst_le_max (a b : Nat): a ≤ max a b  := by
 
             
 theorem snd_le_max (a b : Nat): b ≤ max a b  := by
-    simp [max]
     exact if c: a ≤ b
     then by
       unfold max
@@ -1156,7 +1151,6 @@ theorem snd_le_max (a b : Nat): b ≤ max a b  := by
       
 
 theorem eq_fst_or_snd_of_max (a b : Nat) : (max a b = a) ∨ (max a b = b) := by
-      simp [max]
       exact if c: a ≤ b 
         then by
           unfold max
@@ -1228,8 +1222,7 @@ theorem supp_below_max(norm: X → Nat)(crds : X → R)(s: List X) : (x: X) → 
 theorem supp_zero_of_max_zero(norm: X → Nat)(crds : X → R)(s: List X) : maxNormSuccOnSupp norm crds s = 0 → 
     (x: X) → x ∈ s →  crds x = 0 := fun hyp x hm =>
       if c:crds x = 0 then c 
-      else by 
-        simp
+      else by
         let l := supp_below_max norm crds s x hm c 
         rw [hyp] at l
         contradiction
@@ -1262,7 +1255,6 @@ theorem normsucc_le(norm : X → Nat)(s₁ s₂: FormalSum R X)(eql : s₁ ≈ s
           contradiction
         let in_supp := nonzero_coord_in_support s₂ x₀ nonzr
         rw [p.right]
-        simp
         apply supp_below_max norm s₂.coords s₂.support x₀ in_supp nonzr'
 
 theorem norm_succ_eq(norm : X → Nat)(s₁ s₂: FormalSum R X)(eql : s₁ ≈ s₂):
