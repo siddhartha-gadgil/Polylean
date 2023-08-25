@@ -1,6 +1,7 @@
 import Mathlib.Algebra.Hom.Group
 import Mathlib.GroupTheory.Submonoid.Operations
 import UnitConjecture.Cocycle
+import UnitConjecture.Tactics.AesopRuleSets
 
 /-!
 
@@ -20,8 +21,6 @@ namespace MetabelianGroup
 
 variable {Q K : Type _} [AddGroup Q] [AddCommGroup K]
 variable (c : Q → Q → K) [ccl : Cocycle c]
-
-declare_aesop_rule_sets [Metabelian]
 
 /-- The multiplication operation defined using the cocycle.
 The cocycle condition is crucially used in showing associativity and other properties. -/
@@ -72,6 +71,7 @@ theorem mul_assoc : ∀ (g g' g'' : K × Q), mul c (mul c g g') g'' =  mul c g (
       exact ccl.cocycle_condition q q' q''
     · apply add_assoc
 
+set_option synthInstance.checkSynthOrder false in -- HACK
 /-- A group structure on `K × Q` using the above multiplication operation. -/
 instance metabelianGroup : Group (K × Q) :=
   {
@@ -125,7 +125,9 @@ def Quotient.projection : K × Q →* (Multiplicative Q) :=
 
 /-- A proof that the projection map is surjective. -/
 theorem Quotient.projection_surj : Function.Surjective (Quotient.projection c) := by
-  intro q; use ⟨(0 : K), q⟩
+  intro q
+  use ⟨(0 : K), q⟩
+  aesop
 
 /-- A proof that the image of the first map is the kernel of the second map. -/
 theorem exact_seq : MonoidHom.mrange (Kernel.inclusion c) = MonoidHom.mker (Quotient.projection c) := by
