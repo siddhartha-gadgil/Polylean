@@ -90,7 +90,6 @@ theorem mul_monom_assoc(b : R)(h x₀ : G)(s₁ s₂: FormalSum R G): coords (mu
       let (a, x) := head
       simp [mulMonom, coords, mul]
       rw [← append_coords]
-      simp
       rw [mul_monom_dist]
       rw [ih]
       simp [add_assoc, mulMonom]
@@ -166,7 +165,6 @@ def mulAux : FormalSum R G → R[G] → R[G] := by
     apply funext; intro x₀
     simp [mul]
     repeat (rw [← append_coords])
-    simp
     simp [mul_monom_add, add_assoc]    
   | cons a x s₁ s₂ _ step =>
     apply funext ; intro x₀
@@ -224,7 +222,6 @@ theorem first_arg_invariant (s₁ s₂ t : FormalSum R G) (rel : ElementaryMove 
         simp [mul, mulMonom]
         apply funext; intro x₀
         rw [← append_coords]
-        simp
         simp [coords, monom_coords_at_zero]
         rw [← append_coords]
         simp  
@@ -271,7 +268,6 @@ theorem first_arg_invariant (s₁ s₂ t : FormalSum R G) (rel : ElementaryMove 
         apply funext; intro x₀
         rw [← append_coords]
         rw [← append_coords]
-        simp
         rw [mulMonom]
         rw [mulMonom]
         rw [coords]
@@ -280,7 +276,6 @@ theorem first_arg_invariant (s₁ s₂ t : FormalSum R G) (rel : ElementaryMove 
         rw [mulMonom]
         rw [coords]
         rw [coords]
-        simp
         let rel' : ElementaryMove R G 
           ((a₁, x₁) :: (a₂, x₂) :: tail)
             ((a₂, x₂) :: (a₁, x₁) :: tail) := by 
@@ -401,11 +396,9 @@ instance : Ring (R[G]) :=
           simp [FormalSum.mul, mulMonom]
           funext x₀
           repeat (rw [← append_coords])
-          simp
           let lih := congrFun ih x₀
           rw [← append_coords] at lih
           rw [lih]
-          simp only [add_assoc]
           rw [mul_monom_dist]
           simp only [add_assoc, add_left_comm, add_left_cancel_iff]
     zero_mul := by
@@ -457,10 +450,8 @@ instance : Ring (R[G]) :=
       intro y z
       apply Quotient.sound
       apply funext; intro x₀
-      simp [coords]
       induction z with
-      | nil => 
-          simp
+      | nil =>
           simp [FormalSum.mul]
       | cons h t ih => 
           let (a, h) := h
@@ -495,7 +486,6 @@ instance : Ring (R[G]) :=
       | cons h t ih => 
         let (a, x) := h
         repeat (rw [coords])
-        simp
         rw [FormalSum.mul]
         rw [← append_coords]
         simp [ih, mulMonom, coords]      
