@@ -8,15 +8,6 @@ package Polylean {
 @[default_target]
 lean_lib UnitConjecture
 
-lean_lib ConjInvLength
-
-lean_lib Complexes
-
-lean_lib Experiments
-
-@[default_target]
-lean_exe polymath
-
 require mathlib from git
   "https://github.com/leanprover-community/mathlib4.git"@"master"
 
