@@ -105,21 +105,21 @@ instance : AutAction ccl.α := ccl.autAct
 @[aesop norm (rule_sets [Cocycle])]
 lemma left_id {q : Q} : c 0 q = (0 : K) := by
   have := ccl.cocycle_condition 0 0 q
-  aesop (rule_sets [Cocycle])
+  simp_all only [cocycle_zero, add_zero, zero_add, zero_vadd, self_eq_add_right]
 
 @[aesop norm (rule_sets [Cocycle])]
 lemma right_id {q : Q} : c q 0 = (0 : K) := by
   have := ccl.cocycle_condition q 0 0
-  aesop (rule_sets [AutAction, Cocycle])
+  simp_all only [add_zero, cocycle_zero, AutAction.vadd_eq, map_zero, zero_add, add_right_eq_self]
 
 @[aesop unsafe (rule_sets [Cocycle])]
 lemma inv_rel (q : Q) : c q (-q) = q +ᵥ (c (-q) q) := by
   have := ccl.cocycle_condition q (-q) q
-  aesop (rule_sets [AutAction, Cocycle])
+  simp_all only [add_right_neg, left_id, add_zero, AutAction.vadd_eq, add_left_neg, right_id]
 
 @[aesop unsafe (rule_sets [Cocycle])]
 lemma inv_rel' (q : Q) : c (-q) q = (-q) +ᵥ (c q (-q)) := by
   have := inv_rel c (-q)
-  aesop
+  simp_all only [neg_neg]
 
 end Cocycle
