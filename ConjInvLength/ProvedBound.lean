@@ -90,7 +90,7 @@ def ProvedBound.prepend{w : Word} (x: Letter)
 
 -- `l(e) ≤ 0`
 def ProvedBound.emptyWord: ProvedBound [] :=
-  ⟨0, fun l emp _ _ _ => by rw [emp]; apply Nat.zero_le⟩
+  ⟨0, fun l emp _ _ _ => by rw [emp]⟩
 
 -- the best proved bound for a word
 def ProvedBound.min {w: Word}: ProvedBound w → List (ProvedBound w) → 
@@ -130,20 +130,20 @@ def provedBound : (w: Word) → ProvedBound w := fun w =>
   match h:w with
   | [] => ProvedBound.emptyWord
   | x :: ys =>
-    have _ : (List.length ys) < List.length (x :: ys) := by
+    have lb : (List.length ys) < List.length (x :: ys) := by
       simp [List.length_cons, Nat.le_refl]
     let head := ProvedBound.prepend x (provedBound ys)
     let splits := provedSplits x⁻¹  ys
-    have _:  w.length = ys.length + 1 := by
+    have wl:  w.length = ys.length + 1 := by
       rw[h] 
       rfl
     let tail := splits.map (fun ps => 
-      have _ : ps.fst.length + 1 ≤ ys.length + 1 := 
+      have l1 : ps.fst.length + 1 ≤ ys.length + 1 := 
         by
         have lm := splitFirst ps
         apply Nat.le_trans lm
         apply Nat.le_succ        
-      have _ : ps.snd.length + 1 ≤ ys.length + 1 :=
+      have l2 : ps.snd.length + 1 ≤ ys.length + 1 :=
         by
         have lm := splitSecond ps
         apply Nat.le_trans lm
