@@ -2,7 +2,7 @@ import Lake
 open Lake DSL
 
 package Polylean {
-  precompileModules := true
+  -- precompileModules := true
 }
 
 @[default_target]

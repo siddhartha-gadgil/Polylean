@@ -1,5 +1,4 @@
-import Mathlib.Algebra.Group.Defs
-import Mathlib.GroupTheory.GroupAction.Defs
+import Mathlib
 import UnitConjecture.Tactics.AesopRuleSets
 
 /-!
@@ -38,10 +37,10 @@ instance toAddAction : AddAction A B where
   vadd := (α ·)
   zero_vadd p := by
     show α _ _ = _
-    aesop (rule_sets [AutAction])
+    simp_all only [id_action, AddMonoidHom.id_apply]
   add_vadd g₁ g₂ p := by
     show α (_ + _) _ = α _ (α _ _)
-    aesop (rule_sets [AutAction])
+    simp_all only [compatibility, AddMonoidHom.coe_comp, Function.comp_apply]
     
 /-!
 Some easy consequences of the definition of an action by automorphisms.
@@ -105,12 +104,16 @@ instance : AutAction ccl.α := ccl.autAct
 @[aesop norm (rule_sets [Cocycle])]
 lemma left_id {q : Q} : c 0 q = (0 : K) := by
   have := ccl.cocycle_condition 0 0 q
-  simp_all only [cocycle_zero, add_zero, zero_add, zero_vadd, self_eq_add_right]
+  rw [add_zero, zero_add, ccl.cocycle_zero, zero_add, zero_vadd] at this
+  simp at this
+  assumption
 
 @[aesop norm (rule_sets [Cocycle])]
 lemma right_id {q : Q} : c q 0 = (0 : K) := by
   have := ccl.cocycle_condition q 0 0
-  simp_all only [add_zero, cocycle_zero, AutAction.vadd_eq, map_zero, zero_add, add_right_eq_self]
+  rw [add_zero, zero_add, ccl.cocycle_zero] at this
+  simp at this
+  rw [this, AutAction.vadd_zero]
 
 @[aesop unsafe (rule_sets [Cocycle])]
 lemma inv_rel (q : Q) : c q (-q) = q +ᵥ (c (-q) q) := by
