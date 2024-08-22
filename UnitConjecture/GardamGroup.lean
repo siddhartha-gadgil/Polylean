@@ -1,4 +1,3 @@
-import Mathlib.Data.Fin.Basic
 import Mathlib
 import UnitConjecture.MetabelianGroup
 import UnitConjecture.AddFreeGroup
@@ -8,21 +7,21 @@ import UnitConjecture.AddFreeGroup
 
 We construct the group `P` (the *Promislow* or *Hantzsche–Wendt* group) as a Metabelian group.
 
-This is done via the cocycle construction, using the explicit action and cocycle described in 
+This is done via the cocycle construction, using the explicit action and cocycle described in
 Section 3.1 of Giles Gardam's paper (https://arxiv.org/abs/2102.11818).
 -/
 
 section Components
 
-/-! 
+/-!
 ### The components of the group `P`
-The group `P` is constructed as a Metabelian group with kernel `K := ℤ³` and quotient `Q := ℤ/2 × ℤ/2`. 
+The group `P` is constructed as a Metabelian group with kernel `K := ℤ³` and quotient `Q := ℤ/2 × ℤ/2`.
 -/
 
 /-! The *kernel* group -/
 
 /-- The *kernel* group - `ℤ³`, the free Abelian group on three generators. -/
-@[aesop safe (rule_sets [P])]
+@[aesop safe (rule_sets := [P])]
 abbrev K := ℤ × ℤ × ℤ
 
 instance KGrp : AddCommGroup K := inferInstance
@@ -34,7 +33,7 @@ instance : DecidableEq (K →+ K) := decideHomsEqual (X := Unit ⊕ Unit ⊕ Uni
 /-! The *quotient* group -/
 
 /-- The *quotient* group - `ℤ/2 × ℤ/2`, the Klein Four group. -/
-@[aesop safe (rule_sets [P])]
+@[aesop safe (rule_sets := [P])]
 abbrev Q := Fin 2 × Fin 2
 
 instance QGrp : AddCommGroup Q := inferInstance
@@ -50,13 +49,13 @@ namespace K
 /-! The generators of the free Abelian group `K`. -/
 
 /-- The first generator of `K`. -/
-@[aesop norm unfold (rule_sets [P])]
+@[aesop norm unfold (rule_sets := [P])]
 abbrev x : K := (1, 0, 0)
 /-- The second generator of `K`. -/
-@[aesop norm unfold (rule_sets [P])]
+@[aesop norm unfold (rule_sets := [P])]
 abbrev y : K := (0, 1, 0)
 /-- The third generator of `K`. -/
-@[aesop norm unfold (rule_sets [P])]
+@[aesop norm unfold (rule_sets := [P])]
 abbrev z : K := (0, 0, 1)
 
 end K
@@ -89,23 +88,23 @@ end Components
 
 section Action
 
-/-! 
-### The action of `Q` on `K` by automorphisms  
-The action of the group `Q` on the kernel `K` by automorphisms required for constructing `P`. 
+/-!
+### The action of `Q` on `K` by automorphisms
+The action of the group `Q` on the kernel `K` by automorphisms required for constructing `P`.
 -/
 
 /-- An abbreviation for the negation homomorphism on commutative groups. -/
-@[aesop norm unfold (rule_sets [P])]
+@[aesop norm unfold (rule_sets := [P])]
 abbrev neg (α : Type _) [SubtractionCommMonoid α] := negAddMonoidHom (α := α)
 
-attribute [aesop norm unfold (rule_sets [P])] negAddMonoidHom
+attribute [aesop norm unfold (rule_sets := [P])] negAddMonoidHom
 
 /-- A temporary notation for easily describing products of additive monoid homomorphisms. -/
 local infixr:100 " × " => AddMonoidHom.prodMap
 
 /-- The action of `Q` on `K` by automorphisms.
 The action can be given a component-wise description in terms of `id` and `neg`, the identity and negation homomorphisms. -/
-@[aesop norm unfold (rule_sets [P]), reducible] 
+@[aesop norm unfold (rule_sets := [P]), reducible]
 def action : Q → (K →+ K)
   | .e =>  .id ℤ  ×  .id ℤ  ×  .id ℤ
   | .a =>  .id ℤ  ×  neg ℤ  ×  neg ℤ
@@ -127,7 +126,7 @@ section Cocycle
 
 open K Q in
 /-- The cocycle in the construction of `P`. -/
-@[aesop norm unfold (rule_sets [P]), reducible]
+@[aesop norm unfold (rule_sets := [P]), reducible]
 def cocycle : Q → Q → K
   | a , a  => x
   | a , c  => x
@@ -152,32 +151,35 @@ end Cocycle
 
 section MetabelianGroup
 
-/-! 
+/-!
 ### The construction of `P`
 The construction of the group `P` as a Metabelian group from the given action and cocycle.
 -/
 
 /-- the group `P` constructed via the cocycle construction -/
-@[aesop norm unfold (rule_sets [P])]
+@[aesop norm unfold (rule_sets := [P])]
 def P := K × Q
 
 namespace P
 
 instance (priority := high) PGrp : Group P := MetabelianGroup.metabelianGroup cocycle
 
--- Priorities to resolve the conflict between the direct product and Metabelian group structure on `K × Q` 
+-- Priorities to resolve the conflict between the direct product and Metabelian group structure on `K × Q`
 scoped instance (priority := high) : HMul (K × Q) (K × Q) (K × Q) := ⟨PGrp.mul⟩
 scoped instance (priority := high) : Mul (K × Q) := ⟨PGrp.mul⟩
-scoped instance (priority := high + 1) : Pow (K × Q) ℕ := PGrp.toMonoid.Pow
+scoped instance (priority := high + 1) : NatPow (K × Q) :=
+  ⟨fun p n => PGrp.toMonoid.npow n p⟩
+
+#check Monoid.npow
 
 instance : DecidableEq P := inferInstanceAs <| DecidableEq (K × Q)
 
 /-- A confirmation that multiplication in `P` is as expected from the Metabelian group structure. -/
-@[aesop norm (rule_sets [P]), simp]
+@[aesop norm (rule_sets := [P]), simp]
 theorem mul (k k' : K) (q q' : Q) : (k, q) * (k', q') = (k + action q k' + cocycle q q', q + q') := rfl
 
-@[aesop norm (rule_sets [P])]
-theorem one : (1 : P) = ((0, 0, 0), Q.e) := rfl 
+@[aesop norm (rule_sets := [P])]
+theorem one : (1 : P) = ((0, 0, 0), Q.e) := rfl
 
 end P
 

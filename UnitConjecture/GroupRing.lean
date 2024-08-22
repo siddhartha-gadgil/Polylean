@@ -14,24 +14,24 @@ variable {R : Type} [Ring R] [DecidableEq R]
 
 variable {G: Type} [Group G] [DecidableEq G]
 
-/-! 
+/-!
 ## Multiplication on formal sums
 -/
 section FormalSumMul
 
 /-- multiplication by a monomial -/
-def FormalSum.mulMonom (b: R)(h: G) : FormalSum R G → FormalSum R G 
+def FormalSum.mulMonom (b: R)(h: G) : FormalSum R G → FormalSum R G
 | [] => []
 | (a, g) :: tail => (a * b, g * h) :: (mulMonom b h tail)
 
 /-- multiplication for formal sums -/
 def FormalSum.mul(fst: FormalSum R G) : FormalSum R G → FormalSum R G
 | [] =>    []
-| (b, h) :: ys =>  
+| (b, h) :: ys =>
   (FormalSum.mulMonom  b h fst) ++ (mul fst ys)
 end FormalSumMul
 
-/-! 
+/-!
 
 ## Properties of multiplication on formal sums
 -/
@@ -41,16 +41,16 @@ open FormalSum
 /-- multiplication by the zero monomial -/
 theorem mul_monom_zero (g x₀: G)(s: FormalSum R G): coords (mulMonom 0 g s) x₀ = 0 := by
   induction s with
-  | nil =>  
+  | nil =>
     simp [mulMonom, coords]
-  | cons h t ih => 
+  | cons h t ih =>
     simp [mulMonom, coords, monom_coords_at_zero]
     assumption
 
 /-- distributivity of multiplication by a monomial -/
 theorem mul_monom_dist(b : R)(h x₀ : G)(s₁ s₂: FormalSum R G): coords (mulMonom b h (s₁  ++ s₂)) x₀ = coords (mulMonom b h s₁) x₀ + coords (mulMonom b h s₂) x₀ := by
     induction s₁ with
-    | nil => 
+    | nil =>
       simp [mulMonom, coords]
     | cons head tail ih =>
       simp [mulMonom, coords]
@@ -60,7 +60,7 @@ theorem mul_monom_dist(b : R)(h x₀ : G)(s₁ s₂: FormalSum R G): coords (mul
 /-- right distributivity -/
 theorem mul_dist(x₀ : G)(s₁ s₂ s₃: FormalSum R G): coords (mul s₁ (s₂  ++ s₃)) x₀ = coords (mul s₁ s₂) x₀ + coords (mul s₁ s₃) x₀ := by
     induction s₂ with
-    | nil => 
+    | nil =>
       simp [mulMonom, coords]
     | cons head tail ih =>
       simp [mulMonom, coords, mul]
@@ -70,10 +70,10 @@ theorem mul_dist(x₀ : G)(s₁ s₂ s₃: FormalSum R G): coords (mul s₁ (s�
       simp [add_assoc]
 
 /-- associativity with two terms monomials -/
-theorem mul_monom_monom_assoc(a b : R)(h x₀ : G)(s : FormalSum R G): coords (mulMonom b h (mulMonom a x s)) x₀ = 
-    coords (mulMonom (a * b) (x * h) s) x₀  := by 
+theorem mul_monom_monom_assoc(a b : R)(h x₀ : G)(s : FormalSum R G): coords (mulMonom b h (mulMonom a x s)) x₀ =
+    coords (mulMonom (a * b) (x * h) s) x₀  := by
     induction s with
-    | nil => 
+    | nil =>
       simp [mulMonom, coords]
     | cons head tail ih =>
       let (a₁, x₁) := head
@@ -81,10 +81,10 @@ theorem mul_monom_monom_assoc(a b : R)(h x₀ : G)(s : FormalSum R G): coords (m
       rw [ih]
 
 /-- associativity with one term a monomial -/
-theorem mul_monom_assoc(b : R)(h x₀ : G)(s₁ s₂: FormalSum R G): coords (mulMonom b h (mul s₁ s₂)) x₀ = 
+theorem mul_monom_assoc(b : R)(h x₀ : G)(s₁ s₂: FormalSum R G): coords (mulMonom b h (mul s₁ s₂)) x₀ =
     coords (mul s₁ (mulMonom b h s₂)) x₀  := by
     induction s₂ with
-    | nil => 
+    | nil =>
       simp [mulMonom, coords]
     | cons head tail ih =>
       let (a, x) := head
@@ -98,9 +98,9 @@ theorem mul_monom_assoc(b : R)(h x₀ : G)(s₁ s₂: FormalSum R G): coords (mu
 /-- left distributivity for multiplication by a monomial -/
 theorem mul_monom_add(b₁ b₂ : R)(h x₀ : G)(s: FormalSum R G): coords (mulMonom (b₁ + b₂) h s) x₀ = coords (mulMonom b₁ h s) x₀ + coords (mulMonom b₂ h s) x₀ := by
   induction s with
-  | nil => 
+  | nil =>
   simp [mulMonom, coords]
-  | cons head tail ih => 
+  | cons head tail ih =>
     let (a, g) := head
     simp [mulMonom, coords]
     rw [left_distrib]
@@ -112,14 +112,14 @@ theorem mul_monom_add(b₁ b₂ : R)(h x₀ : G)(s: FormalSum R G): coords (mulM
       arg 2
       rw [← add_assoc]
       congr
-      rw [add_comm]    
+      rw [add_comm]
     conv =>
       rhs
       rw [add_assoc]
     conv =>
-      rhs 
+      rhs
       arg 2
-      skip 
+      skip
       rw [← add_assoc]
 
 /-- multiplication equivalent when adding term with `0` coefficient -/
@@ -140,17 +140,17 @@ theorem mul_zero_cons (s t : FormalSum R G) :  mul s ((0, h) :: t) ≈  mul s t 
       rw [l]
 
 /-!
-## Induced product on the quotient 
+## Induced product on the quotient
 -/
 
-/-- Quotient in second argument for group ring multiplication 
+/-- Quotient in second argument for group ring multiplication
 -/
 def mulAux : FormalSum R G → R[G] → R[G] := by
   intro s
   apply  Quotient.lift (⟦FormalSum.mul s ·⟧)
   apply func_eql_of_move_equiv
   intro t t' rel
-  simp 
+  simp
   induction rel with
   | zeroCoeff tail g a hyp =>
     rw [hyp]
@@ -165,7 +165,7 @@ def mulAux : FormalSum R G → R[G] → R[G] := by
     apply funext; intro x₀
     simp [mul]
     repeat (rw [← append_coords])
-    simp [mul_monom_add, add_assoc]    
+    simp [mul_monom_add, add_assoc]
   | cons a x s₁ s₂ _ step =>
     apply funext ; intro x₀
     simp [mul]
@@ -180,58 +180,58 @@ def mulAux : FormalSum R G → R[G] → R[G] := by
     rw [← add_assoc]
     rw [← add_assoc]
     simp
-    let lc := 
-      add_comm 
+    let lc :=
+      add_comm
         (coords (mulMonom a₁ x₁ s) x₀)
         (coords (mulMonom a₂ x₂ s) x₀)
-    rw [lc] 
+    rw [lc]
 
 open ElementaryMove
 /-- invariance under moves of multiplication by monomials -/
 theorem mul_monom_invariant (b : R)(h x₀ : G)(s₁ s₂ : FormalSum R G) (rel : ElementaryMove R G s₁ s₂) : coords (mulMonom b h s₁) x₀ = coords (mulMonom b h s₂) x₀ := by
       induction rel with
-      | zeroCoeff tail g a hyp => 
+      | zeroCoeff tail g a hyp =>
         rw [hyp]
         simp [mulMonom, coords,monom_coords_at_zero]
-      | addCoeffs a₁ a₂ x tail => 
+      | addCoeffs a₁ a₂ x tail =>
         simp [mulMonom, coords, right_distrib, monom_coords_hom, add_assoc]
-        
-      | cons a x t₁ t₂ _ step => 
+
+      | cons a x t₁ t₂ _ step =>
         simp [mulMonom, coords, step]
-      | swap a₁ a₂ x₁ x₂ tail => 
+      | swap a₁ a₂ x₁ x₂ tail =>
         simp [mulMonom, coords]
         conv =>
           lhs
           rw [← add_assoc]
           arg 1
           rw [add_comm]
-        rw [← add_assoc]      
+        rw [← add_assoc]
 
 
 /-- invariance under moves for the first argument for multipilication -/
-theorem first_arg_invariant (s₁ s₂ t : FormalSum R G) (rel : ElementaryMove R G s₁ s₂) : FormalSum.mul s₁ t ≈  FormalSum.mul s₂ t := by 
+theorem first_arg_invariant (s₁ s₂ t : FormalSum R G) (rel : ElementaryMove R G s₁ s₂) : FormalSum.mul s₁ t ≈  FormalSum.mul s₂ t := by
     cases t
-    case nil => 
+    case nil =>
       simp [mul]
       rfl
     case cons head' tail' =>
       let (b, h) := head'
       induction rel with
-      | zeroCoeff tail g a hyp => 
+      | zeroCoeff tail g a hyp =>
         rw [hyp]
         simp [mul, mulMonom]
         apply funext; intro x₀
         rw [← append_coords]
         simp [coords, monom_coords_at_zero]
         rw [← append_coords]
-        simp  
-        let rel' : ElementaryMove R G ((0, g) :: tail)  tail := by 
+        simp
+        let rel' : ElementaryMove R G ((0, g) :: tail)  tail := by
           apply ElementaryMove.zeroCoeff
           rfl
-        let prev  := first_arg_invariant  _ _ tail' rel' 
+        let prev  := first_arg_invariant  _ _ tail' rel'
         let pl := congrFun prev x₀
-        rw [pl]  
-      | addCoeffs a₁ a₂ x tail => 
+        rw [pl]
+      | addCoeffs a₁ a₂ x tail =>
         simp [mul]
         apply funext; intro x₀
         rw [← append_coords]
@@ -239,31 +239,31 @@ theorem first_arg_invariant (s₁ s₂ t : FormalSum R G) (rel : ElementaryMove 
         simp [coords]
         rw [right_distrib]
         simp [monom_coords_hom]
-        let rel' : ElementaryMove R G 
+        let rel' : ElementaryMove R G
           ((a₁, x) :: (a₂, x) :: tail)
-            ((a₁ + a₂, x) :: tail) := by 
+            ((a₁ + a₂, x) :: tail) := by
             apply ElementaryMove.addCoeffs
-        let prev  := first_arg_invariant  _ _ tail' rel' 
+        let prev  := first_arg_invariant  _ _ tail' rel'
         let pl := congrFun prev x₀
         rw [pl]
-        simp [add_assoc] 
-      | cons a x s₁ s₂ r _ => 
+        simp [add_assoc]
+      | cons a x s₁ s₂ r _ =>
         simp [mul]
         apply funext; intro x₀
         rw [← append_coords]
         rw [← append_coords]
         simp [coords]
-        let rel' : ElementaryMove R G 
+        let rel' : ElementaryMove R G
           ((a, x) :: s₁)
-            ((a, x) :: s₂) := by 
+            ((a, x) :: s₂) := by
             apply ElementaryMove.cons
-            assumption 
-        let prev  := first_arg_invariant  _ _ tail' rel' 
+            assumption
+        let prev  := first_arg_invariant  _ _ tail' rel'
         let pl := congrFun prev x₀
         rw [pl]
         let ps := mul_monom_invariant b h x₀ s₁ s₂ r
-        rw [ps]       
-      | swap a₁ a₂ x₁ x₂ tail => 
+        rw [ps]
+      | swap a₁ a₂ x₁ x₂ tail =>
         simp [mul]
         apply funext; intro x₀
         rw [← append_coords]
@@ -276,35 +276,35 @@ theorem first_arg_invariant (s₁ s₂ t : FormalSum R G) (rel : ElementaryMove 
         rw [mulMonom]
         rw [coords]
         rw [coords]
-        let rel' : ElementaryMove R G 
+        let rel' : ElementaryMove R G
           ((a₁, x₁) :: (a₂, x₂) :: tail)
-            ((a₂, x₂) :: (a₁, x₁) :: tail) := by 
+            ((a₂, x₂) :: (a₁, x₁) :: tail) := by
             apply ElementaryMove.swap
-        let prev  := first_arg_invariant  _ _ tail' rel' 
+        let prev  := first_arg_invariant  _ _ tail' rel'
         let pl := congrFun prev x₀
         rw [pl]
-        simp 
+        simp
         rw [← add_assoc]
         rw [← add_assoc]
         simp
         conv =>
-          lhs 
-          rw [add_comm]    
-        
+          lhs
+          rw [add_comm]
+
 /-- multiplication for free modules -/
 def mul : R[G] → R[G] → R[G] := by
-  let f  := fun (s : FormalSum R G) => 
-    fun  (t : R[G]) => mulAux  s t 
+  let f  := fun (s : FormalSum R G) =>
+    fun  (t : R[G]) => mulAux  s t
   apply  Quotient.lift f
-  apply func_eql_of_move_equiv  
+  apply func_eql_of_move_equiv
   intro s₁ s₂ rel
-  simp 
+  simp [f]
   apply funext
-  apply Quotient.ind 
+  apply Quotient.ind
   intro t
-  let lhs : mulAux s₁ (Quotient.mk (formalSumSetoid R G) t) = 
+  let lhs : mulAux s₁ (Quotient.mk (formalSumSetoid R G) t) =
     ⟦FormalSum.mul s₁ t⟧ := by rfl
-  let rhs : mulAux s₂ (Quotient.mk (formalSumSetoid R G) t) = 
+  let rhs : mulAux s₂ (Quotient.mk (formalSumSetoid R G) t) =
     ⟦FormalSum.mul s₂ t⟧ := by rfl
   rw [lhs, rhs]
   simp
@@ -315,17 +315,20 @@ def mul : R[G] → R[G] → R[G] := by
 ## The Ring Structure
 -/
 
-instance groupRingMul : Mul (R[G]) := 
+instance groupRingMul : Mul (R[G]) :=
   ⟨mul⟩
 
-instance : One (R[G]) := 
+instance : One (R[G]) :=
   ⟨⟦[(1, 1)]⟧⟩
 
-instance : AddCommGroup (R[G]) := 
+instance : AddCommGroup (R[G]) :=
   {
     zero := ⟦ [] ⟧
     add := FreeModule.add
-    
+
+    nsmul := nsmulRec
+    zsmul := zsmulRec
+
     add_assoc := FreeModule.addn_assoc
     add_zero := FreeModule.addn_zero
     zero_add := FreeModule.zero_addn
@@ -342,16 +345,17 @@ instance : Ring (R[G]) :=
   {
     mul := mul
     neg := fun x => (-1 : R) • x
+    zsmul := zsmulRec
 
-    sub_eq_add_neg := by 
-      intro x y 
+    sub_eq_add_neg := by
+      intro x y
       rfl
 
-    add_left_neg := by 
+    add_left_neg := by
         intro x
         let l := FreeModule.coeffs_distrib (-1 : R) (1 : R) x
         simp at l
-        have lc : (-1 : R) + 1 = 0 := by 
+        have lc : (-1 : R) + 1 = 0 := by
             apply add_left_neg
         -- rw [lc] at l
         rw [FreeModule.unit_coeffs] at l
@@ -367,7 +371,7 @@ instance : Ring (R[G]) :=
       intro y z
       apply Quotient.sound
       induction y with
-      | nil => 
+      | nil =>
           simp
           simp [FormalSum.mul]
           apply eqlCoords.refl
@@ -388,10 +392,10 @@ instance : Ring (R[G]) :=
       intro y z
       apply Quotient.sound
       induction z with
-      | nil => 
+      | nil =>
           simp [FormalSum.mul]
           apply eqlCoords.refl
-      | cons h t ih => 
+      | cons h t ih =>
           let (a, h) := h
           simp [FormalSum.mul, mulMonom]
           funext x₀
@@ -406,41 +410,40 @@ instance : Ring (R[G]) :=
       intro x
       apply Quotient.sound
       induction x with
-      | nil =>        
+      | nil =>
         rfl
-      | cons h t ih =>        
+      | cons h t ih =>
         rw [FormalSum.mul]
-        simp
+        simp [mulMonom]
         apply funext ; intro x₀
         let lih := congrFun ih x₀
         rw [coords] at lih
-        rw [← append_coords]
+        -- rw [← append_coords]
         rw [lih]
-        simp
-        rw [mulMonom]
+        simp [coords]
 
-    mul_zero := by 
+    mul_zero := by
       apply Quotient.ind
       intro x
       rfl
 
     one := ⟦[(1, 1)]⟧
     natCast := fun n => ⟦ [(n, 1)] ⟧
-    natCast_zero := 
+    natCast_zero :=
       by
       apply Quotient.sound
       apply funext; intro x₀
       simp [coords, monomCoeff]
       cases 1 == x₀ <;> rfl
-    natCast_succ := by 
+    natCast_succ := by
       intro n
       apply Quotient.sound
       apply funext; intro x₀
       rw [← append_coords]
       simp
       cases m:1 == x₀ with
-      | true => simp only [coords, monomCoeff, m, add_zero] 
-      | false => simp only [coords, monomCoeff, m, add_zero]        
+      | true => simp only [coords, monomCoeff, m, add_zero]
+      | false => simp only [coords, monomCoeff, m, add_zero]
     mul_assoc := by
       apply @Quotient.ind (motive := fun a  =>
         ∀ b c, a * b * c = a * (b * c))
@@ -453,7 +456,7 @@ instance : Ring (R[G]) :=
       induction z with
       | nil =>
           simp [FormalSum.mul]
-      | cons h t ih => 
+      | cons h t ih =>
           let (a, h) := h
           simp [FormalSum.mul, mulMonom]
           repeat (rw [← append_coords])
@@ -469,13 +472,13 @@ instance : Ring (R[G]) :=
       simp
       induction x with
       | nil => rfl
-      | cons h t ih => 
+      | cons h t ih =>
         let (a, x) := h
         rw [mulMonom, coords, monomCoeff]
         simp
         rw [coords, monomCoeff]
         cases m:x == x₀ <;> simp [ih]
-        
+
     one_mul := by
       apply Quotient.ind
       intro x
@@ -483,14 +486,14 @@ instance : Ring (R[G]) :=
       apply funext; intro x₀
       induction x with
       | nil => rfl
-      | cons h t ih => 
+      | cons h t ih =>
         let (a, x) := h
         repeat (rw [coords])
         rw [FormalSum.mul]
         rw [← append_coords]
-        simp [ih, mulMonom, coords]      
+        simp [ih, mulMonom, coords]
   }
-  
+
 end GroupRing
 
 /-!
@@ -505,9 +508,9 @@ instance groupRingMul {R G : Type _} [Ring R] [Group G] [DecidableEq G]
 
 /-- Monoid homomorphism from `G` to `R[G]` given by `g ↦ 1 ⬝ g` -/
 def groupInclusionHom  (G : Type) [Group G] [DecidableEq G] : G →* R[G] :=
-  { toFun := baseInclusion 1, 
-    map_one' := rfl, 
-    map_mul' := 
+  { toFun := baseInclusion 1,
+    map_one' := rfl,
+    map_mul' :=
     by
       intro _ _
       apply Quotient.sound
@@ -517,26 +520,26 @@ def groupInclusionHom  (G : Type) [Group G] [DecidableEq G] : G →* R[G] :=
 
 /-- As a function `groupInclusionHom` is `g ↦ 1 ⬝ g`-/
 theorem groupInclusionHom_formula (G : Type) [Group G] [DecidableEq G] :
-  (groupInclusionHom (R := R) G).toFun = 
+  (groupInclusionHom (R := R) G).toFun =
     fun g : G ↦ (1 : R) * g := rfl
 
 /-- The monoid homomorphism `G → R[G]`, `g ↦ 1 ⬝ g` is injective if `1 ≠ 0` in `R`  -/
 theorem groupInclusionHom_injective'   (hR : (1 : R) ≠ (0 : R)) : Function.Injective (groupInclusionHom (R := R) G) := by
-  intro _ _ 
+  intro _ _
   apply baseInclusion_injective (1 : R) hR (X := G)
 
 /-- For a field `F` the monoid homomorphism `G → F[G]`, `g ↦ 1 ⬝ g` is injective. -/
 theorem groupInclusionHom_injective {F : Type} [Field F] [DecidableEq F] (G : Type) [Group G][DecidableEq G] : Function.Injective (groupInclusionHom (R := F) G) := by
-  intro _ _ 
+  intro _ _
   apply groupInclusionHom_injective'
   have : (0 : F) ≠ (1 : F) := zero_ne_one
   simp_all only [ne_eq, zero_ne_one, not_false_iff, one_ne_zero]
 
 /-- The ring homomorphism `R → R[G]` given by `a ↦  a ⬝ 1`-/
 def ringInclusionHom  (G : Type) [Group G] [DecidableEq G] : R →+* R[G] :=
-  { toFun := coeffInclusion 1, 
-    map_one' := rfl, 
-    map_mul' := 
+  { toFun := coeffInclusion 1,
+    map_one' := rfl,
+    map_mul' :=
     by
       intro _ _
       apply Quotient.sound
@@ -557,11 +560,11 @@ def ringInclusionHom  (G : Type) [Group G] [DecidableEq G] : R →+* R[G] :=
 
 /-- As a function, `ringInclusionHom` is `r ↦ r ⬝ 1` -/
 theorem ringInclusionHom_formula (G : Type) [Group G] [DecidableEq G] :
-  (ringInclusionHom (R := R) G).toFun = 
+  (ringInclusionHom (R := R) G).toFun =
     fun r : R ↦ r * (1 : G) := rfl
 
 /-- The ring homomorphism `R → R[G]` given by `a ↦  a ⬝ 1` is injective -/
-theorem ringInclusionHom_injective'  
-  (G : Type) [Group G] [DecidableEq G] : Function.Injective (ringInclusionHom (R := R) G) := by 
+theorem ringInclusionHom_injective'
+  (G : Type) [Group G] [DecidableEq G] : Function.Injective (ringInclusionHom (R := R) G) := by
   intro _ _
   apply coeffInclusion_injective

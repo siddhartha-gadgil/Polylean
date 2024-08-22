@@ -1,4 +1,4 @@
-import Mathlib.Algebra.GroupPower.Lemmas
+-- import Mathlib.Algebra.GroupPower.Lemmas
 import Mathlib.Algebra.Group.Prod
 import Mathlib.Data.Int.Cast.Lemmas
 import Mathlib.Algebra.Ring.Basic
@@ -10,12 +10,12 @@ import UnitConjecture.EnumDecide
 
 The definition of a free group on a basis, along with a few properties.
 
-Free groups are defined constructively to allow automatic equality checking of 
+Free groups are defined constructively to allow automatic equality checking of
 homomorphisms on finitely generated free groups.
 
 ## Overview
 - `AddFreeGroup` - the main definition.
-- `decideHomsEqual` - the crucial result that allows the 
+- `decideHomsEqual` - the crucial result that allows the
   automatic comparison of homomorphisms by checking their values on the basis.
 - `ℤFree` - a proof that the additive group of integers is a free group on the one-element type.
 - `prodFree` - a proof that the product of free groups is free.
@@ -54,7 +54,7 @@ instance ℤFree : AddFreeGroup ℤ Unit where
 set_option synthInstance.checkSynthOrder false -- HACK
 open EnumDecide in
 /-- Equality of homomorphisms from a free group on an exhaustively searchable basis is decidable. -/
-@[instance] def decideHomsEqual {F : Type _} [AddCommGroup F] {X : Type _} [DecideForall X] [fgp : AddFreeGroup F X] 
+@[instance] def decideHomsEqual {F : Type _} [AddCommGroup F] {X : Type _} [DecideForall X] [fgp : AddFreeGroup F X]
     {A : Type _} [AddCommGroup A] [DecidableEq A] : DecidableEq (F →+ A) := fun f g =>
   if c : ∀ x : X, f (fgp.ι x) = g (fgp.ι x) then by
     apply Decidable.isTrue
@@ -83,8 +83,8 @@ def ι : (X_A ⊕ X_B) → A × B
 def inducedProdHom (G : Type _) [AddCommGroup G] (f : X_A ⊕ X_B → G) : A × B →+ G :=
     let f_A : X_A → G := f ∘ Sum.inl
     let f_B : X_B → G := f ∘ Sum.inr
-    AddMonoidHom.coprod 
-      (FAb_A.inducedHom G f_A) 
+    AddMonoidHom.coprod
+      (FAb_A.inducedHom G f_A)
       (FAb_B.inducedHom G f_B)
 
 /-- The product of free groups is free. -/
@@ -101,15 +101,15 @@ instance prodFree : AddFreeGroup (A × B) (X_A ⊕ X_B)  :=
       intro _ _ f g hyp
       ext ⟨a, b⟩
       rw [show (a, b) = (a, 0) + (0, b) by simp, map_add, map_add]
-      
+
       have A_unique : f.comp (.inl A B) = g.comp (.inl A B) := by
         apply FAb_A.unique_extension; funext x_A; apply congrFun hyp (Sum.inl x_A)
       have B_unique : f.comp (.inr A B) = g.comp (.inr A B) := by
         apply FAb_B.unique_extension; funext x_B; apply congrFun hyp (Sum.inr x_B)
-   
+
       show f.comp (.inl _ _) a + f.comp (.inr _ _) b =
-           g.comp (.inl _ _) a + g.comp (.inr _ _) b 
+           g.comp (.inl _ _) a + g.comp (.inr _ _) b
       rw [A_unique, B_unique]
   }
-  
+
 end AddFreeGroup.Product

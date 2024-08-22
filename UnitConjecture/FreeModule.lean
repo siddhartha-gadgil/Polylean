@@ -128,7 +128,7 @@ theorem nonzero_coord_in_support  (s : FormalSum R X) : ∀ x : X, 0 ≠ s.coord
           contradiction
         exact decide_eq_false eqn'
       rw [p']
-      apply List.elem_eq_true_of_mem
+      simp
       exact step
 
 /-!
@@ -326,6 +326,7 @@ theorem eql_on_support_of_true {l : List X} {f g : X → R} : beqOnSupport l f g
   | cons h t step =>
     simp [equalOnList]
     simp [beqOnSupport, List.all] at hyp
+    simp [beqOnSupport] at step
     let p₂ := step hyp.right
     exact And.intro hyp.left p₂
 
@@ -459,7 +460,7 @@ def FreeModule.scmul  : R → R[X] → R[X] := by
   let f : FormalSum R X → R[X] := fun s => ⟦s.scmul r⟧
   apply Quotient.lift f
   intro s₁ s₂
-  simp
+  simp [f]
   intro hypeq
   apply funext
   intro x₀
@@ -500,7 +501,7 @@ def FreeModule.add  : R[X] → R[X] → R[X] := by
   let f : FormalSum R X → FormalSum R X → R[X] := fun s₁ s₂ => ⟦s₁ ++ s₂⟧
   apply Quotient.lift₂ f
   intro a₁ b₁ a₂ b₂
-  simp
+  simp [f]
   intro eq₁ eq₂
   apply funext
   intro x₀
@@ -673,15 +674,25 @@ theorem zero_coeffs (x: R[X]) : (0 : R) • x =  ⟦ [] ⟧:= by
   rw [← l]
   simp [coords]
 
+instance : Zero (R[X]) :=
+  ⟨FreeModule.zero⟩
+
+instance : Neg (R[X]) :=
+  ⟨fun x => (-1 : R) • x⟩
+
+#check Zero
+set_option diagnostics true
 /-- The module is an additive commutative group, mainly proved as a check -/
 instance : AddCommGroup (R[X]) :=
   {
-    zero := ⟦ []⟧
+    zero := _
     add := FreeModule.add
     add_assoc := FreeModule.addn_assoc
     add_zero := FreeModule.addn_zero
     zero_add := FreeModule.zero_addn
     neg := fun x => (-1 : R) • x
+    nsmul := nsmulRec
+    zsmul := zsmulRec
 
     sub_eq_add_neg := by intros; rfl
 
@@ -946,9 +957,7 @@ theorem equiv_e_of_zero_coeffs  (s : FormalSum R X) (hyp : ∀ x : X, s.coords x
         apply Quot.sound
         apply ElementaryMove.zeroCoeff
         rfl
-  termination_by
-  _ R X s h => s.length decreasing_by
-  assumption
+  termination_by s.length
 
 /-- If coordinates are equal, the sums are related by moves. -/
 theorem equiv_of_equal_coeffs  (s₁ s₂ : FormalSum R X) (hyp : ∀ x : X, s₁.coords x = s₂.coords x) : s₁ ≃ s₂ :=
@@ -986,6 +995,7 @@ theorem equiv_of_equal_coeffs  (s₁ s₂ : FormalSum R X) (hyp : ∀ x : X, s�
             have cf₂ : s₂.coords x₀ = a₀ := by
               rw [← hyp]
               simp [coords, ← p₁, Nat.add_zero, monomCoeff]
+              sorry
             let ⟨ys, eqn, _⟩ :=
               nonzero_coeff_has_complement x₀ s₂
                 (by
@@ -1024,10 +1034,7 @@ theorem equiv_of_equal_coeffs  (s₁ s₂ : FormalSum R X) (hyp : ∀ x : X, s�
               rw [← d]
               simp [monom_coords_hom, coords, add_assoc]
             apply Eq.trans (Eq.trans (Eq.symm eq₂) eq₁) eq₃
-  termination_by
-  _ R X s _ _ => s.length decreasing_by
-  assumption
-
+  termination_by s₁.length
 /-!
 ## Functions invariant under moves pass to the quotient.
 -/
@@ -1126,13 +1133,13 @@ theorem fst_le_max (a b : Nat): a ≤ max a b  := by
     exact if c:a ≤ b
           then by
               unfold max
-              unfold Nat.instMaxNat
+              unfold Nat.instMax
               unfold maxOfLe
               simp [if_pos c]
               assumption
           else by
               unfold max
-              unfold Nat.instMaxNat
+              unfold Nat.instMax
               unfold maxOfLe
               simp [if_neg c]
 
@@ -1141,12 +1148,12 @@ theorem snd_le_max (a b : Nat): b ≤ max a b  := by
     exact if c: a ≤ b
     then by
       unfold max
-      unfold Nat.instMaxNat
+      unfold Nat.instMax
       unfold maxOfLe
       simp [if_pos c]
     else by
       unfold max
-      unfold Nat.instMaxNat
+      unfold Nat.instMax
       unfold maxOfLe
       simp [if_neg c]
       apply Nat.le_of_lt
@@ -1158,12 +1165,12 @@ theorem eq_fst_or_snd_of_max (a b : Nat) : (max a b = a) ∨ (max a b = b) := by
       exact if c: a ≤ b
         then by
           unfold max
-          unfold Nat.instMaxNat
+          unfold Nat.instMax
           unfold maxOfLe
           simp [if_pos c]
         else by
           unfold max
-          unfold Nat.instMaxNat
+          unfold Nat.instMax
           unfold maxOfLe
           simp [if_neg c]
 

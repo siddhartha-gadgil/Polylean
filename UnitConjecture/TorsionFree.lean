@@ -1,5 +1,5 @@
 import UnitConjecture.GardamGroup
-import Mathlib.Algebra.GroupPower.Basic
+-- import Mathlib.Algebra.GroupPower.Basic
 
 /-!
 ## Torsion-freeness of `P`
@@ -43,7 +43,7 @@ instance {A B : Type _} [AddGroup A] [AddGroup B] [AddTorsionFree A] [AddTorsion
   torsionFree := by
     intro (a, b) n
     rw [show n.succ • (a, b) = (n.succ • a, n.succ • b) from rfl, Prod.ext_iff, Prod.ext_iff]
-    intro ⟨_, _⟩; refine' ⟨_, _⟩ <;> 
+    intro ⟨_, _⟩; refine' ⟨_, _⟩ <;>
       (apply AddTorsionFree.torsionFree; assumption)
 
 end TorsionFree
@@ -51,7 +51,7 @@ end TorsionFree
 /-! ### **Step 1:** Defining the square of an element of `P`. -/
 
 /-- The function taking an element of `P` to its square, which lies in the kernel `K`. -/
-@[aesop norm unfold (rule_sets [P]), reducible]
+@[aesop norm unfold (rule_sets := [P]), reducible]
 def P.sq : P → K
   | ((p, q, r), .e) => (p + p, q + q, r + r)
   | ((_, q, _), .b) => (0, q + q + 1, 0)
@@ -61,16 +61,16 @@ def P.sq : P → K
 open P
 
 /-- A proof that the function `sq` indeed takes an element of `P` to its square in `K`. -/
-@[aesop norm apply (rule_sets [P]), simp]
+@[aesop norm apply (rule_sets := [P]), simp]
 theorem sq_square : ∀ g : P, g * g = (P.sq g, .e)
   | ((p, q, r), x) =>
-    match x with 
+    match x with
     | .e | .a | .b | .c => by
-      aesop (rule_sets [P]) (options := { warnOnNonterminal := false })
+      aesop (rule_sets := [P])
       rw [P.mul]
-      aesop (rule_sets [P])
+      aesop (rule_sets := [P])
 
-/-! ### **Step 2:** Proving that `K` (= `ℤ³`) is torsion-free. -/ 
+/-! ### **Step 2:** Proving that `K` (= `ℤ³`) is torsion-free. -/
 
 /-- The kernel `ℤ³` is torsion-free. -/
 instance K.torsionFree : AddTorsionFree K := inferInstance
@@ -102,17 +102,17 @@ theorem square_free : ∀ {g : P}, g * g = (1 : P) → g = (1 : P)
   | ((p, q, r), x) => by
     match x with
     | .e =>
-      intro h 
-      aesop (rule_sets [P]) (add norm [Int.zero_of_twice_zero]) (options := { warnOnNonterminal := false })
-      rw [Prod.mk.injEq] at h
-      rw [Prod.mk.injEq] at h
-      rw [Prod.mk.injEq] at h
-      aesop (rule_sets [P]) (add norm [Int.zero_of_twice_zero])
-    | .a | .b | .c => 
       intro h
-      aesop (rule_sets [P]) (add norm [Int.odd_ne_zero]) (options := { warnOnNonterminal := false })
+      aesop (rule_sets := [P]) (add norm [Int.zero_of_twice_zero])
+      rw [Prod.mk.injEq] at h
+      rw [Prod.mk.injEq] at h
+      rw [Prod.mk.injEq] at h
+      aesop (rule_sets := [P]) (add norm [Int.zero_of_twice_zero])
+    | .a | .b | .c =>
+      intro h
+      aesop (rule_sets := [P]) (add norm [Int.odd_ne_zero])
       all_goals (rw [Prod.mk.injEq] at h; rw [Prod.mk.injEq] at h; rw [Prod.mk.injEq] at h)
-      aesop (rule_sets [P]) (add norm [Int.odd_ne_zero])
+      aesop (rule_sets := [P]) (add norm [Int.odd_ne_zero])
 
 
 /-! ### **Step 4:** Showing that if the `n`-th power of a group element is trivial, then so is that of its square. -/

@@ -8,7 +8,7 @@ import UnitConjecture.GroupRing
 
 ## Giles Gardam's result
 
-The proof of the theorem `𝔽₂[P]` has non-trivial units. Together with the main result of `TorsionFree` -- that `P` is torsion-free, 
+The proof of the theorem `𝔽₂[P]` has non-trivial units. Together with the main result of `TorsionFree` -- that `P` is torsion-free,
 this completes the formal proof of Gardam's theorem that Kaplansky's Unit Conjecture is false.
 -/
 
@@ -24,7 +24,7 @@ def trivialNonZeroElem {R X : Type _} [Ring R] [DecidableEq X] (a : FreeModule R
 /-- The statement of Kaplansky's Unit Conjecture:
 The only units in a group ring, when the group is torsion-free and the ring is a field, are the trivial units. -/
 def UnitConjecture : Prop :=
-  ∀ {F : Type _} [Field F] [DecidableEq F] 
+  ∀ {F : Type _} [Field F] [DecidableEq F]
   {G : Type _} [Group G] [DecidableEq G] [TorsionFree G],
     ∀ u : (F[G])ˣ, trivialNonZeroElem (u : F[G])
 
@@ -39,6 +39,8 @@ instance : Field 𝔽₂ where
     | 1 => by intro; rfl
   inv_zero := rfl
   div_eq_mul_inv := by decide
+  qsmul := _
+  nnqsmul := _
 
 instance ringElem : Coe P (𝔽₂[P]) where
     coe g := ⟦[(1, g)]⟧
@@ -73,7 +75,7 @@ def s : 𝔽₂[P] := (1 : 𝔽₂[P]) + x*z⁻¹ + x⁻¹*z⁻¹ + y*z⁻¹ + y
 
 /-- The non-trivial unit `α`. -/
 def α : 𝔽₂[P] := p  +  q * a  +  r * b  +  s * a * b
- 
+
 /-! The components of the inverse `α'` of the non-trivial unit `α`. -/
 def p' : 𝔽₂[P] := x⁻¹ * (a⁻¹  * p * a)
 def q' : 𝔽₂[P] := -(x⁻¹ * q)
@@ -90,10 +92,10 @@ end Constants
 
 section Verification
 
-/-! 
+/-!
 ### Verification
 
-The main verification of Giles Gardam's result. 
+The main verification of Giles Gardam's result.
 -/
 
 namespace Gardam
@@ -103,26 +105,29 @@ open P
 /-- A proof that the unit is non-trivial. -/
 theorem α_nonTrivial : ¬ (trivialNonZeroElem α) := by
     intro ⟨g, _, (eqg : ∀ y, α.coordinates y ≠ 0 → y = g)⟩
-    have : z⁻¹ = g := by
+    have l₁ : z⁻¹ = g := by
       apply eqg; native_decide
-    have : x * y = g := by
+    have l₂ : x * y = g := by
       apply eqg; native_decide
-    have : z⁻¹ = x * y := by
+    have l₃ : z⁻¹ = x * y := by
       refine' Eq.trans _ (Eq.symm _) <;> assumption
-    simp at this
+    simp  at l₃
+    have l₄ : z⁻¹ ≠ x * y := by
+      native_decide
+    simp [l₃] at l₄
 
-/-! The fact that the counter-example `α` is in fact a unit of the group ring `𝔽₂[P]` is verified by 
+/-! The fact that the counter-example `α` is in fact a unit of the group ring `𝔽₂[P]` is verified by
   computing the product of `α` with its inverse `α'` and checking that the result is `(1 : 𝔽₂[P])`.
 
   The computational aspects of the group ring implementation and the Metabelian construction are used here. -/
 
 /-- A proof of the existence of a non-trivial unit in `𝔽₂[P]`. -/
-def Counterexample : {u : (𝔽₂[P])ˣ // ¬(trivialNonZeroElem u.val)} := 
+def Counterexample : {u : (𝔽₂[P])ˣ // ¬(trivialNonZeroElem u.val)} :=
   ⟨⟨α, α', by native_decide, by native_decide⟩, α_nonTrivial⟩
 
 /-- Giles Gardam's result - Kaplansky's Unit Conjecture is false. -/
 theorem GardamTheorem : ¬ UnitConjecture :=
-   fun conjecture => Counterexample.prop <| 
+   fun conjecture => Counterexample.prop <|
     conjecture (F := 𝔽₂) (G := P) Counterexample.val
 
 end Gardam
@@ -133,7 +138,7 @@ end Verification
 We check that our definition of "trivial but not zero" is correct by showing it equivalent to a more direct definition.
 -/
 
-theorem trivialNonZeroElem_trivial_nonzeroAux {R G : Type _} [Ring R] [Group G] [DecidableEq G] (p : FormalSum R G) : 
+theorem trivialNonZeroElem_trivial_nonzeroAux {R G : Type _} [Ring R] [Group G] [DecidableEq G] (p : FormalSum R G) :
     trivialNonZeroElem  ⟦p⟧  ↔  ∃ a: R, ∃ g : G, p ≈ [(a, g)] ∧ (a ≠ 0) := by
   apply Iff.intro
   · rw [trivialNonZeroElem]
@@ -144,18 +149,18 @@ theorem trivialNonZeroElem_trivial_nonzeroAux {R G : Type _} [Ring R] [Group G] 
     apply And.intro
     · funext x₁
       simp only [FormalSum.coords, monomCoeff, FreeModule.coordinates, Quotient.lift_mk, add_zero]
-      by_cases x = x₁
+      by_cases h:x = x₁
       · simp [h]
-      · let hyp₃ := hyp₂ x₁ 
+      · let hyp₃ := hyp₂ x₁
         simp only [h, FreeModule.coordinates, Quot.lift_mk, ne_eq] at hyp₃
-        let neqLem : ((x == x₁) = false) := 
+        let neqLem : ((x == x₁) = false) :=
           by apply beq_false_of_ne; assumption
         simp only [neqLem]
-        by_cases FormalSum.coords p x₁ = 0
+        by_cases h:FormalSum.coords p x₁ = 0
         · assumption
         · simp only [Quotient.lift_mk, h, not_false_iff, forall_true_left] at hyp₃
-          have := Eq.symm hyp₃    
-          contradiction 
+          have := Eq.symm hyp₃
+          contradiction
     · assumption
   · intro ⟨a, g, hyp⟩
     simp only [trivialNonZeroElem, ne_eq]
@@ -179,7 +184,7 @@ theorem trivialNonZeroElem_trivial_nonzeroAux {R G : Type _} [Ring R] [Group G] 
         simp only [neq, not_true] at h
 
 /-- Our definition of tiviality of `p : R[G]` coincides with the direct definition `p = a ⬝ g` with `a ≠ 0` -/
-theorem trivialNonZeroElem_trivial_nonzero {R G : Type _} [Ring R] [Group G] [DecidableEq G]: ∀  (p : FreeModule R G),  
+theorem trivialNonZeroElem_trivial_nonzero {R G : Type _} [Ring R] [Group G] [DecidableEq G]: ∀  (p : FreeModule R G),
     trivialNonZeroElem  p  ↔  ∃ a: R, ∃ g : G, p = (a * g) ∧ (a ≠ 0) := by
   rw [groupRingMul]
   apply Quotient.ind

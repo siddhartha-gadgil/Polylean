@@ -6,7 +6,7 @@ import UnitConjecture.Tactics.AesopRuleSets
 The definitions of cocycles and group actions by automorphisms, which are required for the Metabelian construction.
 
 ## Overview
-- `AutAction` - the definition of an action of one group on another by automorphisms. 
+- `AutAction` - the definition of an action of one group on another by automorphisms.
   This is done as a typeclass representing the property of being an action by automorphisms.
 - `Cocycle` - the definition of a *cocycle* associated with a certain action by automorphisms.
   This is also done as a typeclass with the function as an explicit argument and the action as a field of the structure.
@@ -16,7 +16,7 @@ The definitions of cocycles and group actions by automorphisms, which are requir
 ### Actions by automorphisms
 -/
 
-/-- An action of an additive group on another additive group by automorphisms. 
+/-- An action of an additive group on another additive group by automorphisms.
     There is a closely related typeclass `DistribMulAction` in `Mathlib` that uses multiplicative notation. -/
 class AutAction {A B : Type _} [AddGroup A] [AddGroup B] (α : A → (B →+ B)) where
   /-- The automorphism corresponding to the zero element is the identity. -/
@@ -27,7 +27,7 @@ class AutAction {A B : Type _} [AddGroup A] [AddGroup B] (α : A → (B →+ B))
 
 namespace AutAction
 
-attribute [aesop norm (rule_sets [AutAction])] id_action compatibility
+attribute [aesop norm (rule_sets := [AutAction])] id_action compatibility
 
 variable {A B : Type _} [AddGroup A] [AddGroup B] (α : A → (B →+ B)) [AutAction α]
 
@@ -41,30 +41,31 @@ instance toAddAction : AddAction A B where
   add_vadd g₁ g₂ p := by
     show α (_ + _) _ = α _ (α _ _)
     simp_all only [compatibility, AddMonoidHom.coe_comp, Function.comp_apply]
-    
+
 /-!
 Some easy consequences of the definition of an action by automorphisms.
 -/
 
-@[aesop norm (rule_sets [AutAction])]
+@[aesop norm (rule_sets := [AutAction])]
 lemma vadd_eq : ∀ {a : A} {b : B}, a +ᵥ b = α a b := rfl
 
-@[aesop norm (rule_sets [AutAction])]
-lemma vadd_zero : ∀ {a : A}, a +ᵥ (0 : B) = (0 : B) := by aesop (rule_sets [AutAction])
+@[aesop norm (rule_sets := [AutAction])]
+lemma vadd_zero : ∀ {a : A}, a +ᵥ (0 : B) = (0 : B) := by
+  aesop (rule_sets := [AutAction])
 
-@[aesop unsafe (rule_sets [AutAction])]
-lemma vadd_dist : ∀ {a : A} {b b' : B}, a +ᵥ (b + b') = (a +ᵥ b) + (a +ᵥ b') := by aesop (rule_sets [AutAction])
+@[aesop unsafe (rule_sets := [AutAction])]
+lemma vadd_dist : ∀ {a : A} {b b' : B}, a +ᵥ (b + b') = (a +ᵥ b) + (a +ᵥ b') := by aesop (rule_sets := [AutAction])
 
-@[aesop unsafe (rule_sets [AutAction])]
-lemma compatibility' : ∀ {a a' : A} {b : B}, α a (α a' b) = α (a + a') b := by aesop (rule_sets [AutAction]) 
+@[aesop unsafe (rule_sets := [AutAction])]
+lemma compatibility' : ∀ {a a' : A} {b : B}, α a (α a' b) = α (a + a') b := by aesop (rule_sets := [AutAction])
 
-@[aesop norm (rule_sets [AutAction])]
+@[aesop norm (rule_sets := [AutAction])]
 lemma act_neg_act {a : A} {b : B} : α a (α (-a) b) = b := by
   rw [compatibility']
-  aesop (erase compatibility) (rule_sets [AutAction])
+  aesop (erase compatibility) (rule_sets := [AutAction])
 
-@[aesop unsafe (rule_sets [AutAction])]
-lemma vadd_of_neg : ∀ {a : A} {b : B}, a +ᵥ (-b) = - (a +ᵥ b) := by aesop (rule_sets [AutAction])
+@[aesop unsafe (rule_sets := [AutAction])]
+lemma vadd_of_neg : ∀ {a : A} {b : B}, a +ᵥ (-b) = - (a +ᵥ b) := by aesop (rule_sets := [AutAction])
 
 end AutAction
 
@@ -74,7 +75,7 @@ end AutAction
 -/
 
 /--
-A cocycle associated with a certain action of `Q` on `K` via automorphisms is a 
+A cocycle associated with a certain action of `Q` on `K` via automorphisms is a
 function from `Q × Q` to `K` satisfying a certain requirement known as the "cocycle condition". -/
 class Cocycle {Q K : Type _} [AddGroup Q] [AddGroup K] (c : Q → Q → K) where
   /-- An action of the quotient on the kernel by automorphisms. -/
@@ -96,31 +97,31 @@ A few deductions from the cocycle condition.
 variable {Q K : Type _} [AddGroup Q] [AddGroup K]
 variable (c : Q → Q → K) [ccl : Cocycle c]
 
-attribute [aesop norm (rule_sets [Cocycle])] Cocycle.cocycle_zero
-attribute [aesop norm (rule_sets [Cocycle])] Cocycle.cocycle_condition
+attribute [aesop norm (rule_sets := [Cocycle])] Cocycle.cocycle_zero
+attribute [aesop norm (rule_sets := [Cocycle])] Cocycle.cocycle_condition
 
 instance : AutAction ccl.α := ccl.autAct
 
-@[aesop norm (rule_sets [Cocycle])]
+@[aesop norm (rule_sets := [Cocycle])]
 lemma left_id {q : Q} : c 0 q = (0 : K) := by
   have := ccl.cocycle_condition 0 0 q
   rw [add_zero, zero_add, ccl.cocycle_zero, zero_add, zero_vadd] at this
   simp at this
   assumption
 
-@[aesop norm (rule_sets [Cocycle])]
+@[aesop norm (rule_sets := [Cocycle])]
 lemma right_id {q : Q} : c q 0 = (0 : K) := by
   have := ccl.cocycle_condition q 0 0
   rw [add_zero, zero_add, ccl.cocycle_zero] at this
   simp at this
   rw [this, AutAction.vadd_zero]
 
-@[aesop unsafe (rule_sets [Cocycle])]
+@[aesop unsafe (rule_sets := [Cocycle])]
 lemma inv_rel (q : Q) : c q (-q) = q +ᵥ (c (-q) q) := by
   have := ccl.cocycle_condition q (-q) q
   simp_all only [add_right_neg, left_id, add_zero, AutAction.vadd_eq, add_left_neg, right_id]
 
-@[aesop unsafe (rule_sets [Cocycle])]
+@[aesop unsafe (rule_sets := [Cocycle])]
 lemma inv_rel' (q : Q) : c (-q) q = (-q) +ᵥ (c q (-q)) := by
   have := inv_rel c (-q)
   simp_all only [neg_neg]
