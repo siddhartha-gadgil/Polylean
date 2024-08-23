@@ -19,7 +19,7 @@ def ProvedSplit.prepend{l: Letter}{ys : Word} (x: Letter)
       have newProof : x :: ys = newFst ++ [l] ++ newSnd  :=
         by
           rw [ps.proof]
-          simp
+          simp [newFst]
       ⟨newFst, newSnd, newProof⟩
 
 -- all proved splits of a word
@@ -140,7 +140,7 @@ def provedBound : (w: Word) → ProvedBound w := fun w =>
     have wl:  w.length = ys.length + 1 := by
       rw[h]
       rfl
-    let tail := splits.map (fun ps =>
+    let tail := splits.map (fun ps : ProvedSplit x⁻¹ ys =>
       have l1 : ps.fst.length + 1 ≤ ys.length + 1 :=
         by
         have lm := splitFirst ps
@@ -154,8 +154,7 @@ def provedBound : (w: Word) → ProvedBound w := fun w =>
       ProvedBound.headMatches x ys ps.fst ps.snd ps.proof
         (provedBound ps.fst) (provedBound ps.snd))
     ProvedBound.min head tail
-termination_by  _ w => w.length
-decreasing_by assumption
+termination_by  w => w.length
 
 #eval (provedBound ([α, α, β, α!, β!])).bound
 

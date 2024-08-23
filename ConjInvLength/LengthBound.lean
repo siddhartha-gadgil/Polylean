@@ -1,7 +1,7 @@
 import Mathlib.Algebra.Group.Defs
 inductive Letter where
   | α : Letter
-  | β : Letter 
+  | β : Letter
   | α! : Letter
   | β! : Letter
   deriving DecidableEq, Repr, Hashable, Inhabited
@@ -17,8 +17,8 @@ instance : ToString Letter := ⟨Letter.toString⟩
 def Letter.inv : Letter → Letter
   | α => α!
   | β  => β!
-  | α! => α 
-  | β! => β 
+  | α! => α
+  | β! => β
 
 @[inline] instance letInv : Inv Letter := ⟨Letter.inv⟩
 
@@ -31,7 +31,7 @@ def Word.toString(w: Word) := w.foldl (fun x y => s!"{x}{y}") ""
 
 instance : ToString Word := ⟨Word.toString⟩
 
-def Word.pow : Word → Nat → Word 
+def Word.pow : Word → Nat → Word
   | w, 0 => []
   | w, Nat.succ m => w ++ (pow w m)
 
@@ -55,18 +55,17 @@ def length : Word → Nat
     let base := 1 + (length ys)
     let derived := (splits x⁻¹ ys).map fun ⟨(fst, snd), h⟩ =>
       have h : fst.length + snd.length < ys.length + 1 := Nat.lt_trans h (Nat.lt_succ_self _)
-      have h1 : snd.length < ys.length + 1  := Nat.lt_of_le_of_lt (Nat.le_add_left _ _) h
-      have h2 : fst.length < ys.length + 1 := Nat.lt_of_le_of_lt (Nat.le_add_right _ _) h
+      have _ : snd.length < ys.length + 1  := Nat.lt_of_le_of_lt (Nat.le_add_left _ _) h
+      have _ : fst.length < ys.length + 1 := Nat.lt_of_le_of_lt (Nat.le_add_right _ _) h
       length fst + length snd
     derived.foldl min base -- minimum of base and elements of derived
-termination_by _ l => l.length
-decreasing_by assumption
+termination_by l => l.length
 
 #eval length ([α, α, β, α!, β!])
 
 #eval length ([α, α, β, α!, β!]^2)
 
--- For proofs 
+-- For proofs
 
 def Word.conj: Word → Letter → Word := fun w l => [l] ++ w ++ [l⁻¹]
 

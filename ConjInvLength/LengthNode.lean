@@ -1,13 +1,13 @@
 import ConjInvLength.Length
-import Std 
-open Std
+import Batteries
+open Batteries
 
 inductive ProofNode :   Type
 | empty : ProofNode
 | gen: (l : Letter) → ProofNode
-| triang: (w₁ w₂ : Wrd) → ProofNode 
-| conj : (l: Letter) → (w: Wrd) → ProofNode 
-| power : (n: Nat) →  (w: Wrd) → ProofNode 
+| triang: (w₁ w₂ : Wrd) → ProofNode
+| conj : (l: Letter) → (w: Wrd) → ProofNode
+| power : (n: Nat) →  (w: Wrd) → ProofNode
 deriving Repr, BEq
 
 open ProofNode
@@ -43,10 +43,10 @@ def ProofNode.baseLength: ProofNode → Option Nat
 | _ => none
 
 
-initialize floatNormCache : 
+initialize floatNormCache :
     IO.Ref (HashMap Wrd Float) ← IO.mkRef (HashMap.empty)
 
-initialize proofCache : 
+initialize proofCache :
     IO.Ref (HashMap Wrd ProofNode) ← IO.mkRef (HashMap.empty)
 
 def cacheLength?(w: Wrd) : IO (Option Float) :=
@@ -54,15 +54,15 @@ def cacheLength?(w: Wrd) : IO (Option Float) :=
     let cache ← floatNormCache.get
     match cache.find? w with
     | some n => pure (some n)
-    | none => pure none 
+    | none => pure none
 
 -- nodes are saved as a side effect of the computation
 partial def lengthNodes : Wrd → IO Float := fun w => do
   match ← cacheLength? w with
-  | some n => 
+  | some n =>
       pure n
   | none =>
-    if w.size =0 then 
+    if w.size =0 then
       floatNormCache.set <| (← floatNormCache.get).insert #[] 0
       proofCache.set <| (← proofCache.get).insert #[] empty
       return 0
@@ -76,40 +76,39 @@ partial def lengthNodes : Wrd → IO Float := fun w => do
         have h2 : fst.size < ys.size + 1 := Nat.lt_of_le_of_lt (Nat.le_add_right _ _) h
         return ((← lengthNodes fst) + (← lengthNodes snd), fst, snd)
       let (res, nodes) := derived.foldl (
-          fun (l₁, ns) (l₂, fst, snd) => 
+          fun (l₁, ns) (l₂, fst, snd) =>
             if l₂ < l₁ then (l₂, [triang fst (snd^(x⁻¹)), conj (x⁻¹) snd]) else (l₁, ns)
-      ) (base, [gen x, triang ys #[x]]) 
+      ) (base, [gen x, triang ys #[x]])
       floatNormCache.set <| (← floatNormCache.get).insert w res
       for node in nodes do
         proofCache.set <| (← proofCache.get).insert (node.top) node
       return res
-termination_by _ l => l.size
 
-def powerLength : Wrd → Nat → IO Float 
+def powerLength : Wrd → Nat → IO Float
 | w, n => do
   let pl ← lengthNodes (w ^ n)
   let res := pl / n.toFloat
   match ← cacheLength? w with
-  | none => 
+  | none =>
     floatNormCache.set <| (← floatNormCache.get).insert w res
-    if n >1 then 
+    if n >1 then
       proofCache.set <| (← proofCache.get).insert w (power n w)
     return res
-  | some l₀ => 
-    if res < l₀ then 
+  | some l₀ =>
+    if res < l₀ then
       IO.println s!"updated cache for {w}"
       floatNormCache.set <| (← floatNormCache.get).insert w res
-      if n >1 then 
+      if n >1 then
         proofCache.set <| (← proofCache.get).insert w (power n w)
       return res
-    else 
+    else
       return l₀
 
-partial def resolveProof(w: Wrd) : IO ((List ProofNode) × (List Wrd)) := do 
+partial def resolveProof(w: Wrd) : IO ((List ProofNode) × (List Wrd)) := do
   let cache ← proofCache.get
   match cache.find? w with
   | none => return ([], [w])
-  | some node => 
+  | some node =>
     let ws := node.base
     let offspring ←  ws.mapM resolveProof
     return offspring.foldl (fun (ns, ws) (ns', ws') => (ns ++ ns', ws ++ ws') ) ([node], [])
@@ -118,7 +117,7 @@ partial def derivedLength!(w: Wrd) : IO Float := do
   let cache ← proofCache.get
   match cache.find? w with
   | none => panic! s!"no cached node for {w}"
-  | some node => 
+  | some node =>
     match node with
     | empty => return 0.0
     | gen l => return 1.0
@@ -130,17 +129,17 @@ partial def derivedProof!(w: Wrd) : IO (Float × (List ProofNode)) := do
   let cache ← proofCache.get
   match cache.find? w with
   | none => panic! s!"no cached node for {w}"
-  | some node => 
+  | some node =>
     match node with
     | empty => return (0.0, [empty])
     | gen l => return (1.0, [gen l])
-    | triang w₁ w₂ => 
-      let (l₁, ns₁) ← derivedProof! w₁ 
+    | triang w₁ w₂ =>
+      let (l₁, ns₁) ← derivedProof! w₁
       let (l₂, ns₂) ← derivedProof! w₂
-      return (l₁ + l₂, ns₁ ++ ns₂ ++ [triang w₁ w₂]) 
-    | conj l w => 
+      return (l₁ + l₂, ns₁ ++ ns₂ ++ [triang w₁ w₂])
+    | conj l w =>
       let (l₀, ns) ← derivedProof! w
       return (l₀, ns ++ [conj l w])
-    | power n w => 
+    | power n w =>
       let (l₀, ns) ← derivedProof! (w^n)
       return (l₀ / n.toFloat, ns ++ [power n w])

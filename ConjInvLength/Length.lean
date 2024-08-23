@@ -1,13 +1,13 @@
-import Std 
+import Batteries
 import ConjInvLength.LengthBound
-open Std
+open Batteries
 open Letter
 
 def Letter.int : Letter → Int
   | α => 1
   | β => 2
   | α! => -1
-  | β! => -2 
+  | β! => -2
 
 open Letter
 
@@ -22,7 +22,7 @@ def Wrd.toString(w: Wrd) := w.foldl (fun x y => s!"{x}{y}") ""
 
 instance : ToString Wrd := ⟨Wrd.toString⟩
 
-def Wrd.pow : Wrd → Nat → Wrd 
+def Wrd.pow : Wrd → Nat → Wrd
   | _, 0 => #[]
   | w, Nat.succ m => w ++ (pow w m)
 
@@ -30,7 +30,7 @@ instance : Pow Wrd Nat where
   pow w n := w.pow n
 namespace Wrd
 
-def hashfn (w: Wrd) : UInt64 := 
+def hashfn (w: Wrd) : UInt64 :=
   w.foldl (fun h i => mixHash h (hash i)) 7
 
 instance : Hashable Wrd := ⟨hashfn⟩
@@ -40,44 +40,47 @@ initialize normCache : IO.Ref (HashMap Wrd Nat) ← IO.mkRef (HashMap.empty)
 def splits(l : Letter) : (w : Wrd) → Array {p : Wrd × Wrd // p.1.size + p.2.size < w.size} := fun w =>
   match h:w.size with
   | 0 => #[]
-  | m + 1  =>    
+  | m + 1  =>
     let x := w.back
     have _ : w.size -1 < w.size := by
-      rw [h] 
+      rw [h]
       apply Nat.le_refl
     let ys := w.pop
     have ysize : ys.size = m := by
       rw [Array.size_pop, h]
       rfl
     let tailSplits := (splits l ys).map fun ⟨(fst, snd), h⟩ =>
-      ⟨(fst, snd.push x), by 
+      ⟨(fst, snd.push x), by
         rw [Array.size_push]
         rw [ysize] at h
-        simp [Nat.add_succ, Nat.succ_lt_succ h]⟩
-    if x = l then tailSplits.push ⟨(ys, #[]), 
-      by 
+        simp
+        simp at h
+        rw [← Nat.add_assoc]
+        simp [Nat.succ_lt_succ h]⟩
+    if x = l then tailSplits.push ⟨(ys, #[]),
+      by
         rw [ysize]
         apply Nat.le_refl⟩ else tailSplits
-termination_by _ l w => w.size
+termination_by  w => w.size
 
-def length(w : Wrd) :  IO Nat := 
+def length(w : Wrd) :  IO Nat :=
 do
   let cache ← normCache.get
   match cache.find? w with
-  | some n => 
+  | some n =>
       pure n
   | none =>
-    let res ← 
+    let res ←
       match h:w.size with
       | 0 => pure 0
       | m + 1 => do
         let ys := w.pop
         let x := w.back
         have lll : w.size -1 < w.size := by
-          rw [h] 
+          rw [h]
           apply Nat.le_refl
         let base := 1 + (← length <| ys)
-        let derived ←  (splits x⁻¹ ys).mapM fun ⟨(fst, snd), h0⟩ => 
+        let derived ←  (splits x⁻¹ ys).mapM fun ⟨(fst, snd), h0⟩ =>
           have ysize : ys.size = m := by
             rw [Array.size_pop, h]
             rfl
@@ -91,7 +94,7 @@ do
         derived.foldl (fun x y => do return min (← x) y) (pure base)
     normCache.set <| (← normCache.get).insert w res
     return res
-termination_by _ w => w.size
+termination_by w.size
 
 end Wrd
 

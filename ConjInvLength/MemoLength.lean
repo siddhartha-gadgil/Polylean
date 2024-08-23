@@ -1,16 +1,16 @@
-import Std 
+import Batteries
 import ConjInvLength.LengthBound
-open Std
+open Batteries
 
 initialize normCache : IO.Ref (HashMap Word Nat) ← IO.mkRef (HashMap.empty)
 
 def memoLength : Word → IO Nat := fun w => do
   let cache ← normCache.get
   match cache.find? w with
-  | some n => 
+  | some n =>
       pure n
   | none =>
-    match w with  
+    match w with
     | [] => return 0
     | x :: ys => do
       have lb : (List.length ys) < List.length (x :: ys) := by
@@ -24,11 +24,4 @@ def memoLength : Word → IO Nat := fun w => do
       let res := derived.foldl min base -- minimum of base and elements of derived
       normCache.set <| (← normCache.get).insert w res
       return res
-termination_by _ l => l.length
-decreasing_by assumption 
-
-#check Array.eraseIdx'
-
-#check -1
-
-#eval #[1, 3, 5].eraseIdx' (0: Fin 3)
+termination_by l => l.length
