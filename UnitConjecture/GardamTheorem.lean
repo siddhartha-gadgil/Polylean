@@ -18,7 +18,7 @@ section Preliminaries
 /-! ### Preliminaries -/
 
 /-- The definition of an element of a free module being trivial but not zero, i.e., of the form `k•x` for `x : X` and `k ≠ 0`. -/
-def trivialNonZeroElem {R X : Type _} [Ring R] [DecidableEq X] (a : FreeModule R X) : Prop :=
+def trivialNonZeroElem {R X : Type _} [Ring R] [DecidableEq X][DecidableEq R] (a : FreeModule R X) : Prop :=
   ∃! x : X, FreeModule.coordinates x a ≠ 0
 
 /-- The statement of Kaplansky's Unit Conjecture:
@@ -138,7 +138,7 @@ end Verification
 We check that our definition of "trivial but not zero" is correct by showing it equivalent to a more direct definition.
 -/
 
-theorem trivialNonZeroElem_trivial_nonzeroAux {R G : Type _} [Ring R] [Group G] [DecidableEq G] (p : FormalSum R G) :
+theorem trivialNonZeroElem_trivial_nonzeroAux {R G : Type _} [Ring R] [Group G] [DecidableEq G] [DecidableEq R] (p : FormalSum R G) :
     trivialNonZeroElem  ⟦p⟧  ↔  ∃ a: R, ∃ g : G, p ≈ [(a, g)] ∧ (a ≠ 0) := by
   apply Iff.intro
   · rw [trivialNonZeroElem]
@@ -184,7 +184,7 @@ theorem trivialNonZeroElem_trivial_nonzeroAux {R G : Type _} [Ring R] [Group G] 
         simp only [neq, not_true] at h
 
 /-- Our definition of tiviality of `p : R[G]` coincides with the direct definition `p = a ⬝ g` with `a ≠ 0` -/
-theorem trivialNonZeroElem_trivial_nonzero {R G : Type _} [Ring R] [Group G] [DecidableEq G]: ∀  (p : FreeModule R G),
+theorem trivialNonZeroElem_trivial_nonzero {R G : Type _} [Ring R] [Group G] [DecidableEq G] [DecidableEq R]: ∀  (p : FreeModule R G),
     trivialNonZeroElem  p  ↔  ∃ a: R, ∃ g : G, p = (a * g) ∧ (a ≠ 0) := by
   rw [groupRingMul]
   apply Quotient.ind

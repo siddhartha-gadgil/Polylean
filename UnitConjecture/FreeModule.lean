@@ -243,11 +243,11 @@ theorem is_equivalence  : Equivalence (eqlCoords R X) :=
 end eqlCoords
 
 /-- Setoid based on equal coordinates. -/
-instance formalSumSetoid (R X : Type) [Ring R] [DecidableEq X] : Setoid (FormalSum R X) :=
+instance formalSumSetoid (R X : Type) [Ring R] [DecidableEq X][DecidableEq R] : Setoid (FormalSum R X) :=
   ⟨eqlCoords R X, eqlCoords.is_equivalence⟩
 
 /-- Quotient free module. -/
-abbrev FreeModule (R X : Type) [Ring R] [DecidableEq X] :=
+abbrev FreeModule (R X : Type) [Ring R] [DecidableEq X][DecidableEq R] :=
   Quotient (formalSumSetoid R X)
 
 notation R"["G"]" => FreeModule R G
@@ -681,7 +681,6 @@ instance : Neg (R[X]) :=
   ⟨fun x => (-1 : R) • x⟩
 
 #check Zero
-set_option diagnostics true
 /-- The module is an additive commutative group, mainly proved as a check -/
 instance : AddCommGroup (R[X]) :=
   {
@@ -696,13 +695,13 @@ instance : AddCommGroup (R[X]) :=
 
     sub_eq_add_neg := by intros; rfl
 
-    add_left_neg := by
-        intro x
-        let l := FreeModule.coeffs_distrib (-1 : R) (1 : R) x
-        simp at l
-        rw [FreeModule.unit_coeffs] at l
-        rw [FreeModule.zero_coeffs] at l
-        exact l
+    neg_add_cancel := by
+      intro x
+      let l := FreeModule.coeffs_distrib (-1 : R) (1 : R) x
+      simp at l
+      rw [FreeModule.unit_coeffs] at l
+      rw [FreeModule.zero_coeffs] at l
+      exact l
 
     add_comm := FreeModule.addn_comm
   }

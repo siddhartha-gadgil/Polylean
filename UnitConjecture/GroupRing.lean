@@ -333,10 +333,10 @@ instance : AddCommGroup (R[G]) :=
     add_zero := FreeModule.addn_zero
     zero_add := FreeModule.zero_addn
     add_comm := FreeModule.addn_comm
-    add_left_neg := by
+    neg_add_cancel := by
         intro x
         let l := FreeModule.coeffs_distrib (-1 : R) (1 : R) x
-        rw [add_left_neg, FreeModule.unit_coeffs, FreeModule.zero_coeffs] at l
+        rw [neg_add_cancel, FreeModule.unit_coeffs, FreeModule.zero_coeffs] at l
         exact l
   }
 
@@ -351,12 +351,12 @@ instance : Ring (R[G]) :=
       intro x y
       rfl
 
-    add_left_neg := by
+    neg_add_cancel := by
         intro x
         let l := FreeModule.coeffs_distrib (-1 : R) (1 : R) x
         simp at l
         have lc : (-1 : R) + 1 = 0 := by
-            apply add_left_neg
+            apply neg_add_cancel
         -- rw [lc] at l
         rw [FreeModule.unit_coeffs] at l
         rw [FreeModule.zero_coeffs] at l
@@ -502,7 +502,7 @@ end GroupRing
 set_option autoImplicit false
 
 /-- Product `R → G → R[G]`, `r ↦ g ↦ r ⬝ g`; used only in verification results -/
-instance groupRingMul {R G : Type _} [Ring R] [Group G] [DecidableEq G]
+instance groupRingMul {R G : Type _} [Ring R] [Group G] [DecidableEq G][DecidableEq R]
  : HMul R G (FreeModule R G) := ⟨fun r g ↦ ⟦[(r, g)]⟧⟩
 
 

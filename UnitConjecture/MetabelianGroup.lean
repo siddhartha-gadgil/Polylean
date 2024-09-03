@@ -82,7 +82,7 @@ instance metabelianGroup : Group (K × Q) :=
     one_mul := left_id c,
     mul_assoc := mul_assoc c,
 
-    mul_left_inv := left_inv c,
+    inv_mul_cancel := left_inv c,
     div_eq_mul_inv := by intros; rfl
   }
 

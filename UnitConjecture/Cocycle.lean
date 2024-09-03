@@ -119,7 +119,7 @@ lemma right_id {q : Q} : c q 0 = (0 : K) := by
 @[aesop unsafe (rule_sets := [Cocycle])]
 lemma inv_rel (q : Q) : c q (-q) = q +ᵥ (c (-q) q) := by
   have := ccl.cocycle_condition q (-q) q
-  simp_all only [add_right_neg, left_id, add_zero, AutAction.vadd_eq, add_left_neg, right_id]
+  simp_all only [add_right_neg, left_id, add_zero, AutAction.vadd_eq, neg_add_cancel, right_id]
 
 @[aesop unsafe (rule_sets := [Cocycle])]
 lemma inv_rel' (q : Q) : c (-q) q = (-q) +ᵥ (c q (-q)) := by
