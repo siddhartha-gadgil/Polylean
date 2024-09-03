@@ -969,8 +969,7 @@ theorem equiv_of_equal_coeffs  (s₁ s₂ : FormalSum R X) (hyp : ∀ x : X, s�
       rfl
     let zl := equiv_e_of_zero_coeffs s₂ coeffs
     Eq.symm zl
-  | h :: t =>
-    let (a₀, x₀) := h
+  | (a₀, x₀) :: t =>
     by
     exact
       if p : 0 = a₀ then by
@@ -979,7 +978,7 @@ theorem equiv_of_equal_coeffs  (s₁ s₂ : FormalSum R X) (hyp : ∀ x : X, s�
           apply ElementaryMove.zeroCoeff
           apply Eq.symm
           assumption
-        have _ : t.length < (h :: t).length := by
+        have _ : t.length < ((a₀, x₀) :: t).length := by
           simp [List.length_cons]
         have eq₂ : t ≃ s₂ := by
           apply equiv_of_equal_coeffs t s₂
@@ -994,7 +993,7 @@ theorem equiv_of_equal_coeffs  (s₁ s₂ : FormalSum R X) (hyp : ∀ x : X, s�
             have cf₂ : s₂.coords x₀ = a₀ := by
               rw [← hyp]
               simp [coords, ← p₁, Nat.add_zero, monomCoeff]
-              sorry
+              exact Eq.symm p₁
             let ⟨ys, eqn, _⟩ :=
               nonzero_coeff_has_complement x₀ s₂
                 (by
@@ -1004,7 +1003,7 @@ theorem equiv_of_equal_coeffs  (s₁ s₂ : FormalSum R X) (hyp : ∀ x : X, s�
             rw [cf₂] at cfs
             let cfs' := fun (x : X) => Eq.trans (hyp x) (Eq.symm (cfs x))
             simp [coords] at cfs'
-            have _ : t.length < (h :: t).length := by
+            have _ : t.length < ((a₀, x₀) :: t).length := by
               simp [List.length_cons]
             let step := equiv_of_equal_coeffs t ys cfs'
             let _step' := cons_equiv_of_equiv t ys a₀ x₀ step
