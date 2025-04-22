@@ -188,4 +188,9 @@ theorem trivialNonZeroElem_trivial_nonzero {R G : Type _} [Ring R] [Group G] [De
     trivialNonZeroElem  p  ↔  ∃ a: R, ∃ g : G, p = (a * g) ∧ (a ≠ 0) := by
   rw [groupRingMul]
   apply Quotient.ind
-  simp only [trivialNonZeroElem_trivial_nonzeroAux, ne_eq, exists_and_right, Quotient.eq, forall_const]
+  simp only [trivialNonZeroElem_trivial_nonzeroAux]
+  conv =>
+    enter [a, 2, 1, a, 1, g, 1]
+    rw [Quotient.eq]
+  intro a
+  rfl

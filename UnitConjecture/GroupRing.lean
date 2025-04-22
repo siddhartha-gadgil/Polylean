@@ -61,13 +61,14 @@ theorem mul_monom_dist(b : R)(h x₀ : G)(s₁ s₂: FormalSum R G): coords (mul
 theorem mul_dist(x₀ : G)(s₁ s₂ s₃: FormalSum R G): coords (mul s₁ (s₂  ++ s₃)) x₀ = coords (mul s₁ s₂) x₀ + coords (mul s₁ s₃) x₀ := by
     induction s₂ with
     | nil =>
-      simp [mulMonom, coords]
+      simp only [List.nil_append, coords, zero_add, mulMonom, mul]
     | cons head tail ih =>
       simp [mulMonom, coords, mul]
       rw [← append_coords]
       rw [← append_coords]
       rw [ih]
       simp [add_assoc]
+
 
 /-- associativity with two terms monomials -/
 theorem mul_monom_monom_assoc(a b : R)(h x₀ : G)(s : FormalSum R G): coords (mulMonom b h (mulMonom a x s)) x₀ =
@@ -85,7 +86,7 @@ theorem mul_monom_assoc(b : R)(h x₀ : G)(s₁ s₂: FormalSum R G): coords (mu
     coords (mul s₁ (mulMonom b h s₂)) x₀  := by
     induction s₂ with
     | nil =>
-      simp [mulMonom, coords]
+      simp [mulMonom, coords, mul]
     | cons head tail ih =>
       let (a, x) := head
       simp [mulMonom, coords, mul]
@@ -236,7 +237,7 @@ theorem first_arg_invariant (s₁ s₂ t : FormalSum R G) (rel : ElementaryMove 
         apply funext; intro x₀
         rw [← append_coords]
         rw [← append_coords]
-        simp [coords]
+        simp [coords, mulMonom]
         rw [right_distrib]
         simp [monom_coords_hom]
         let rel' : ElementaryMove R G
@@ -252,7 +253,7 @@ theorem first_arg_invariant (s₁ s₂ t : FormalSum R G) (rel : ElementaryMove 
         apply funext; intro x₀
         rw [← append_coords]
         rw [← append_coords]
-        simp [coords]
+        simp [coords, mulMonom]
         let rel' : ElementaryMove R G
           ((a, x) :: s₁)
             ((a, x) :: s₂) := by
@@ -515,7 +516,8 @@ def groupInclusionHom  (G : Type) [Group G] [DecidableEq G] : G →* R[G] :=
       intro _ _
       apply Quotient.sound
       funext x
-      simp [FormalSum.coords]
+      simp [FormalSum.coords, FormalSum.mul, FormalSum.mulMonom, monomCoeff, add_zero, mul_one]
+
   }
 
 /-- As a function `groupInclusionHom` is `g ↦ 1 ⬝ g`-/
@@ -544,7 +546,7 @@ def ringInclusionHom  (G : Type) [Group G] [DecidableEq G] : R →+* R[G] :=
       intro _ _
       apply Quotient.sound
       funext x
-      simp [FormalSum.coords],
+      simp [FormalSum.coords, monomCoeff, FormalSum.mul, FormalSum.mulMonom]
     map_zero' := by
       apply Quotient.sound
       funext x
@@ -555,8 +557,16 @@ def ringInclusionHom  (G : Type) [Group G] [DecidableEq G] : R →+* R[G] :=
       apply Quotient.sound
       funext x
       simp only [FormalSum.coords, monomCoeff]
-      split <;> simp only [add_zero]
+      split
+      · simp [add_zero, FormalSum.coords, monomCoeff]
+        have : 1 = x := by
+          apply eq_of_beq
+          assumption
+        simp [this]
+      · simp only [add_zero]
+        sorry
   }
+
 
 /-- As a function, `ringInclusionHom` is `r ↦ r ⬝ 1` -/
 theorem ringInclusionHom_formula (G : Type) [Group G] [DecidableEq G] :

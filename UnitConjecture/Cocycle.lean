@@ -85,7 +85,7 @@ class Cocycle {Q K : Type _} [AddGroup Q] [AddGroup K] (c : Q → Q → K) where
   /-- The value of the cocycle is zero when its inputs are zero, as a convention. -/
   cocycle_zero : c 0 0 = (0 : K)
   /-- The *cocycle condition*. -/
-  cocycle_condition : ∀ q q' q'' : Q, c q q' + c (q + q') q'' = q +ᵥ c q' q'' + c q (q' + q'')
+  cocycle_condition : ∀ q q' q'' : Q, c q q' + c (q + q') q'' = (q +ᵥ c q' q'') + c q (q' + q'')
 
 
 namespace Cocycle
@@ -109,17 +109,20 @@ lemma left_id {q : Q} : c 0 q = (0 : K) := by
   simp at this
   assumption
 
+#check vadd_add_assoc
+
 @[aesop norm (rule_sets := [Cocycle])]
 lemma right_id {q : Q} : c q 0 = (0 : K) := by
   have := ccl.cocycle_condition q 0 0
   rw [add_zero, zero_add, ccl.cocycle_zero] at this
+  -- rw [← vadd_add_assoc q 0 (c q 0)]
   simp at this
   rw [this, AutAction.vadd_zero]
 
 @[aesop unsafe (rule_sets := [Cocycle])]
 lemma inv_rel (q : Q) : c q (-q) = q +ᵥ (c (-q) q) := by
   have := ccl.cocycle_condition q (-q) q
-  simp_all only [add_right_neg, left_id, add_zero, AutAction.vadd_eq, neg_add_cancel, right_id]
+  simp_all [left_id, add_zero, AutAction.vadd_eq, neg_add_cancel, right_id]
 
 @[aesop unsafe (rule_sets := [Cocycle])]
 lemma inv_rel' (q : Q) : c (-q) q = (-q) +ᵥ (c q (-q)) := by

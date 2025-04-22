@@ -450,7 +450,7 @@ def scmul  : R → FormalSum R X → FormalSum R X
 theorem scmul_coords  (r : R) (s : FormalSum R X) (x₀ : X) : (r * s.coords x₀) = (s.scmul r).coords x₀ := by
   induction s with
   | nil =>
-    simp [coords]
+    simp [coords, scmul]
   | cons h t ih =>
     simp [scmul, coords, monom_coords_mul, left_distrib, ih]
 
@@ -851,7 +851,7 @@ theorem nonzero_coeff_has_complement  (x₀ : X)(s : FormalSum R X) :
     | false =>
       let k := coords tail x₀
       have lem : k = coords ((a, x) :: tail) x₀ := by
-        simp [coords, monomCoeff, c, zero_add]
+        simp [coords, monomCoeff, c, zero_add, k]
       rw [← lem] at pos
       let ⟨ys', eqnStep, lIneqStep⟩ := hyp pos
       rw [← lem]
@@ -1026,11 +1026,12 @@ theorem equiv_of_equal_coeffs  (s₁ s₂ : FormalSum R X) (hyp : ∀ x : X, s�
               apply equiv_of_equal_coeffs
               intro x
               rw [← hyp x]
-              simp [coords]
+              simp [coords, s₃]
               let d := coords_well_defined x _ _ eqn
               rw [coords] at d
               rw [← d]
-              simp [monom_coords_hom, coords, add_assoc]
+              simp only [monom_coords_hom]
+              rw [add_assoc]
             apply Eq.trans (Eq.trans (Eq.symm eq₂) eq₁) eq₃
   termination_by s₁.length
 /-!
