@@ -106,14 +106,14 @@ open P
 theorem α_nonTrivial : ¬ (trivialNonZeroElem α) := by
     intro ⟨g, _, (eqg : ∀ y, α.coordinates y ≠ 0 → y = g)⟩
     have l₁ : z⁻¹ = g := by
-      apply eqg; native_decide
+      apply eqg; decide
     have l₂ : x * y = g := by
-      apply eqg; native_decide
+      apply eqg; decide
     have l₃ : z⁻¹ = x * y := by
       refine' Eq.trans _ (Eq.symm _) <;> assumption
     simp  at l₃
     have l₄ : z⁻¹ ≠ x * y := by
-      native_decide
+      decide
     simp [l₃] at l₄
 
 /-! The fact that the counter-example `α` is in fact a unit of the group ring `𝔽₂[P]` is verified by
